@@ -1,0 +1,144 @@
+{
+  "uretim_zamani_tr": "2026-09-22 00:54:13",
+  "zaman_dilimi": "GÜNLÜK (1d) — saatlik değil",
+  "kaynak": "Yahoo Finance (yfinance)",
+  "bist100": {
+    "ticker": "XU100.IS",
+    "son_kapanis_tarihi": "2026-09-18",
+    "kapanis": 13284.4,
+    "gunluk_degisim_pct": -1.67,
+    "gun_ici_dusuk": 13199.5,
+    "gun_ici_yuksek": 13427.1,
+    "rsi14_gunluk": 35.9,
+    "atr14": 336.33,
+    "hareketli_ortalamalar": {
+      "sma5": 13608.98,
+      "ema5": 13577.91,
+      "sma10": 13996.85,
+      "ema10": 13821.29,
+      "sma20": 14166.5,
+      "ema20": 13996.58,
+      "sma50": 14038.35,
+      "ema50": 14068.72,
+      "sma100": 14162.49,
+      "ema100": 13946.73,
+      "sma200": 13501.69,
+      "ema200": 13375.91
+    },
+    "haftalik": {
+      "son_tamamlanan_hafta_kapanis": 14467.3,
+      "bu_hafta_son_kapanis": 13284.4
+    },
+    "son_5_kapanis": [
+      14235.8,
+      13892.3,
+      13122.6,
+      13509.8,
+      13284.4
+    ],
+    "son_5_kapanis_tarih": [
+      "2026-09-14",
+      "2026-09-15",
+      "2026-09-16",
+      "2026-09-17",
+      "2026-09-18"
+    ],
+    "seviyelere_mesafe": {
+      "korunan_taban": {
+        "seviye": 13000,
+        "mesafe_pct": 2.19
+      },
+      "tez_cizgisi_haftalik": {
+        "seviye": 12600,
+        "mesafe_pct": 5.43
+      },
+      "ma200_basit": {
+        "seviye": 13501.69,
+        "mesafe_pct": -1.61
+      }
+    },
+    "korunan_taban_3gun": false
+  },
+  "bist30": {
+    "ticker": "XU030.IS",
+    "son_kapanis_tarihi": "2026-09-18",
+    "kapanis": 16182.1,
+    "gunluk_degisim_pct": -1.15,
+    "gun_ici_dusuk": 16084.9,
+    "gun_ici_yuksek": 16371.1,
+    "rsi14_gunluk": 45.41,
+    "atr14": 430.2,
+    "hareketli_ortalamalar": {
+      "sma5": 16384.96,
+      "ema5": 16370.41,
+      "sma10": 16734.01,
+      "ema10": 16522.43,
+      "sma20": 16662.49,
+      "ema20": 16531.55,
+      "sma50": 16196.13,
+      "ema50": 16364.68,
+      "sma100": 16295.61,
+      "ema100": 16070.08,
+      "sma200": 15289.15,
+      "ema200": 15248.12
+    },
+    "haftalik": {
+      "son_tamamlanan_hafta_kapanis": 17247.4,
+      "bu_hafta_son_kapanis": 16182.1
+    },
+    "son_5_kapanis": [
+      17011.8,
+      16645.1,
+      15716.0,
+      16369.8,
+      16182.1
+    ],
+    "son_5_kapanis_tarih": [
+      "2026-09-14",
+      "2026-09-15",
+      "2026-09-16",
+      "2026-09-17",
+      "2026-09-18"
+    ]
+  },
+  "genislik": {
+    "hisse_sayisi": 30,
+    "yukselen": 8,
+    "dusen": 22,
+    "tabana_kilitli_(<=-9.5%)": 0,
+    "tavana_kilitli_(>=9.5%)": 0,
+    "yukselen_orani_pct": 26.7,
+    "detay": {
+      "THYAO.IS": -1.3,
+      "GARAN.IS": -1.96,
+      "AKBNK.IS": -1.19,
+      "ISCTR.IS": -0.82,
+      "YKBNK.IS": 2.6,
+      "HALKB.IS": -2.68,
+      "VAKBN.IS": 0.3,
+      "KCHOL.IS": -1.83,
+      "SAHOL.IS": -2.81,
+      "TUPRS.IS": 1.27,
+      "ASELS.IS": -1.84,
+      "BIMAS.IS": 0.42,
+      "EREGL.IS": 0.77,
+      "SISE.IS": -1.39,
+      "FROTO.IS": -1.87,
+      "TOASO.IS": -0.87,
+      "PGSUS.IS": -1.73,
+      "TCELL.IS": -1.97,
+      "TTKOM.IS": -0.66,
+      "EKGYO.IS": -1.2,
+      "KRDMD.IS": -0.14,
+      "SASA.IS": -2.89,
+      "ASTOR.IS": -2.94,
+      "ENKAI.IS": -0.47,
+      "TAVHL.IS": 0.91,
+      "DOAS.IS": -1.47,
+      "GUBRF.IS": 3.32,
+      "MGROS.IS": 0.1,
+      "ARCLK.IS": -2.9,
+      "HEKTS.IS": -3.7
+    }
+  }
+}
