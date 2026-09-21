@@ -25,6 +25,8 @@ jobs:
           python-version: "3.11"
       - run: pip install --upgrade borsapy yfinance pandas
       - run: python bist_radar.py
+        env:
+          EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
 
       - name: JSON'u depoya yaz
         run: |
