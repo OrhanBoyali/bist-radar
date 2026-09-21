@@ -193,7 +193,15 @@ def fund_block(code):
     s = h[pc].dropna()
     last_d = s.index[-1]
     past = s[s.index <= last_d - pd.Timedelta(days=30)]
-    out = {"fiyat": J(s.iloc[-1]), "fiyat_tarihi": last_d.strftime("%Y-%m-%d"),
+    trend = {}
+    for col, key in (("FundSize", "buyukluk"), ("Investors", "yatirimci")):
+        if col in h.columns:
+            x = h[col].dropna()
+            xp = x[x.index <= last_d - pd.Timedelta(days=30)]
+            trend[f"{key}_son"] = J(x.iloc[-1])
+            trend[f"{key}_30g_degisim_pct"] = pct(x.iloc[-1], xp.iloc[-1]) if len(xp) else None
+    out_trend = trend
+    out = {"fiyat": J(s.iloc[-1]), "fiyat_tarihi": last_d.strftime("%Y-%m-%d"), "akis": out_trend,
            "gunluk_getiri_pct": pct(s.iloc[-1], s.iloc[-2]) if len(s) > 1 else None,
            "getiri_30g_pct": pct(s.iloc[-1], past.iloc[-1]) if len(past) else None}
     info = safe(f"fon_bilgi_{code}", lambda: f.info) or {}
@@ -231,6 +239,20 @@ def breadth_and_foreign():
             "tabana_kilitli": int(ld), "tavana_kilitli": int(lu),
             "yukselen_orani_pct": round(up / n * 100, 1) if n else None,
             "alinamayan": fails, "detay": detail}, foreign
+
+def breadth_market():
+    """Tüm BIST (XUTUM) tek taramada: 'ordu' genişliği. BIST 30 = generaller, burada değil."""
+    df = bp.scan("XUTUM", "change_percent > -100", limit=800)
+    col = next((c for c in df.columns if "change" in str(c).lower()), None)
+    if col is None or len(df) < 100:
+        raise ValueError(f"tarama eksik: {len(df)} satır, sütunlar {list(df.columns)[:6]}")
+    ch = pd.to_numeric(df[col], errors="coerce").dropna()
+    return {"kaynak": "borsapy scan (XUTUM)", "hisse_sayisi": int(len(ch)),
+            "yukselen": int((ch > 0).sum()), "dusen": int((ch < 0).sum()),
+            "tabana_kilitli": int((ch <= -9.5).sum()), "tavana_kilitli": int((ch >= 9.5).sum()),
+            "yukselen_orani_pct": round(float((ch > 0).mean() * 100), 1),
+            "medyan_degisim_pct": round(float(ch.median()), 2)}
+
 
 def breadth_yahoo():
     with open(TICKERS_FILE, encoding="utf-8") as f:
@@ -339,11 +361,24 @@ def main():
             gen, today_foreign = r
     if gen is None and yf and os.path.exists(TICKERS_FILE):
         gen = safe("yahoo_yedek_genislik", breadth_yahoo)
-    R["genislik"] = gen or {"hata": "alınamadı"}
+    R["genislik_bist30"] = gen or {"hata": "alınamadı"}
+    R["genislik"] = (safe("genislik_tum_piyasa", breadth_market) if bp else None) or {"hata": "alınamadı"}
     R["yabanci"] = safe("yabanci_trend", lambda: foreign_trend(today_foreign)) if today_foreign else {"hata": "yabancı oranı alınamadı"}
 
-    if bp:
+    prev = {}
+    if os.path.exists(OUT):
+        try:
+            prev = json.load(open(OUT, encoding="utf-8"))
+        except Exception:
+            prev = {}
+    fon_saati = NOW.hour in (8, 18, 19) or not prev.get("fonlar")
+    if bp and fon_saati:
         R["fonlar"] = {c: safe(f"fon_{c}", lambda c=c: fund_block(c)) for c in FUNDS}
+        R["fonlar_zamani"] = NOW.strftime("%Y-%m-%d %H:%M")
+    elif prev.get("fonlar"):
+        R["fonlar"] = prev["fonlar"]
+        R["fonlar_zamani"] = prev.get("fonlar_zamani", "önceki çalışma") + " (önbellek — TEFAS günde 1 fiyat)"
+    if bp:
         R["tcmb"] = tcmb_block()
         R["enflasyon"] = safe("enflasyon", lambda: J(bp.Inflation().latest()))
         R["tahvil"] = safe("tahvil", lambda: J(bp.bonds()))
@@ -377,7 +412,11 @@ def main():
         T["tez_cizgisi_mesafe_pct"] = pct(f, LEVELS["tez_cizgisi_haftalik"])
         T["k3_tetik_13000_alti_kapanis"] = bool(f < LEVELS["korunan_taban"] and not b["son_bar_kismi_mi"])
         T["k3_yaklasiyor_anlik"] = bool(f < LEVELS["korunan_taban"] and b["son_bar_kismi_mi"])
-        hk = b.get("haftalik_kapanis", {}).get("bu_hafta_son")
+        wkc = b.get("haftalik_kapanis", {})
+        hafta_tamam = (datetime.strptime(b["son_bar_tarihi"], "%Y-%m-%d").weekday() == 4
+                       and not b["son_bar_kismi_mi"])
+        hk = wkc.get("bu_hafta_son") if hafta_tamam else wkc.get("son_tamamlanan_hafta")
+        T["tez_cizgisi_referans_kapanis"] = hk
         T["tez_cizgisi_haftalik_kirildi"] = bool(hk and hk < LEVELS["tez_cizgisi_haftalik"])
         T["korunan_taban_3gun"] = all(12900 <= x["k"] <= 13500 for x in b["son_5_kapanis"][-3:])
         ma200 = b.get("hareketli_ortalamalar", {}).get("sma200")
@@ -386,10 +425,18 @@ def main():
         if bk is not None and ix is not None:
             T["banka_minus_endeks_pct"] = round(bk - ix, 2)
             T["kamu_alim_proxy"] = "GÜÇLÜ" if bk - ix > 2 else ("VAR" if bk - ix > 0.7 else "YOK")
+            T["kamu_alim_proxy_not"] = "ZAYIF PROXY: banka primi faiz indirimi beklentisinden de gelebilir; haberle teyit şart"
     except Exception as e:
         T["bist_tetik_hata"] = str(e)[:150]
     try:
-        g = R.get("genislik", {}); T["genislik_tabana_kilitli"] = g.get("tabana_kilitli")
+        g = R.get("genislik", {}); g30 = R.get("genislik_bist30", {})
+        T["genislik_tabana_kilitli_tum"] = g.get("tabana_kilitli")
+        T["genislik_yukselen_orani_tum"] = g.get("yukselen_orani_pct")
+        T["genislik_yukselen_orani_bist30"] = g30.get("yukselen_orani_pct")
+        if g.get("yukselen_orani_pct") is not None and g30.get("yukselen_orani_pct") is not None:
+            fark = round(g30["yukselen_orani_pct"] - g["yukselen_orani_pct"], 1)
+            T["generaller_eksi_ordu_puan"] = fark
+            T["yapay_taban_sinyali"] = bool(fark > 30 or (g.get("tabana_kilitli") or 0) >= 15)
         T["yabanci_1hafta_puan"] = R.get("yabanci", {}).get("1hafta_degisim_puan")
         k = R.get("kuresel", {})
         T["nasdaq_zirveden_pct"] = k.get("nasdaq", {}).get("zirveden_pct")
@@ -411,6 +458,14 @@ def main():
             T["ortulu_para_politikasi"] = ("SIKILAŞMA" if a - pf > 1 else ("GEVŞEME" if a - pf < -1 else "NÖTR"))
     except Exception as e:
         T["tcmb_tetik_hata"] = str(e)[:120]
+
+    akis_alarm = {}
+    for c, fb in (R.get("fonlar") or {}).items():
+        a = (fb or {}).get("akis") or {}
+        b_ = a.get("buyukluk_30g_degisim_pct"); y_ = a.get("yatirimci_30g_degisim_pct")
+        if (b_ is not None and b_ <= -20) or (y_ is not None and y_ <= -15):
+            akis_alarm[c] = {"buyukluk_30g": b_, "yatirimci_30g": y_}
+    T["fon_kitlesel_cikis_alarm"] = akis_alarm   # Tera/Pusula dersi: erken uyarı
 
     # Reel getiri (Blok 5)
     tufe = find_monthly_cpi(R.get("enflasyon"))
