@@ -2,16 +2,18 @@ name: BIST Radar (günlük)
 
 on:
   schedule:
-    # Piyasa saatlerinde saat başı: 07-15 UTC = 10:00-18:00 TR, Pzt-Cum
-    - cron: "0 7-15 * * 1-5"
-    # Kapanış sonrası kesin veri: 15:45 UTC = 18:45 TR
-    - cron: "45 15 * * 1-5"
-    # Sabah kontrolü (Yahoo bir gün gecikirse önceki günün kesin kapanışı): 05:00 UTC = 08:00 TR
-    - cron: "0 5 * * 1-5"
+    - cron: "0 5 * * 1-5"      # 08:00 TR — sabah kontrolü
+    - cron: "0 7-15 * * 1-5"   # 10:00-18:00 TR — saat başı
+    - cron: "45 15 * * 1-5"    # 18:45 TR — kapanış
   workflow_dispatch:
 
 permissions:
   contents: write
+  issues: write
+
+concurrency:
+  group: radar
+  cancel-in-progress: false
 
 jobs:
   radar:
@@ -21,12 +23,37 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install yfinance pandas
+      - run: pip install --upgrade borsapy yfinance pandas
       - run: python bist_radar.py
+
       - name: JSON'u depoya yaz
         run: |
           git config user.name "bist-radar-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add output/radar.json
+          git add output/
           git diff --cached --quiet || git commit -m "radar: $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git pull --rebase -q || true
           git push
+
+      - name: Kırılma varsa Issue aç (e-posta bildirimi)
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ ! -f output/radar.json ]; then
+            BODY="radar.json hiç üretilmedi — betik çalışmadı. Actions loguna bak."
+            STATUS="SORUN VAR"
+          else
+            STATUS=$(python -c "import json;print(json.load(open('output/radar.json'))['saglik']['ozet'])")
+            BODY=$(python -c "import json;d=json.load(open('output/radar.json'))['saglik']['hatali_moduller'];print('\n'.join(f'- **{k}**: {v}' for k,v in d.items()))")
+          fi
+          echo "Sağlık: $STATUS"
+          if [ "$STATUS" != "TAMAM" ]; then
+            gh label create radar-hata --color d73a4a --description "Veri modülü kırıldı" --force || true
+            OPEN=$(gh issue list --label radar-hata --state open --json number --jq 'length')
+            if [ "$OPEN" = "0" ]; then
+              gh issue create --label radar-hata \
+                --title "⚠️ Radar veri hatası — $(date -u +%F)" \
+                --body "$(printf 'Otomatik tespit. Hatalı modüller:\n\n%s\n\nYedek (Yahoo) devrede olabilir. Düzeltince bu issue'"'"'yu kapat.' "$BODY")"
+            fi
+          fi
