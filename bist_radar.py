@@ -21,6 +21,8 @@ LEVELS = {"korunan_taban": 13000, "tez_cizgisi_haftalik": 12600}
 FUNDS = ["YLB", "IJV", "DLY", "TIE", "AKU"]          # portföydeki fonlar
 CEPHANE = ["YLB", "IJV", "DLY"]                      # reel getiri kuralı SADECE bunlara
 TUFE_AYLIK_MANUEL = 1.84   # otomatik alınamazsa kullanılır (Ağustos 2026)
+# Politika faizi yılda 8 kez değişir → PPK sonrası BURAYI güncelle
+POLITIKA_FAIZI = {"oran": 37.0, "karar_tarihi": "2026-09-10", "sonraki_ppk": "2026-10-22"}
 NASDAQ_ESIK, ALTIN_ESIK = -15.0, -5.0
 SEKTOR = ["XBANK", "XUSIN", "XHOLD", "XUTEK", "XUMAL"]
 YAHOO_INDEX = {"XU100": "XU100.IS", "XU030": "XU030.IS", "XBANK": "XBANK.IS", "XUSIN": "XUSIN.IS"}
@@ -273,6 +275,37 @@ def foreign_trend(today):
         res["not"] = "1 haftalık geçmiş birikiyor"
     return res
 
+def tcmb_block():
+    """borsapy.TCMB() yanlış okuyor (7,0) → kullanılmıyor. Manuel politika faizi + EVDS AOFM."""
+    out = {"politika_faizi": {**POLITIKA_FAIZI, "kaynak": "MANUEL (PPK sonrası güncellenir)"}}
+    try:
+        days = (datetime.strptime(POLITIKA_FAIZI["sonraki_ppk"], "%Y-%m-%d").date() - NOW.date()).days
+        out["ppk_kalan_gun"] = days
+        if days < 0:
+            HEALTH["politika_faizi_guncelle"] = (f"UYARI: {POLITIKA_FAIZI['sonraki_ppk']} PPK geçti; "
+                                                  "betikteki POLITIKA_FAIZI güncellenmeli.")
+    except Exception:
+        pass
+    if not os.environ.get("EVDS_API_KEY"):
+        out["aofm"] = {"not": "EVDS_API_KEY tanımlı değil — fiili fonlama maliyeti alınmıyor"}
+        return out
+    def _aofm():
+        ev = bp.evds_series("TP.APIFON4", period="3mo")
+        df = ev.to_frame() if isinstance(ev, pd.Series) else ev
+        df = to_dt_index(df.copy())
+        num = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
+        s_ = df[num[0]].dropna()
+        val = float(s_.iloc[-1])
+        if not 15 <= val <= 70:
+            raise ValueError(f"makul olmayan değer {val}")
+        prev30 = s_[s_.index <= s_.index[-1] - pd.Timedelta(days=30)]
+        return {"oran": round(val, 2), "tarih": s_.index[-1].strftime("%Y-%m-%d"),
+                "30g_once": round(float(prev30.iloc[-1]), 2) if len(prev30) else None,
+                "kaynak": "TCMB EVDS (TP.APIFON4)"}
+    out["aofm"] = safe("evds_aofm", _aofm) or {"hata": "alınamadı"}
+    return out
+
+
 def find_monthly_cpi(obj):
     """Enflasyon çıktısında aylık TÜFE değişimini arar."""
     if isinstance(obj, dict):
@@ -311,14 +344,7 @@ def main():
 
     if bp:
         R["fonlar"] = {c: safe(f"fon_{c}", lambda c=c: fund_block(c)) for c in FUNDS}
-        R["tcmb"] = safe("tcmb_faiz", lambda: J({"politika": bp.TCMB().policy_rate, "gecelik": bp.TCMB().overnight}))
-        try:
-            pr = float(R["tcmb"]["politika"])
-            if not 15 <= pr <= 70:
-                HEALTH["tcmb_faiz"] = f"ŞÜPHELİ VERİ: politika faizi {pr} okundu (makul aralık 15-70). Kullanma."
-                R["tcmb"]["UYARI"] = "yanlış okuma — güvenme"
-        except Exception:
-            pass
+        R["tcmb"] = tcmb_block()
         R["enflasyon"] = safe("enflasyon", lambda: J(bp.Inflation().latest()))
         R["tahvil"] = safe("tahvil", lambda: J(bp.bonds()))
         R["doviz_altin"] = {k: safe(f"fx_{k}", lambda k=k: J(bp.FX(k).current)) for k in FX_LIST}
@@ -374,6 +400,18 @@ def main():
         T["gram_altin_zirveden_pct"] = (R.get("gram_altin_1y") or {}).get("zirveden_pct")
     except Exception as e:
         T["kuresel_tetik_hata"] = str(e)[:150]
+    try:
+        tc = R.get("tcmb") or {}
+        a = (tc.get("aofm") or {}).get("oran"); pf = tc["politika_faizi"]["oran"]
+        T["politika_faizi"] = pf
+        T["ppk_kalan_gun"] = tc.get("ppk_kalan_gun")
+        if a is not None:
+            T["aofm"] = a
+            T["aofm_eksi_politika"] = round(a - pf, 2)
+            T["ortulu_para_politikasi"] = ("SIKILAŞMA" if a - pf > 1 else ("GEVŞEME" if a - pf < -1 else "NÖTR"))
+    except Exception as e:
+        T["tcmb_tetik_hata"] = str(e)[:120]
+
     # Reel getiri (Blok 5)
     tufe = find_monthly_cpi(R.get("enflasyon"))
     T["tufe_aylik"] = tufe if tufe is not None else TUFE_AYLIK_MANUEL
