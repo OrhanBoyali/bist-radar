@@ -52,8 +52,8 @@ jobs:
             gh label create radar-hata --color d73a4a --description "Veri modülü kırıldı" --force || true
             OPEN=$(gh issue list --label radar-hata --state open --json number --jq 'length')
             if [ "$OPEN" = "0" ]; then
-              gh issue create --label radar-hata \
+              gh issue create --label radar-hata --assignee OrhanBoyali \
                 --title "⚠️ Radar veri hatası — $(date -u +%F)" \
-                --body "$(printf 'Otomatik tespit. Hatalı modüller:\n\n%s\n\nYedek (Yahoo) devrede olabilir. Düzeltince bu issue'"'"'yu kapat.' "$BODY")"
+                --body "$(printf '@OrhanBoyali otomatik tespit. Hatalı modüller:\n\n%s\n\nYedek (Yahoo) devrede olabilir. Düzeltince bu issue'"'"'yu kapat.' "$BODY")"
             fi
           fi
