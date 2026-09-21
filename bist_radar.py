@@ -19,13 +19,14 @@ TICKERS_FILE = "tickers.txt"
 # ---- SİSTEM AYARLARI (ana kayıttan; değişince güncelle) -------------------
 LEVELS = {"korunan_taban": 13000, "tez_cizgisi_haftalik": 12600}
 FUNDS = ["YLB", "IJV", "DLY", "TIE", "AKU"]          # portföydeki fonlar
+CEPHANE = ["YLB", "IJV", "DLY"]                      # reel getiri kuralı SADECE bunlara
 TUFE_AYLIK_MANUEL = 1.84   # otomatik alınamazsa kullanılır (Ağustos 2026)
 NASDAQ_ESIK, ALTIN_ESIK = -15.0, -5.0
 SEKTOR = ["XBANK", "XUSIN", "XHOLD", "XUTEK", "XUMAL"]
 YAHOO_INDEX = {"XU100": "XU100.IS", "XU030": "XU030.IS", "XBANK": "XBANK.IS", "XUSIN": "XUSIN.IS"}
 KURESEL = {"sp500": "^GSPC", "nasdaq": "^IXIC", "vix": "^VIX",
            "dolar_endeksi": "DX-Y.NYB", "brent": "BZ=F", "abd_10y": "^TNX", "ons_altin": "GC=F"}
-FX_LIST = ["USD", "EUR", "gram-altin", "ceyrek-altin", "yarim-altin", "tam-altin", "ons-altin", "BRENT"]
+FX_LIST = ["USD", "EUR", "gram-altin", "ceyrek-altin", "yarim-altin", "tam-altin", "BRENT"]  # ons-altin çıkarıldı: borsapy anlamsız değer veriyordu
 
 # ---- SAĞLIK TAKİBİ --------------------------------------------------------
 HEALTH = {}
@@ -311,12 +312,29 @@ def main():
     if bp:
         R["fonlar"] = {c: safe(f"fon_{c}", lambda c=c: fund_block(c)) for c in FUNDS}
         R["tcmb"] = safe("tcmb_faiz", lambda: J({"politika": bp.TCMB().policy_rate, "gecelik": bp.TCMB().overnight}))
+        try:
+            pr = float(R["tcmb"]["politika"])
+            if not 15 <= pr <= 70:
+                HEALTH["tcmb_faiz"] = f"ŞÜPHELİ VERİ: politika faizi {pr} okundu (makul aralık 15-70). Kullanma."
+                R["tcmb"]["UYARI"] = "yanlış okuma — güvenme"
+        except Exception:
+            pass
         R["enflasyon"] = safe("enflasyon", lambda: J(bp.Inflation().latest()))
         R["tahvil"] = safe("tahvil", lambda: J(bp.bonds()))
         R["doviz_altin"] = {k: safe(f"fx_{k}", lambda k=k: J(bp.FX(k).current)) for k in FX_LIST}
         R["takvim_tr"] = safe("takvim_tr", lambda: J(bp.economic_calendar(period="1w", country="TR").head(25)))
         R["takvim_abd_onemli"] = safe("takvim_abd", lambda: J(
             bp.EconomicCalendar().events(period="1w", country="US", importance="high").head(15)))
+
+    if bp:
+        gdf = safe("gram_altin_gecmis", lambda: bp.FX("gram-altin").history(period="1y"))
+        if gdf is not None:
+            try:
+                gdf = norm_ohlc(gdf)
+                R["gram_altin_1y"] = {"son": J(gdf["Close"].iloc[-1]), "zirve_1y": J(gdf["Close"].max()),
+                                      "zirveden_pct": pct(gdf["Close"].iloc[-1], gdf["Close"].max())}
+            except Exception as e:
+                HEALTH["gram_altin_gecmis"] = f"HATA: {e}"
 
     if yf:
         R["kuresel"] = {}
@@ -353,6 +371,7 @@ def main():
         T["altin_zirveden_pct"] = k.get("ons_altin", {}).get("zirveden_pct")
         T["altin_duzeltme_tetik"] = bool(T["altin_zirveden_pct"] is not None and T["altin_zirveden_pct"] <= ALTIN_ESIK)
         T["vix"] = k.get("vix", {}).get("son_fiyat")
+        T["gram_altin_zirveden_pct"] = (R.get("gram_altin_1y") or {}).get("zirveden_pct")
     except Exception as e:
         T["kuresel_tetik_hata"] = str(e)[:150]
     # Reel getiri (Blok 5)
@@ -361,7 +380,7 @@ def main():
     T["tufe_kaynak"] = "otomatik" if tufe is not None else "MANUEL (betikteki sabit)"
     reel = {}
     for c, fb in (R.get("fonlar") or {}).items():
-        if fb and fb.get("getiri_30g_pct") is not None:
+        if c in CEPHANE and fb and fb.get("getiri_30g_pct") is not None:
             r_ = round(fb["getiri_30g_pct"] - T["tufe_aylik"], 2)
             reel[c] = {"reel_30g_pct": r_, "durum": "ACIL" if r_ <= 0 else ("ALARM" if r_ < 1 else "OK")}
     T["reel_getiri"] = reel
