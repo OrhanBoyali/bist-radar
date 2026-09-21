@@ -20,6 +20,8 @@ TICKERS_FILE = "tickers.txt"
 LEVELS = {"korunan_taban": 13000, "tez_cizgisi_haftalik": 12600}
 FUNDS = ["YLB", "IJV", "DLY", "TIE", "AKU"]          # portföydeki fonlar
 CEPHANE = ["YLB", "IJV", "DLY"]                      # reel getiri kuralı SADECE bunlara
+STOPAJ_PP = 0.175          # para piyasası fonu stopajı (kârdan). Değişirse güncelle.
+REEL_ALARM, REEL_ACIL = 0.5, 0.0   # NET reel getiri eşikleri (aylık %)
 TUFE_AYLIK_MANUEL = 1.84   # otomatik alınamazsa kullanılır (Ağustos 2026)
 # Politika faizi yılda 8 kez değişir → PPK sonrası BURAYI güncelle
 POLITIKA_FAIZI = {"oran": 37.0, "karar_tarihi": "2026-09-10", "sonraki_ppk": "2026-10-22"}
@@ -474,9 +476,14 @@ def main():
     reel = {}
     for c, fb in (R.get("fonlar") or {}).items():
         if c in CEPHANE and fb and fb.get("getiri_30g_pct") is not None:
-            r_ = round(fb["getiri_30g_pct"] - T["tufe_aylik"], 2)
-            reel[c] = {"reel_30g_pct": r_, "durum": "ACIL" if r_ <= 0 else ("ALARM" if r_ < 1 else "OK")}
+            brut = fb["getiri_30g_pct"]
+            net_getiri = brut * (1 - STOPAJ_PP)
+            r_net = round(net_getiri - T["tufe_aylik"], 2)
+            reel[c] = {"brut_30g_pct": brut, "net_30g_pct": round(net_getiri, 2),
+                       "reel_net_pct": r_net, "reel_brut_pct": round(brut - T["tufe_aylik"], 2),
+                       "durum": "ACIL" if r_net <= REEL_ACIL else ("ALARM" if r_net < REEL_ALARM else "OK")}
     T["reel_getiri"] = reel
+    T["reel_getiri_yontem"] = f"NET: getiri×(1-{STOPAJ_PP}) − aylık TÜFE; ALARM <{REEL_ALARM}, ACİL ≤{REEL_ACIL}"
     R["tetikler"] = T
 
     # ---- SAĞLIK ----
