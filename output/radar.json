@@ -1,6 +1,6 @@
 {
  "surum": "v3",
- "uretim_zamani_tr": "2026-09-22 01:23:15",
+ "uretim_zamani_tr": "2026-09-22 01:40:36",
  "not": "Kişisel veri yok. BIST verisi ~15 dk gecikmeli. Günlük göstergeler tamamlanmış barlarla.",
  "bist100": {
   "kaynak": "borsapy",
@@ -363,10 +363,15 @@
   }
  },
  "tcmb": {
-  "politika": 7.0,
-  "gecelik": {
-   "borrowing": 57.0,
-   "lending": 62.0
+  "politika_faizi": {
+   "oran": 37.0,
+   "karar_tarihi": "2026-09-10",
+   "sonraki_ppk": "2026-10-22",
+   "kaynak": "MANUEL (PPK sonrası güncellenir)"
+  },
+  "ppk_kalan_gun": 30,
+  "aofm": {
+   "not": "EVDS_API_KEY tanımlı değil — fiili fonlama maliyeti alınmıyor"
   }
  },
  "enflasyon": {
@@ -449,14 +454,6 @@
    "open": 45055.9147,
    "high": 45155.5313,
    "low": 44499.6558,
-   "update_time": "2026-09-21T00:00:00"
-  },
-  "ons-altin": {
-   "symbol": "ons-altin",
-   "last": 109986.36,
-   "open": 110985.56,
-   "high": 110985.56,
-   "low": 109747.94,
    "update_time": "2026-09-21T00:00:00"
   },
   "BRENT": {
@@ -568,6 +565,11 @@
    "Period": "-"
   }
  ],
+ "gram_altin_1y": {
+  "son": 6812.904,
+  "zirve_1y": 7549.471,
+  "zirveden_pct": -9.76
+ },
  "kuresel": {
   "sp500": {
    "kaynak": "yahoo",
@@ -637,17 +639,17 @@
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-09-21",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 95.87,
-   "gunluk_degisim_pct": -7.7,
-   "rsi14_tamamlanmis": 47.8362,
+   "son_fiyat": 95.98,
+   "gunluk_degisim_pct": -7.6,
+   "rsi14_tamamlanmis": 47.9848,
    "rsi14_anlik": null,
    "atr14": 4.5234,
    "52h_zirve_kapanis": 118.35,
-   "zirveden_pct": -18.99,
-   "haftalik_degisim_pct": -9.28,
-   "aylik_degisim_pct": 2.23,
+   "zirveden_pct": -18.9,
+   "haftalik_degisim_pct": -9.18,
+   "aylik_degisim_pct": 2.35,
    "gun_ici_dusuk": 95.86,
-   "gun_ici_yuksek": 95.87
+   "gun_ici_yuksek": 95.98
   },
   "abd_10y": {
    "kaynak": "yahoo",
@@ -669,17 +671,17 @@
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-09-21",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 4388.3999,
-   "gunluk_degisim_pct": -0.82,
-   "rsi14_tamamlanmis": 47.2805,
+   "son_fiyat": 4389.2002,
+   "gunluk_degisim_pct": -0.81,
+   "rsi14_tamamlanmis": 47.3431,
    "rsi14_anlik": null,
    "atr14": 103.9816,
    "52h_zirve_kapanis": 5318.3999,
-   "zirveden_pct": -17.49,
-   "haftalik_degisim_pct": 0.84,
-   "aylik_degisim_pct": -4.0,
+   "zirveden_pct": -17.47,
+   "haftalik_degisim_pct": 0.86,
+   "aylik_degisim_pct": -3.99,
    "gun_ici_dusuk": 4382.0,
-   "gun_ici_yuksek": 4388.3999
+   "gun_ici_yuksek": 4390.7002
   }
  },
  "tetikler": {
@@ -696,9 +698,12 @@
   "yabanci_1hafta_puan": null,
   "nasdaq_zirveden_pct": 0.0,
   "nasdaq_duzeltme_tetik": false,
-  "altin_zirveden_pct": -17.49,
+  "altin_zirveden_pct": -17.47,
   "altin_duzeltme_tetik": true,
   "vix": 14.87,
+  "gram_altin_zirveden_pct": -9.76,
+  "politika_faizi": 37.0,
+  "ppk_kalan_gun": 30,
   "tufe_aylik": 1.84,
   "tufe_kaynak": "otomatik",
   "reel_getiri": {
@@ -713,14 +718,6 @@
    "DLY": {
     "reel_30g_pct": 1.22,
     "durum": "OK"
-   },
-   "TIE": {
-    "reel_30g_pct": -3.59,
-    "durum": "ACIL"
-   },
-   "AKU": {
-    "reel_30g_pct": -3.37,
-    "durum": "ACIL"
    }
   }
  },
@@ -754,7 +751,6 @@
    "fon_bilgi_AKU": "OK",
    "fon_ucret_AKU": "OK",
    "fon_AKU": "OK",
-   "tcmb_faiz": "OK",
    "enflasyon": "OK",
    "tahvil": "OK",
    "fx_USD": "OK",
@@ -763,10 +759,10 @@
    "fx_ceyrek-altin": "OK",
    "fx_yarim-altin": "OK",
    "fx_tam-altin": "OK",
-   "fx_ons-altin": "OK",
    "fx_BRENT": "OK",
    "takvim_tr": "OK",
    "takvim_abd": "OK",
+   "gram_altin_gecmis": "OK",
    "yahoo_sp500": "OK",
    "yahoo_nasdaq": "OK",
    "yahoo_vix": "OK",
