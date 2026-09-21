@@ -1,6 +1,6 @@
 {
  "surum": "v3",
- "uretim_zamani_tr": "2026-09-22 01:40:36",
+ "uretim_zamani_tr": "2026-09-22 01:47:29",
  "not": "Kişisel veri yok. BIST verisi ~15 dk gecikmeli. Günlük göstergeler tamamlanmış barlarla.",
  "bist100": {
   "kaynak": "borsapy",
@@ -198,7 +198,7 @@
    "gun_ici_yuksek": 17277.15
   }
  },
- "genislik": {
+ "genislik_bist30": {
   "kaynak": "borsapy",
   "hisse_sayisi": 30,
   "yukselen": 25,
@@ -239,6 +239,16 @@
    "VAKBN": 3.81,
    "YKBNK": 0.94
   }
+ },
+ "genislik": {
+  "kaynak": "borsapy scan (XUTUM)",
+  "hisse_sayisi": 580,
+  "yukselen": 106,
+  "dusen": 466,
+  "tabana_kilitli": 116,
+  "tavana_kilitli": 6,
+  "yukselen_orani_pct": 18.3,
+  "medyan_degisim_pct": -3.21
  },
  "yabanci": {
   "bugun_ort_yabanci_orani": 31.755,
@@ -362,6 +372,7 @@
    }
   }
  },
+ "fonlar_zamani": "önceki çalışma (önbellek — TEFAS günde 1 fiyat)",
  "tcmb": {
   "politika_faizi": {
    "oran": 37.0,
@@ -639,17 +650,17 @@
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-09-21",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 95.98,
-   "gunluk_degisim_pct": -7.6,
-   "rsi14_tamamlanmis": 47.9848,
+   "son_fiyat": 96.01,
+   "gunluk_degisim_pct": -7.57,
+   "rsi14_tamamlanmis": 48.0254,
    "rsi14_anlik": null,
    "atr14": 4.5234,
    "52h_zirve_kapanis": 118.35,
-   "zirveden_pct": -18.9,
-   "haftalik_degisim_pct": -9.18,
-   "aylik_degisim_pct": 2.35,
+   "zirveden_pct": -18.88,
+   "haftalik_degisim_pct": -9.15,
+   "aylik_degisim_pct": 2.38,
    "gun_ici_dusuk": 95.86,
-   "gun_ici_yuksek": 95.98
+   "gun_ici_yuksek": 96.01
   },
   "abd_10y": {
    "kaynak": "yahoo",
@@ -671,15 +682,15 @@
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-09-21",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 4389.2002,
-   "gunluk_degisim_pct": -0.81,
-   "rsi14_tamamlanmis": 47.3431,
+   "son_fiyat": 4390.1001,
+   "gunluk_degisim_pct": -0.79,
+   "rsi14_tamamlanmis": 47.4136,
    "rsi14_anlik": null,
    "atr14": 103.9816,
    "52h_zirve_kapanis": 5318.3999,
-   "zirveden_pct": -17.47,
-   "haftalik_degisim_pct": 0.86,
-   "aylik_degisim_pct": -3.99,
+   "zirveden_pct": -17.45,
+   "haftalik_degisim_pct": 0.88,
+   "aylik_degisim_pct": -3.97,
    "gun_ici_dusuk": 4382.0,
    "gun_ici_yuksek": 4390.7002
   }
@@ -689,21 +700,28 @@
   "tez_cizgisi_mesafe_pct": 5.85,
   "k3_tetik_13000_alti_kapanis": false,
   "k3_yaklasiyor_anlik": false,
+  "tez_cizgisi_referans_kapanis": 13284.42,
   "tez_cizgisi_haftalik_kirildi": false,
   "korunan_taban_3gun": false,
   "ma200_ustu": false,
   "banka_minus_endeks_pct": 1.5,
   "kamu_alim_proxy": "VAR",
-  "genislik_tabana_kilitli": 1,
+  "kamu_alim_proxy_not": "ZAYIF PROXY: banka primi faiz indirimi beklentisinden de gelebilir; haberle teyit şart",
+  "genislik_tabana_kilitli_tum": 116,
+  "genislik_yukselen_orani_tum": 18.3,
+  "genislik_yukselen_orani_bist30": 83.3,
+  "generaller_eksi_ordu_puan": 65.0,
+  "yapay_taban_sinyali": true,
   "yabanci_1hafta_puan": null,
   "nasdaq_zirveden_pct": 0.0,
   "nasdaq_duzeltme_tetik": false,
-  "altin_zirveden_pct": -17.47,
+  "altin_zirveden_pct": -17.45,
   "altin_duzeltme_tetik": true,
   "vix": 14.87,
   "gram_altin_zirveden_pct": -9.76,
   "politika_faizi": 37.0,
   "ppk_kalan_gun": 30,
+  "fon_kitlesel_cikis_alarm": {},
   "tufe_aylik": 1.84,
   "tufe_kaynak": "otomatik",
   "reel_getiri": {
@@ -735,22 +753,8 @@
    "borsapy_endeks_XUTEK": "OK",
    "borsapy_endeks_XUMAL": "OK",
    "genislik_ve_yabanci": "OK",
+   "genislik_tum_piyasa": "OK",
    "yabanci_trend": "OK",
-   "fon_bilgi_YLB": "OK",
-   "fon_ucret_YLB": "OK",
-   "fon_YLB": "OK",
-   "fon_bilgi_IJV": "OK",
-   "fon_ucret_IJV": "OK",
-   "fon_IJV": "OK",
-   "fon_bilgi_DLY": "OK",
-   "fon_ucret_DLY": "OK",
-   "fon_DLY": "OK",
-   "fon_bilgi_TIE": "OK",
-   "fon_ucret_TIE": "OK",
-   "fon_TIE": "OK",
-   "fon_bilgi_AKU": "OK",
-   "fon_ucret_AKU": "OK",
-   "fon_AKU": "OK",
    "enflasyon": "OK",
    "tahvil": "OK",
    "fx_USD": "OK",
