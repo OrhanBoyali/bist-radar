@@ -26,8 +26,7 @@ ALTIN_DUZELTME_ESIK = -5.0     # zirveden % (altın fonu tetiği)
 
 # --- TICKER'LAR ----------------------------------------------------------
 BIST = {"bist100": "XU100.IS", "bist30": "XU030.IS"}
-SEKTOR = {"banka": "XBANK.IS", "sinai": "XUSIN.IS", "holding": "XHOLD.IS",
-          "teknoloji": "XUTEK.IS", "mali": "XUMAL.IS"}
+SEKTOR = {"banka": "XBANK.IS", "sinai": "XUSIN.IS"}   # Yahoo'da holding/teknoloji/mali yok
 KURESEL = {"sp500": "^GSPC", "nasdaq": "^IXIC", "vix": "^VIX",
            "dolar_endeksi": "DX-Y.NYB", "brent": "BZ=F", "abd_10y": "^TNX"}
 DOVIZ = {"usdtry": "USDTRY=X", "eurtry": "EURTRY=X", "eurusd": "EURUSD=X"}
@@ -96,9 +95,9 @@ def basic_block(ticker: str, days: int = 400, with_ma: bool = True) -> dict:
         "rsi14_tamamlanmis": rsi_wilder(c_comp),
         "rsi14_anlik": rsi_wilder(c_all) if partial else None,
         "atr14": atr(comp),
-        "52h_zirve": round(float(df["High"].tail(252).max()), 2),
-        "52h_dip": round(float(df["Low"].tail(252).min()), 2),
-        "zirveden_pct": pct(c_all.iloc[-1], df["High"].tail(252).max()),
+        "52h_zirve": round(float(c_all.tail(252).max()), 2),   # kapanış bazlı (vadeli uç fiyat hatasına karşı)
+        "52h_dip": round(float(c_all.tail(252).min()), 2),
+        "zirveden_pct": pct(c_all.iloc[-1], c_all.tail(252).max()),
         "haftalik_degisim_pct": pct(c_all.iloc[-1], c_all.iloc[-6]) if len(c_all) > 6 else None,
         "aylik_degisim_pct": pct(c_all.iloc[-1], c_all.iloc[-22]) if len(c_all) > 22 else None,
     }
