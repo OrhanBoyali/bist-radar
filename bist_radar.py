@@ -243,18 +243,35 @@ def breadth_and_foreign():
             "yukselen_orani_pct": round(up / n * 100, 1) if n else None,
             "alinamayan": fails, "detay": detail}, foreign
 
-def breadth_market():
-    """Tüm BIST (XUTUM) tek taramada: 'ordu' genişliği. BIST 30 = generaller, burada değil."""
-    df = bp.scan("XUTUM", "change_percent > -100", limit=800)
+def breadth_scan(index_code="XUTUM", min_rows=100):
+    """Tek sorguda genişlik. XUTUM = ordu (tüm piyasa), XU030 = generaller."""
+    df = bp.scan(index_code, "change_percent > -100", limit=800)
     col = next((c for c in df.columns if "change" in str(c).lower()), None)
-    if col is None or len(df) < 100:
+    if col is None or len(df) < min_rows:
         raise ValueError(f"tarama eksik: {len(df)} satır, sütunlar {list(df.columns)[:6]}")
     ch = pd.to_numeric(df[col], errors="coerce").dropna()
-    return {"kaynak": "borsapy scan (XUTUM)", "hisse_sayisi": int(len(ch)),
+    return {"kaynak": f"borsapy scan ({index_code})", "hisse_sayisi": int(len(ch)),
             "yukselen": int((ch > 0).sum()), "dusen": int((ch < 0).sum()),
             "tabana_kilitli": int((ch <= -9.5).sum()), "tavana_kilitli": int((ch >= 9.5).sum()),
             "yukselen_orani_pct": round(float((ch > 0).mean() * 100), 1),
             "medyan_degisim_pct": round(float(ch.median()), 2)}
+
+
+def foreign_ratios():
+    import time
+    comps = bp.Index("XU030").component_symbols
+    out, fails = {}, 0
+    for sym in comps:
+        try:
+            fr = bp.Ticker(sym).fast_info["foreign_ratio"]
+            if fr is not None:
+                out[sym] = float(fr)
+        except Exception:
+            fails += 1
+        time.sleep(0.4)   # kaynağı yormamak için
+    if fails > len(comps) / 2:
+        raise ValueError(f"{fails}/{len(comps)} yabancı oranı alınamadı")
+    return out
 
 
 def breadth_yahoo():
@@ -357,24 +374,29 @@ def main():
     R["bist30"] = index_block("XU030")
     R["sektor"] = {s: index_block(s, with_ma=False) for s in SEKTOR}
 
-    gen, today_foreign = None, {}
-    if bp:
-        r = safe("genislik_ve_yabanci", breadth_and_foreign)
-        if r:
-            gen, today_foreign = r
-    if gen is None and yf and os.path.exists(TICKERS_FILE):
-        gen = safe("yahoo_yedek_genislik", breadth_yahoo)
-    R["genislik_bist30"] = gen or {"hata": "alınamadı"}
-    R["genislik"] = (safe("genislik_tum_piyasa", breadth_market) if bp else None) or {"hata": "alınamadı"}
-    R["yabanci"] = safe("yabanci_trend", lambda: foreign_trend(today_foreign)) if today_foreign else {"hata": "yabancı oranı alınamadı"}
-
     prev = {}
     if os.path.exists(OUT):
         try:
             prev = json.load(open(OUT, encoding="utf-8"))
         except Exception:
             prev = {}
-    fon_saati = NOW.hour in (8, 9, 18, 19) or not prev.get("fonlar")   # 08:17 ve 18:52 çalışmaları (gecikme payıyla)
+    gunluk_saat = NOW.hour in (8, 9, 18, 19)   # 08:17 ve 18:52 çalışmaları (gecikme payıyla)
+
+    R["genislik"] = (safe("genislik_tum_piyasa", lambda: breadth_scan("XUTUM", 100)) if bp else None) or {"hata": "alınamadı"}
+    g30 = safe("genislik_bist30", lambda: breadth_scan("XU030", 25)) if bp else None
+    if g30 is None and yf and os.path.exists(TICKERS_FILE):
+        g30 = safe("yahoo_yedek_genislik", breadth_yahoo)
+    R["genislik_bist30"] = g30 or {"hata": "alınamadı"}
+
+    if bp and (gunluk_saat or not prev.get("yabanci")):
+        fr = safe("yabanci_orani", foreign_ratios)
+        R["yabanci"] = safe("yabanci_trend", lambda: foreign_trend(fr)) if fr else {"hata": "yabancı oranı alınamadı"}
+    else:
+        R["yabanci"] = prev.get("yabanci", {})
+        if isinstance(R["yabanci"], dict):
+            R["yabanci"] = {**R["yabanci"], "not_onbellek": "yabancı oranı günde 2 kez güncellenir"}
+
+    fon_saati = gunluk_saat or not prev.get("fonlar")
     if bp and fon_saati:
         R["fonlar"] = {c: safe(f"fon_{c}", lambda c=c: fund_block(c)) for c in FUNDS}
         R["fonlar_zamani"] = NOW.strftime("%Y-%m-%d %H:%M")
