@@ -29,7 +29,8 @@ NASDAQ_ESIK, ALTIN_ESIK = -15.0, -5.0
 SEKTOR = ["XBANK", "XUSIN", "XHOLD", "XUTEK", "XUMAL"]
 YAHOO_INDEX = {"XU100": "XU100.IS", "XU030": "XU030.IS", "XBANK": "XBANK.IS", "XUSIN": "XUSIN.IS"}
 KURESEL = {"sp500": "^GSPC", "nasdaq": "^IXIC", "vix": "^VIX",
-           "dolar_endeksi": "DX-Y.NYB", "brent": "BZ=F", "abd_10y": "^TNX", "ons_altin": "GC=F"}
+           "dolar_endeksi": "DX-Y.NYB", "abd_10y": "^TNX", "ons_altin": "GC=F"}
+# Brent Yahoo'dan ALINMAZ: vade geçişinde sahte düşüş gösterdi (21 Eyl). borsapy BRENT kullanılır.
 FX_LIST = ["USD", "EUR", "gram-altin", "ceyrek-altin", "yarim-altin", "tam-altin", "BRENT"]  # ons-altin çıkarıldı: borsapy anlamsız değer veriyordu
 
 # ---- SAĞLIK TAKİBİ --------------------------------------------------------
@@ -373,7 +374,7 @@ def main():
             prev = json.load(open(OUT, encoding="utf-8"))
         except Exception:
             prev = {}
-    fon_saati = NOW.hour in (8, 18, 19) or not prev.get("fonlar")
+    fon_saati = NOW.hour in (8, 9, 18, 19) or not prev.get("fonlar")   # 08:17 ve 18:52 çalışmaları (gecikme payıyla)
     if bp and fon_saati:
         R["fonlar"] = {c: safe(f"fon_{c}", lambda c=c: fund_block(c)) for c in FUNDS}
         R["fonlar_zamani"] = NOW.strftime("%Y-%m-%d %H:%M")
@@ -446,6 +447,9 @@ def main():
         T["altin_zirveden_pct"] = k.get("ons_altin", {}).get("zirveden_pct")
         T["altin_duzeltme_tetik"] = bool(T["altin_zirveden_pct"] is not None and T["altin_zirveden_pct"] <= ALTIN_ESIK)
         T["vix"] = k.get("vix", {}).get("son_fiyat")
+        br = (R.get("doviz_altin") or {}).get("BRENT") or {}
+        T["brent"] = br.get("last") if isinstance(br, dict) else None
+        T["brent_kaynak"] = "borsapy"
         T["gram_altin_zirveden_pct"] = (R.get("gram_altin_1y") or {}).get("zirveden_pct")
     except Exception as e:
         T["kuresel_tetik_hata"] = str(e)[:150]
