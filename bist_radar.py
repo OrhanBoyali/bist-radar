@@ -198,11 +198,19 @@ def fund_block(code):
     past = s[s.index <= last_d - pd.Timedelta(days=30)]
     trend = {}
     for col, key in (("FundSize", "buyukluk"), ("Investors", "yatirimci")):
-        if col in h.columns:
-            x = h[col].dropna()
-            xp = x[x.index <= last_d - pd.Timedelta(days=30)]
+        try:
+            if col not in h.columns:
+                continue
+            x = pd.to_numeric(h[col], errors="coerce").dropna()
+            x = x[x > 0]
+            if x.empty:
+                trend[f"{key}_not"] = "veri boş"
+                continue
+            xp = x[x.index <= x.index[-1] - pd.Timedelta(days=30)]
             trend[f"{key}_son"] = J(x.iloc[-1])
             trend[f"{key}_30g_degisim_pct"] = pct(x.iloc[-1], xp.iloc[-1]) if len(xp) else None
+        except Exception as ex:
+            trend[f"{key}_hata"] = str(ex)[:80]
     out_trend = trend
     out = {"fiyat": J(s.iloc[-1]), "fiyat_tarihi": last_d.strftime("%Y-%m-%d"), "akis": out_trend,
            "gunluk_getiri_pct": pct(s.iloc[-1], s.iloc[-2]) if len(s) > 1 else None,
@@ -422,21 +430,22 @@ def evds_kesif2():
     return "yazıldı"
 
 
-EVDS_SERILER = {   # 22 Eyl keşfiyle doğrulandı
-    "yabanci_hisse_net_haftalik": "TP.MKNETHAR.M7",   # yurt dışı yerleşik net değişim, hisse
-    "yabanci_dibs_net_haftalik": "TP.MKNETHAR.M8",    # yurt dışı yerleşik net değişim, DİBS
-    "mevduat_tl_1ay": "TP.TRY.MT01",                  # 1 aya kadar TL mevduat, akım %
-    "mevduat_tl_3ay": "TP.TRY.MT02",                  # 3 aya kadar TL mevduat, akım %
-    "tufe_endeks": "TP.TUKFIY2025.GENEL",             # TÜİK TÜFE 2025=100
-    "pka_12ay_enflasyon": "TP.ENFBEK.PKA12ENF",       # piyasa katılımcıları 12 ay enflasyon beklentisi
-    "brut_doviz_rezerv": "TP.AB.N07",                 # MB bilançosu, brüt döviz rezervleri (haftalık)
-    "net_uluslararasi_rezerv": "TP.AB.N06",           # MB bilançosu, net uluslararası rezervler (haftalık)
+EVDS_SERILER = {   # 22 Eyl keşfiyle doğrulandı — (kod, frekans). Frekans AÇIKÇA verilir:
+    # verilmezse borsapy haftalık serileri aylık ortalamaya çeviriyor (22 Eyl hatası).
+    "yabanci_hisse_net_haftalik": ("TP.MKNETHAR.M7", "weekly"),
+    "yabanci_dibs_net_haftalik": ("TP.MKNETHAR.M8", "weekly"),
+    "mevduat_tl_1ay": ("TP.TRY.MT01", "weekly"),
+    "mevduat_tl_3ay": ("TP.TRY.MT02", "weekly"),
+    "tufe_endeks": ("TP.TUKFIY2025.GENEL", "monthly"),
+    "pka_12ay_enflasyon": ("TP.ENFBEK.PKA12ENF", "monthly"),
+    "brut_doviz_rezerv": ("TP.AB.N07", "weekly"),
+    "net_uluslararasi_rezerv": ("TP.AB.N06", "weekly"),
 }
 EVDS_ESKI_ESIK = {"haftalik": 21, "aylik": 70}   # bu kadar gün yeni veri yoksa uyarı
 
-def _evds_frame(code, yil=2):
+def _evds_frame(code, yil=2, freq=None):
     start = (NOW - timedelta(days=365 * yil)).strftime("%Y-%m-%d")
-    df = bp.evds_series(code, start=start)
+    df = bp.evds_series(code, start=start, frequency=freq) if freq else bp.evds_series(code, start=start)
     df = df.to_frame() if isinstance(df, pd.Series) else df
     df = to_dt_index(df.copy())
     num = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
@@ -469,14 +478,14 @@ def pka_kur_beklentisi():
         sec = kur[kur[nc].astype(str).str.contains("12 ay", case=False)]
         if len(sec):
             row = sec.iloc[0]
-            ser = _evds_frame(row[cc])
+            ser = _evds_frame(row[cc], freq="monthly")
             return {"kod": row[cc], "ad": row[nc], "grup": grp, **_ozet(ser), "adaylar": adaylar_tum}
     raise ValueError("12 ay kur beklentisi bulunamadı; adaylar: " + "; ".join(adaylar_tum[:8]))
 
 def evds_resmi():
     out = {}
-    for ad, code in EVDS_SERILER.items():
-        ser = safe(f"evds_{ad}", lambda code=code: _evds_frame(code))
+    for ad, (code, freq) in EVDS_SERILER.items():
+        ser = safe(f"evds_{ad}", lambda code=code, freq=freq: _evds_frame(code, freq=freq))
         if ser is None:
             out[ad] = {"kod": code, "hata": "alınamadı"}
             continue
