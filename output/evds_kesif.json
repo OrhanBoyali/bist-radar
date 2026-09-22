@@ -1,0 +1,509 @@
+{
+ "zaman": "2026-09-22 14:17",
+ "yabanci_hisse_islemleri": {
+  "terim": "yurt dışı yerleşiklerin hisse senedi",
+  "sonuc": []
+ },
+ "yabanci_menkul_kiymet": {
+  "terim": "yurt dışı yerleşikler menkul kıymet",
+  "sonuc": [
+   {
+    "index": 0,
+    "hit_type": "datagroup",
+    "CODE": "bie_mknethar",
+    "NAME_TR": "Yurt Dışı Yerleşikler Menkul Kıymet Portföyü",
+    "NAME_EN": "Securities Portfolio Held By Non-Residents",
+    "CATEGORY_TR": "YURT DIŞI YERLEŞİKLER MENKUL KIYMET PORTFÖYÜ",
+    "FREQUENCY_STR": "HAFTALIK(CUMA)"
+   }
+  ]
+ },
+ "rezerv": {
+  "terim": "rezerv varlıklar",
+  "sonuc": [
+   {
+    "index": 0,
+    "hit_type": "series",
+    "CODE": "TP.UYPUCAYARSIV.K32",
+    "NAME_TR": "32 4. Rezerv varlıklar (milyon ABD doları) (Arşiv)",
+    "NAME_EN": "32 4. Reserve assets(Million USD) (Archive)",
+    "DATAGROUP_CODE": "bie_uypucayarsiv",
+    "DATAGROUP_TR": "Uluslararası Yatırım Pozisyonu (Arşiv)",
+    "FREQUENCY_STR": "ÜÇ AYLIK"
+   },
+   {
+    "index": 1,
+    "hit_type": "series",
+    "CODE": "TP.UYPUCAYARSIV.K35",
+    "NAME_TR": "35 4.3 IMF Nezdinde Rezerv Varlıklar (milyon ABD doları) (Arşiv)",
+    "NAME_EN": "35 4.3 Reserve position in the IMF(Million USD) (Archive)",
+    "DATAGROUP_CODE": "bie_uypucayarsiv",
+    "DATAGROUP_TR": "Uluslararası Yatırım Pozisyonu (Arşiv)",
+    "FREQUENCY_STR": "ÜÇ AYLIK"
+   },
+   {
+    "index": 2,
+    "hit_type": "series",
+    "CODE": "TP.UYPUCAYARSIV.K36",
+    "NAME_TR": "36 4.4 Diğer Rezerv Varlıkları (milyon ABD doları) (Arşiv)",
+    "NAME_EN": "36 4.4 Other reserve assets(Million USD) (Archive)",
+    "DATAGROUP_CODE": "bie_uypucayarsiv",
+    "DATAGROUP_TR": "Uluslararası Yatırım Pozisyonu (Arşiv)",
+    "FREQUENCY_STR": "ÜÇ AYLIK"
+   },
+   {
+    "index": 3,
+    "hit_type": "series",
+    "CODE": "TP.ODEAYRSUNUM6.Q204",
+    "NAME_TR": "3.5.Rezerv Varlıklar",
+    "NAME_EN": "3.5.Reserve Assets",
+    "DATAGROUP_CODE": "bie_odeayrsunum6",
+    "DATAGROUP_TR": "Ödemeler Dengesi-Ayrıntılı Sunum",
+    "FREQUENCY_STR": "AYLIK"
+   },
+   {
+    "index": 4,
+    "hit_type": "series",
+    "CODE": "TP.ODANA6.Q33",
+    "NAME_TR": "5.Rezerv Varlıklar",
+    "NAME_EN": "5.Reserve Assets",
+    "DATAGROUP_CODE": "bie_odana6",
+    "DATAGROUP_TR": "Ödemeler Dengesi-Analitik Sunum",
+    "FREQUENCY_STR": "AYLIK"
+   },
+   {
+    "index": 5,
+    "hit_type": "series",
+    "CODE": "TP.OD.Z34",
+    "NAME_TR": "E-14-Rezerv Varlıklar (Arşiv)",
+    "NAME_EN": "E-14-Reserve Assets (Archive)",
+    "DATAGROUP_CODE": "bie_odoz3",
+    "DATAGROUP_TR": "Ödemeler Dengesi Analitik Sunum (5.El Kitabı) (Arşiv)",
+    "FREQUENCY_STR": "AYLIK"
+   },
+   {
+    "index": 6,
+    "hit_type": "series",
+    "CODE": "TP.ODAYR5.Q194",
+    "NAME_TR": "II-B.4.Rezerv Varlıklar (Arşiv)",
+    "NAME_EN": "II-B.4.Reserve assets (Archive)",
+    "DATAGROUP_CODE": "bie_odayr5",
+    "DATAGROUP_TR": "Ödemeler Dengesi Ayrıntılı Sunum (5.El Kitabı) (Arşiv)",
+    "FREQUENCY_STR": "AYLIK"
+   },
+   {
+    "index": 7,
+    "hit_type": "series",
+    "CODE": "TP.ODEAYRSUNUMARSV.Q204",
+    "NAME_TR": "III-4.Rezerv Varlıklar (Arşiv)",
+    "NAME_EN": "III-4.Reserve assets (Archive)",
+    "DATAGROUP_CODE": "bie_odeayrsunumarsv",
+    "DATAGROUP_TR": "Ödemeler Dengesi Ayrıntılı Sunum (6. El Kitabı) (Arşiv)",
+    "FREQUENCY_STR": "AYLIK"
+   },
+   {
+    "index": 8,
+    "hit_type": "series",
+    "CODE": "TP.OD.Q181",
+    "NAME_TR": "II-B4.Rezerv Varlıklar (Arşiv)",
+    "NAME_EN": "II-B4.Reserve Assets (Archive)",
+    "DATAGROUP_CODE": "bie_odod3",
+    "DATAGROUP_TR": "Ödemeler Dengesi Ayrıntılı Sunum (Arşiv)",
+    "FREQUENCY_STR": "AYLIK"
+   },
+   {
+    "index": 9,
+    "hit_type": "series",
+    "CODE": "TP.UYPUCAY.K32",
+    "NAME_TR": "1.5.Rezerv Varlıklar",
+    "NAME_EN": "1.5.Reserve Assets",
+    "DATAGROUP_CODE": "bie_uypucay",
+    "DATAGROUP_TR": "Uluslararası Yatırım Pozisyonu",
+    "FREQUENCY_STR": "ÜÇ AYLIK"
+   },
+   {
+    "index": 10,
+    "hit_type": "series",
+    "CODE": "TP.UYPUCAY.K35",
+    "NAME_TR": "1.5.3.IMF Nezdinde Rezerv Varlıklar",
+    "NAME_EN": "1.5.3.Reserve position in the IMF",
+    "DATAGROUP_CODE": "bie_uypucay",
+    "DATAGROUP_TR": "Uluslararası Yatırım Pozisyonu",
+    "FREQUENCY_STR": "ÜÇ AYLIK"
+   },
+   {
+    "index": 11,
+    "hit_type": "series",
+    "CODE": "TP.UYPUCAY.K36",
+    "NAME_TR": "1.5.4.Diğer Rezerv Varlıkları",
+    "NAME_EN": "1.5.4.Other Reserve Assets",
+    "DATAGROUP_CODE": "bie_uypucay",
+    "DATAGROUP_TR": "Uluslararası Yatırım Pozisyonu",
+    "FREQUENCY_STR": "ÜÇ AYLIK"
+   },
+   {
+    "index": 12,
+    "hit_type": "series",
+    "CODE": "TP.AB.B4",
+    "NAME_TR": "1.Resmi Rezerv Varlıklar",
+    "NAME_EN": "1.Official Reserve Assets",
+    "DATAGROUP_CODE": "bie_abreserv",
+    "DATAGROUP_TR": "Toplam Uluslararası Rezervler",
+    "FREQUENCY_STR": "AYLIK"
+   },
+   {
+    "index": 13,
+    "hit_type": "series",
+    "CODE": "TP.REZVARPD.K1",
+    "NAME_TR": "1.1.Resmi Rezerv Varlıkları",
+    "NAME_EN": "1.1.Official Reserve Assets",
+    "DATAGROUP_CODE": "bie_ulusdovlkd",
+    "DATAGROUP_TR": "Uluslararası Rezervler ve Döviz Likiditesi Tablosu",
+    "FREQUENCY_STR": "AYLIK"
+   },
+   {
+    "index": 14,
+    "hit_type": "series",
+    "CODE": "TP.REZVARPD.K12",
+    "NAME_TR": "1.1.5.Diğer Rezerv Varlıkları",
+    "NAME_EN": "1.1.5.Other Reserve Assets",
+    "DATAGROUP_CODE": "bie_ulusdovlkd",
+    "DATAGROUP_TR": "Uluslararası Rezervler ve Döviz Likiditesi Tablosu",
+    "FREQUENCY_STR": "AYLIK"
+   },
+   {
+    "index": 15,
+    "hit_type": "series",
+    "CODE": "TP.REZVARPD.K17",
+    "NAME_TR": "1.2.1.Resmi Rezerv Varlıklarına Dahil Edilmeyen Menkul Kıymetler",
+    "NAME_EN": "1.2.1.Securities not Included in Official Reserve Assets",
+    "DATAGROUP_CODE": "bie_ulusdovlkd",
+    "DATAGROUP_TR": "Uluslararası Rezervler ve Döviz Likiditesi Tablosu",
+    "FREQUENCY_STR": "AYLIK"
+   },
+   {
+    "index": 16,
+    "hit_type": "series",
+    "CODE": "TP.REZVARPD.K18",
+    "NAME_TR": "1.2.2.Resmi Rezerv Varlıklarına Dahil Edilmeyen Mevduatlar",
+    "NAME_EN": "1.2.2.Deposits not Included in Official Reserve Assets",
+    "DATAGROUP_CODE": "bie_ulusdovlkd",
+    "DATAGROUP_TR": "Uluslararası Rezervler ve Döviz Likiditesi Tablosu",
+    "FREQUENCY_STR": "AYLIK"
+   },
+   {
+    "index": 17,
+    "hit_type": "series",
+    "CODE": "TP.REZVARPD.K19",
+    "NAME_TR": "1.2.3.Resmi Rezerv Varlıklarına Dahil Edilmeyen Krediler",
+    "NAME_EN": "1.2.3.Loans not Included in Official Reserve Assets",
+    "DATAGROUP_CODE": "bie_ulusdovlkd",
+    "DATAGROUP_TR": "Uluslararası Rezervler ve Döviz Likiditesi Tablosu",
+    "FREQUENCY_STR": "AYLIK"
+   },
+   {
+    "index": 18,
+    "hit_type": "series",
+    "CODE": "TP.REZVARPD.K20",
+    "NAME_TR": "1.2.4.Resmi Rezerv Varlıklarına Dahil Edilmeyen Mali Türevler",
+    "NAME_EN": "1.2.4.Financial Derivatives not Included in Official Reserve Assets",
+    "DATAGROUP_CODE": "bie_ulusdovlkd",
+    "DATAGROUP_TR": "Uluslararası Rezervler ve Döviz Likiditesi Tablosu",
+    "FREQUENCY_STR": "AYLIK"
+   },
+   {
+    "index": 19,
+    "hit_type": "series",
+    "CODE": "TP.REZVARPD.K21",
+    "NAME_TR": "1.2.5.Resmi Rezerv Varlıklarına Dahil Edilmeyen Altın",
+    "NAME_EN": "1.2.5.Gold not Included in Official Reserve Assets",
+    "DATAGROUP_CODE": "bie_ulusdovlkd",
+    "DATAGROUP_TR": "Uluslararası Rezervler ve Döviz Likiditesi Tablosu",
+    "FREQUENCY_STR": "AYLIK"
+   }
+  ]
+ },
+ "brut_rezerv": {
+  "terim": "brüt rezerv",
+  "sonuc": []
+ },
+ "piyasa_katilimcilari_anketi": {
+  "terim": "piyasa katılımcıları anketi",
+  "sonuc": [
+   {
+    "index": 0,
+    "hit_type": "datagroup",
+    "CODE": "bie_urbeka",
+    "NAME_TR": "Piyasa Katılımcıları Anketi Tanımsal İstatistikleri (15/8/2001 - 31/12/2012 Tarihleri Arası 15 Günlük Veriler (Arşiv)",
+    "NAME_EN": "Survey of Market Participants Descriptive Statistics (15 Days Data from 15/8/2001 to 31/12/2012 (Archive)",
+    "CATEGORY_TR": "PİYASA KATILIMCILARI ANKETİ (ARŞİV)",
+    "FREQUENCY_STR": "AYDA İKİ KEZ"
+   },
+   {
+    "index": 1,
+    "hit_type": "datagroup",
+    "CODE": "bie_bekodtufe",
+    "NAME_TR": "Piyasa Katılımcıları Anketi Tüketici Enflasyonu Beklentilerinin Olasılık Dağılımları (Arşiv)",
+    "NAME_EN": "Survey of Market Participants Probability Distributions of Consumer Inflation Expectations (Archive)",
+    "CATEGORY_TR": "PİYASA KATILIMCILARI ANKETİ (ARŞİV)",
+    "FREQUENCY_STR": "AYLIK"
+   }
+  ]
+ },
+ "beklenti_enflasyon": {
+  "terim": "12 ay sonrası TÜFE beklentisi",
+  "sonuc": []
+ },
+ "beklenti_kur": {
+  "terim": "12 ay sonrası döviz kuru beklentisi",
+  "sonuc": []
+ },
+ "mevduat_faizi": {
+  "terim": "mevduat faiz oranları",
+  "sonuc": [
+   {
+    "index": 0,
+    "hit_type": "datagroup",
+    "CODE": "bie_mt100h",
+    "NAME_TR": "Mevduat Faiz Oranları (Akım)",
+    "NAME_EN": "Interest Rates on Deposits (Flow Data)",
+    "CATEGORY_TR": "FAİZ VE KÂR PAYI İSTATİSTİKLERİ (AKIM)",
+    "FREQUENCY_STR": "HAFTALIK(CUMA)"
+   },
+   {
+    "index": 1,
+    "hit_type": "datagroup",
+    "CODE": "bie_mt210ags",
+    "NAME_TR": "Mevduat Faiz Oranları (Stok)",
+    "NAME_EN": "Interest Rates on Deposits (Stock Data)",
+    "CATEGORY_TR": "FAİZ VE KÂR PAYI İSTATİSTİKLERİ (STOK)",
+    "FREQUENCY_STR": "AYLIK"
+   }
+  ]
+ },
+ "tufe": {
+  "terim": "tüketici fiyat endeksi",
+  "sonuc": [
+   {
+    "index": 0,
+    "hit_type": "datagroup",
+    "CODE": "bie_itouge2023",
+    "NAME_TR": "İstanbul Tüketici Fiyat Endeksi",
+    "NAME_EN": "Istanbul Consumer Price Index",
+    "CATEGORY_TR": "GEÇİNME ENDEKSLERİ (İTO)",
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": null,
+    "DATAGROUP_TR": null
+   },
+   {
+    "index": 1,
+    "hit_type": "datagroup",
+    "CODE": "bie_imfcpind",
+    "NAME_TR": "IMF - Tüketici Fiyat Endeksi (2010=100)",
+    "NAME_EN": "IMF - Consumer Price Index (2010=100)",
+    "CATEGORY_TR": "ULUSLARARASI PARA FONU (IMF)",
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": null,
+    "DATAGROUP_TR": null
+   },
+   {
+    "index": 2,
+    "hit_type": "datagroup",
+    "CODE": "bie_tukfiy4",
+    "NAME_TR": "Tüketici Fiyat Endeksi (2003=100) (Arşiv) (Arşiv)",
+    "NAME_EN": "Consumer Price Index (2003=100) (Archive) (Archive) (Archive)",
+    "CATEGORY_TR": "FİYAT ENDEKSLERİ (ARŞİV)",
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": null,
+    "DATAGROUP_TR": null
+   },
+   {
+    "index": 3,
+    "hit_type": "datagroup",
+    "CODE": "bie_tukfiy2025",
+    "NAME_TR": "Tüketici Fiyat Endeksi (2025=100)",
+    "NAME_EN": "Consumer Price Index (2025=100)",
+    "CATEGORY_TR": "TÜKETİCİ FİYAT ENDEKSİ (TÜİK)",
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": null,
+    "DATAGROUP_TR": null
+   },
+   {
+    "index": 4,
+    "hit_type": "datagroup",
+    "CODE": "bie_tukfiy2003",
+    "NAME_TR": "Tüketici Fiyat Endeksi (Genel) (2003=100)",
+    "NAME_EN": "Consumer Price Index (General) (2003=100)",
+    "CATEGORY_TR": "TÜKETİCİ FİYAT ENDEKSİ (TÜİK)",
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": null,
+    "DATAGROUP_TR": null
+   },
+   {
+    "index": 5,
+    "hit_type": "series",
+    "CODE": "TP.IMFCPIND.DEU",
+    "NAME_TR": "Almanya (DEU) Tüketici Fiyat Endeksi (2010=100)",
+    "NAME_EN": "Germany (DEU) Consumer Price Index (2010=100)",
+    "CATEGORY_TR": null,
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": "bie_imfcpind",
+    "DATAGROUP_TR": "IMF - Tüketici Fiyat Endeksi (2010=100)"
+   },
+   {
+    "index": 6,
+    "hit_type": "series",
+    "CODE": "TP.IMFCPIND.USA",
+    "NAME_TR": "Amerika Birleşik Devletleri (USA) Tüketici Fiyat Endeksi (2010=100)",
+    "NAME_EN": "United States (USA) Consumer Price Index (2010=100)",
+    "CATEGORY_TR": null,
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": "bie_imfcpind",
+    "DATAGROUP_TR": "IMF - Tüketici Fiyat Endeksi (2010=100)"
+   },
+   {
+    "index": 7,
+    "hit_type": "series",
+    "CODE": "TP.IMFCPIND.ARG",
+    "NAME_TR": "Arjantin (ARG) Tüketici Fiyat Endeksi (2010=100)",
+    "NAME_EN": "Argentina (ARG) Consumer Price Index (2010=100)",
+    "CATEGORY_TR": null,
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": "bie_imfcpind",
+    "DATAGROUP_TR": "IMF - Tüketici Fiyat Endeksi (2010=100)"
+   },
+   {
+    "index": 8,
+    "hit_type": "series",
+    "CODE": "TP.IMFCPIND.ALB",
+    "NAME_TR": "Arnavutluk (ALB) Tüketici Fiyat Endeksi (2010=100)",
+    "NAME_EN": "Albania (ALB) Consumer Price Index (2010=100)",
+    "CATEGORY_TR": null,
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": "bie_imfcpind",
+    "DATAGROUP_TR": "IMF - Tüketici Fiyat Endeksi (2010=100)"
+   },
+   {
+    "index": 9,
+    "hit_type": "series",
+    "CODE": "TP.IMFCPIND.AUT",
+    "NAME_TR": "Avusturya (AUT) Tüketici Fiyat Endeksi (2010=100)",
+    "NAME_EN": "Austria (AUT) Consumer Price Index (2010=100)",
+    "CATEGORY_TR": null,
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": "bie_imfcpind",
+    "DATAGROUP_TR": "IMF - Tüketici Fiyat Endeksi (2010=100)"
+   },
+   {
+    "index": 10,
+    "hit_type": "series",
+    "CODE": "TP.IMFCPIND.AZE",
+    "NAME_TR": "Azerbaycan (AZE) Tüketici Fiyat Endeksi (2010=100)",
+    "NAME_EN": "Azerbaijan (AZE) Consumer Price Index (2010=100)",
+    "CATEGORY_TR": null,
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": "bie_imfcpind",
+    "DATAGROUP_TR": "IMF - Tüketici Fiyat Endeksi (2010=100)"
+   },
+   {
+    "index": 11,
+    "hit_type": "series",
+    "CODE": "TP.IMFCPIND.BHS",
+    "NAME_TR": "Bahamalar (BHS) Tüketici Fiyat Endeksi (2010=100)",
+    "NAME_EN": "Bahamas (BHS) Consumer Price Index (2010=100)",
+    "CATEGORY_TR": null,
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": "bie_imfcpind",
+    "DATAGROUP_TR": "IMF - Tüketici Fiyat Endeksi (2010=100)"
+   },
+   {
+    "index": 12,
+    "hit_type": "series",
+    "CODE": "TP.IMFCPIND.BLR",
+    "NAME_TR": "Belarus (BLR) Tüketici Fiyat Endeksi (2010=100)",
+    "NAME_EN": "Belarus (BLR) Consumer Price Index (2010=100)",
+    "CATEGORY_TR": null,
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": "bie_imfcpind",
+    "DATAGROUP_TR": "IMF - Tüketici Fiyat Endeksi (2010=100)"
+   },
+   {
+    "index": 13,
+    "hit_type": "series",
+    "CODE": "TP.IMFCPIND.BEL",
+    "NAME_TR": "Belçika (BEL) Tüketici Fiyat Endeksi (2010=100)",
+    "NAME_EN": "Belgium (BEL) Consumer Price Index (2010=100)",
+    "CATEGORY_TR": null,
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": "bie_imfcpind",
+    "DATAGROUP_TR": "IMF - Tüketici Fiyat Endeksi (2010=100)"
+   },
+   {
+    "index": 14,
+    "hit_type": "series",
+    "CODE": "TP.IMFCPIND.GBR",
+    "NAME_TR": "Birleşik Krallık (GBR) Tüketici Fiyat Endeksi (2010=100)",
+    "NAME_EN": "United Kingdom (GBR) Consumer Price Index (2010=100)",
+    "CATEGORY_TR": null,
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": "bie_imfcpind",
+    "DATAGROUP_TR": "IMF - Tüketici Fiyat Endeksi (2010=100)"
+   },
+   {
+    "index": 15,
+    "hit_type": "series",
+    "CODE": "TP.IMFCPIND.BOL",
+    "NAME_TR": "Bolivya (BOL) Tüketici Fiyat Endeksi (2010=100)",
+    "NAME_EN": "Bolivia (BOL) Consumer Price Index (2010=100)",
+    "CATEGORY_TR": null,
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": "bie_imfcpind",
+    "DATAGROUP_TR": "IMF - Tüketici Fiyat Endeksi (2010=100)"
+   },
+   {
+    "index": 16,
+    "hit_type": "series",
+    "CODE": "TP.IMFCPIND.BIH",
+    "NAME_TR": "Bosna-Hersek (BIH) Tüketici Fiyat Endeksi (2010=100)",
+    "NAME_EN": "Bosnia And Herzegovina (BIH) Consumer Price Index (2010=100)",
+    "CATEGORY_TR": null,
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": "bie_imfcpind",
+    "DATAGROUP_TR": "IMF - Tüketici Fiyat Endeksi (2010=100)"
+   },
+   {
+    "index": 17,
+    "hit_type": "series",
+    "CODE": "TP.IMFCPIND.BWA",
+    "NAME_TR": "Botsvana (BWA) Tüketici Fiyat Endeksi (2010=100)",
+    "NAME_EN": "Botswana (BWA) Consumer Price Index (2010=100)",
+    "CATEGORY_TR": null,
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": "bie_imfcpind",
+    "DATAGROUP_TR": "IMF - Tüketici Fiyat Endeksi (2010=100)"
+   },
+   {
+    "index": 18,
+    "hit_type": "series",
+    "CODE": "TP.IMFCPIND.BRA",
+    "NAME_TR": "Brezilya (BRA) Tüketici Fiyat Endeksi (2010=100)",
+    "NAME_EN": "Brazil (BRA) Consumer Price Index (2010=100)",
+    "CATEGORY_TR": null,
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": "bie_imfcpind",
+    "DATAGROUP_TR": "IMF - Tüketici Fiyat Endeksi (2010=100)"
+   },
+   {
+    "index": 19,
+    "hit_type": "series",
+    "CODE": "TP.IMFCPIND.BRN",
+    "NAME_TR": "Brunei (BRN) Tüketici Fiyat Endeksi (2010=100)",
+    "NAME_EN": "Brunei Darussalam (BRN) Consumer Price Index (2010=100)",
+    "CATEGORY_TR": null,
+    "FREQUENCY_STR": "AYLIK",
+    "DATAGROUP_CODE": "bie_imfcpind",
+    "DATAGROUP_TR": "IMF - Tüketici Fiyat Endeksi (2010=100)"
+   }
+  ]
+ }
+}
