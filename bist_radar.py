@@ -496,6 +496,53 @@ def evds_resmi():
     return out
 
 
+ARSIV_FILE = "output/gunluk_arsiv.csv"
+
+def gunluk_arsiv(R):
+    """Her iş günü akşam (18:00 sonrası ilk çalışmada) günün özetini tek satır ekler. Silinmez."""
+    if NOW.weekday() >= 5 or NOW.hour < 18:
+        return "saat değil"
+    T = R.get("tetikler") or {}
+    b = R.get("bist100") or {}
+    g = R.get("genislik") or {}
+    g30 = R.get("genislik_bist30") or {}
+    fx = R.get("doviz_altin") or {}
+    fon = R.get("fonlar") or {}
+    reel = T.get("reel_getiri") or {}
+    def fxl(k):
+        v = fx.get(k); return v.get("last") if isinstance(v, dict) else None
+    satir = {
+        "tarih": NOW.strftime("%Y-%m-%d"),
+        "bist100": b.get("son_fiyat"), "bist100_gun_pct": b.get("gunluk_degisim_pct"),
+        "rsi14": b.get("rsi14_anlik") or b.get("rsi14_tamamlanmis"),
+        "bist30": (R.get("bist30") or {}).get("son_fiyat"),
+        "banka_gun_pct": (R.get("sektor", {}).get("XBANK") or {}).get("gunluk_degisim_pct"),
+        "tum_yukselen_pct": g.get("yukselen_orani_pct"), "tum_taban": g.get("tabana_kilitli"),
+        "tum_medyan_pct": g.get("medyan_degisim_pct"), "bist30_yukselen_pct": g30.get("yukselen_orani_pct"),
+        "yapay_taban": T.get("yapay_taban_sinyali"), "kamu_alim_proxy": T.get("kamu_alim_proxy"),
+        "aofm": T.get("aofm"), "aofm_30g_puan": T.get("aofm_30g_degisim_puan"),
+        "politika_faizi": T.get("politika_faizi"),
+        "yabanci_ort_oran": (R.get("yabanci") or {}).get("bugun_ort_yabanci_orani"),
+        "yabanci_hisse_net_hafta": T.get("yabanci_hisse_net_son_hafta"),
+        "brut_rezerv_4h_pct": T.get("brut_rezerv_4hafta_pct"),
+        "tufe_aylik": T.get("tufe_aylik"), "dolar_makasi": T.get("dolar_makasi_puan"),
+        "usd": fxl("USD"), "gram_altin": fxl("gram-altin"), "brent": fxl("BRENT"),
+        "vix": T.get("vix"), "nasdaq_zirveden": T.get("nasdaq_zirveden_pct"),
+    }
+    for c in FUNDS:
+        satir[f"fiyat_{c}"] = (fon.get(c) or {}).get("fiyat")
+    for c in CEPHANE:
+        satir[f"reel_net_{c}"] = (reel.get(c) or {}).get("reel_net_pct")
+    yeni = pd.DataFrame([satir])
+    if os.path.exists(ARSIV_FILE):
+        eski = pd.read_csv(ARSIV_FILE)
+        eski = eski[eski["tarih"] != satir["tarih"]]          # aynı gün tekrar çalışırsa üzerine yaz
+        yeni = pd.concat([eski, yeni], ignore_index=True)
+    os.makedirs("output", exist_ok=True)
+    yeni.to_csv(ARSIV_FILE, index=False)
+    return f"{len(yeni)} gün kayıtlı"
+
+
 def find_monthly_cpi(obj):
     """Enflasyon çıktısında aylık TÜFE değişimini arar."""
     if isinstance(obj, dict):
@@ -706,6 +753,7 @@ def main():
     T["reel_getiri"] = reel
     T["reel_getiri_yontem"] = f"NET: getiri×(1-{STOPAJ_PP}) − aylık TÜFE; ALARM <{REEL_ALARM}, ACİL ≤{REEL_ACIL}"
     R["tetikler"] = T
+    R["arsiv"] = safe("gunluk_arsiv", lambda: gunluk_arsiv(R))
 
     # ---- SAĞLIK ----
     bad = {k: v for k, v in HEALTH.items() if v != "OK"}
