@@ -2,9 +2,10 @@ name: BIST Radar (günlük)
 
 on:
   schedule:
-    - cron: "0 5 * * 1-5"      # 08:00 TR — sabah kontrolü
-    - cron: "0 7-15 * * 1-5"   # 10:00-18:00 TR — saat başı
-    - cron: "45 15 * * 1-5"    # 18:45 TR — kapanış
+    # Saat başları GitHub'ın en yoğun anı → işler gecikiyor/atlanıyor. Dakikalar bilinçli kaydırıldı.
+    - cron: "17 5 * * 1-5"     # 08:17 TR — sabah kontrolü + fonlar
+    - cron: "17 7-15 * * 1-5"  # 10:17-18:17 TR — saatlik
+    - cron: "52 15 * * 1-5"    # 18:52 TR — kapanış + fonlar
   workflow_dispatch:
 
 permissions:
