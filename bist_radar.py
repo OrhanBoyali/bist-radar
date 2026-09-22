@@ -378,6 +378,50 @@ def evds_kesif():
     return "yazıldı"
 
 
+KESIF2_FILE = "output/evds_kesif2.json"
+KESIF2_GRUPLAR = {                      # 1. keşifte bulunan grupların içini aç
+    "yabanci_portfoy": "bie_mknethar",
+    "mevduat_faizi_akim": "bie_mt100h",
+    "tufe_2025": "bie_tukfiy2025",
+}
+KESIF2_TERIMLER = {                     # 1. keşifte bulunamayanlar, farklı kelimelerle
+    "haftalik_rezerv": "haftalık rezerv",
+    "brut_doviz_rezervi": "brüt döviz rezervleri",
+    "uluslararasi_rezervler": "uluslararası rezervler",
+    "katilimci": "piyasa katılımcıları",
+    "beklenti_anketi": "beklenti anketi",
+    "enflasyon_beklentisi": "enflasyon beklentisi",
+    "kur_beklentisi": "döviz kuru beklentisi",
+}
+
+def evds_kesif2():
+    """2. keşif, bir kerelik. Dosya varsa çalışmaz."""
+    if os.path.exists(KESIF2_FILE):
+        return "zaten var"
+    e = bp.EVDS()
+    out = {"zaman": NOW.strftime("%Y-%m-%d %H:%M")}
+    for ad, grup in KESIF2_GRUPLAR.items():
+        try:
+            out["grup_" + ad] = {"grup": grup, "seriler": J(e.series_in_group(grup).head(80))}
+        except Exception as ex:
+            out["grup_" + ad] = {"grup": grup, "hata": f"{type(ex).__name__}: {str(ex)[:150]}"}
+    for ad, terim in KESIF2_TERIMLER.items():
+        try:
+            out["ara_" + ad] = {"terim": terim, "sonuc": J(bp.evds_search(terim).head(25))}
+        except Exception as ex:
+            out["ara_" + ad] = {"terim": terim, "hata": f"{type(ex).__name__}: {str(ex)[:150]}"}
+    try:
+        dg = e.datagroups()
+        mask = dg.astype(str).apply(
+            lambda r: r.str.contains("Katılımcı|Beklenti|Rezerv", case=False, regex=True)).any(axis=1)
+        out["veri_gruplari_filtre"] = J(dg[mask].head(80))
+    except Exception as ex:
+        out["veri_gruplari_filtre"] = {"hata": f"{type(ex).__name__}: {str(ex)[:150]}"}
+    os.makedirs("output", exist_ok=True)
+    json.dump(out, open(KESIF2_FILE, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    return "yazıldı"
+
+
 def find_monthly_cpi(obj):
     """Enflasyon çıktısında aylık TÜFE değişimini arar."""
     if isinstance(obj, dict):
@@ -439,6 +483,7 @@ def main():
         R["tcmb"] = tcmb_block()
         if os.environ.get("EVDS_API_KEY"):
             R["evds_kesif"] = safe("evds_kesif", evds_kesif)
+            R["evds_kesif2"] = safe("evds_kesif2", evds_kesif2)
         R["enflasyon"] = safe("enflasyon", lambda: J(bp.Inflation().latest()))
         R["tahvil"] = safe("tahvil", lambda: J(bp.bonds()))
         R["doviz_altin"] = {k: safe(f"fx_{k}", lambda k=k: J(bp.FX(k).current)) for k in FX_LIST}
