@@ -348,6 +348,36 @@ def tcmb_block():
     return out
 
 
+KESIF_FILE = "output/evds_kesif.json"
+KESIF_TERIMLER = {
+    "yabanci_hisse_islemleri": "yurt dışı yerleşiklerin hisse senedi",
+    "yabanci_menkul_kiymet": "yurt dışı yerleşikler menkul kıymet",
+    "rezerv": "rezerv varlıklar",
+    "brut_rezerv": "brüt rezerv",
+    "piyasa_katilimcilari_anketi": "piyasa katılımcıları anketi",
+    "beklenti_enflasyon": "12 ay sonrası TÜFE beklentisi",
+    "beklenti_kur": "12 ay sonrası döviz kuru beklentisi",
+    "mevduat_faizi": "mevduat faiz oranları",
+    "tufe": "tüketici fiyat endeksi",
+}
+
+def evds_kesif():
+    """Bir kerelik: EVDS'de arama yapıp seri kodlarını dosyaya yazar. Dosya varsa çalışmaz.
+    Tekrar çalıştırmak için depodan output/evds_kesif.json silinir."""
+    if os.path.exists(KESIF_FILE):
+        return "zaten var"
+    out = {"zaman": NOW.strftime("%Y-%m-%d %H:%M")}
+    for ad, terim in KESIF_TERIMLER.items():
+        try:
+            df = bp.evds_search(terim)
+            out[ad] = {"terim": terim, "sonuc": J(df.head(20)) if hasattr(df, "head") else J(df)}
+        except Exception as e:
+            out[ad] = {"terim": terim, "hata": f"{type(e).__name__}: {str(e)[:150]}"}
+    os.makedirs("output", exist_ok=True)
+    json.dump(out, open(KESIF_FILE, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    return "yazıldı"
+
+
 def find_monthly_cpi(obj):
     """Enflasyon çıktısında aylık TÜFE değişimini arar."""
     if isinstance(obj, dict):
@@ -388,11 +418,12 @@ def main():
         g30 = safe("yahoo_yedek_genislik", breadth_yahoo)
     R["genislik_bist30"] = g30 or {"hata": "alınamadı"}
 
-    if bp and (gunluk_saat or not prev.get("yabanci")):
+    onceki_yab = prev.get("yabanci") or {}
+    if bp and (gunluk_saat or not onceki_yab or "hata" in onceki_yab):
         fr = safe("yabanci_orani", foreign_ratios)
         R["yabanci"] = safe("yabanci_trend", lambda: foreign_trend(fr)) if fr else {"hata": "yabancı oranı alınamadı"}
     else:
-        R["yabanci"] = prev.get("yabanci", {})
+        R["yabanci"] = onceki_yab
         if isinstance(R["yabanci"], dict):
             R["yabanci"] = {**R["yabanci"], "not_onbellek": "yabancı oranı günde 2 kez güncellenir"}
 
@@ -406,6 +437,8 @@ def main():
         R["fonlar_zamani"] = onceki + " (önbellek — TEFAS günde 1 fiyat)"
     if bp:
         R["tcmb"] = tcmb_block()
+        if os.environ.get("EVDS_API_KEY"):
+            R["evds_kesif"] = safe("evds_kesif", evds_kesif)
         R["enflasyon"] = safe("enflasyon", lambda: J(bp.Inflation().latest()))
         R["tahvil"] = safe("tahvil", lambda: J(bp.bonds()))
         R["doviz_altin"] = {k: safe(f"fx_{k}", lambda k=k: J(bp.FX(k).current)) for k in FX_LIST}
@@ -492,6 +525,12 @@ def main():
             T["aofm"] = a
             T["aofm_eksi_politika"] = round(a - pf, 2)
             T["ortulu_para_politikasi"] = ("SIKILAŞMA" if a - pf > 1 else ("GEVŞEME" if a - pf < -1 else "NÖTR"))
+            a30 = (tc.get("aofm") or {}).get("30g_once")
+            if a30 is not None:
+                d30 = round(a - a30, 2)
+                T["aofm_30g_degisim_puan"] = d30
+                T["aofm_30g_yon"] = ("GEVŞEME — fon getirileri önümüzdeki haftalarda düşer" if d30 <= -1 else
+                                     ("SIKILAŞMA — fon getirileri önümüzdeki haftalarda artar" if d30 >= 1 else "SABİT"))
     except Exception as e:
         T["tcmb_tetik_hata"] = str(e)[:120]
 
