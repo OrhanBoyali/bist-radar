@@ -422,6 +422,80 @@ def evds_kesif2():
     return "yazıldı"
 
 
+EVDS_SERILER = {   # 22 Eyl keşfiyle doğrulandı
+    "yabanci_hisse_net_haftalik": "TP.MKNETHAR.M7",   # yurt dışı yerleşik net değişim, hisse
+    "yabanci_dibs_net_haftalik": "TP.MKNETHAR.M8",    # yurt dışı yerleşik net değişim, DİBS
+    "mevduat_tl_1ay": "TP.TRY.MT01",                  # 1 aya kadar TL mevduat, akım %
+    "mevduat_tl_3ay": "TP.TRY.MT02",                  # 3 aya kadar TL mevduat, akım %
+    "tufe_endeks": "TP.TUKFIY2025.GENEL",             # TÜİK TÜFE 2025=100
+    "pka_12ay_enflasyon": "TP.ENFBEK.PKA12ENF",       # piyasa katılımcıları 12 ay enflasyon beklentisi
+    "brut_doviz_rezerv": "TP.AB.N07",                 # MB bilançosu, brüt döviz rezervleri (haftalık)
+    "net_uluslararasi_rezerv": "TP.AB.N06",           # MB bilançosu, net uluslararası rezervler (haftalık)
+}
+EVDS_ESKI_ESIK = {"haftalik": 21, "aylik": 70}   # bu kadar gün yeni veri yoksa uyarı
+
+def _evds_frame(code, yil=2):
+    start = (NOW - timedelta(days=365 * yil)).strftime("%Y-%m-%d")
+    df = bp.evds_series(code, start=start)
+    df = df.to_frame() if isinstance(df, pd.Series) else df
+    df = to_dt_index(df.copy())
+    num = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
+    if not num:
+        raise ValueError(f"{code}: sayısal sütun yok {list(df.columns)[:5]}")
+    ser = df[num[0]].dropna()
+    if ser.empty:
+        raise ValueError(f"{code}: boş seri")
+    return ser
+
+def _ozet(ser, n=6):
+    return {"son": J(ser.iloc[-1]), "tarih": ser.index[-1].strftime("%Y-%m-%d"),
+            "onceki": J(ser.iloc[-2]) if len(ser) > 1 else None,
+            "veri_yasi_gun": (NOW.date() - ser.index[-1].date()).days,
+            "son_gozlemler": [{"t": d.strftime("%Y-%m-%d"), "v": J(v)} for d, v in ser.tail(n).items()]}
+
+def pka_kur_beklentisi():
+    """Kur beklentisi serisini grup içinden adla bulur; seçimi ve adayları yazar (doğrulama için)."""
+    e = bp.EVDS()
+    adaylar_tum = []
+    for grp in ("bie_pkauo", "bie_urbek"):
+        try:
+            df = e.series_in_group(grp)
+        except Exception:
+            continue
+        nc = next(c for c in df.columns if str(c).upper() == "SERIE_NAME")
+        cc = next(c for c in df.columns if str(c).upper() == "SERIE_CODE")
+        kur = df[df[nc].astype(str).str.contains("kur|dolar|USD", case=False, regex=True)]
+        adaylar_tum += [f"{r[cc]} | {r[nc]}" for _, r in kur.head(12).iterrows()]
+        sec = kur[kur[nc].astype(str).str.contains("12 ay", case=False)]
+        if len(sec):
+            row = sec.iloc[0]
+            ser = _evds_frame(row[cc])
+            return {"kod": row[cc], "ad": row[nc], "grup": grp, **_ozet(ser), "adaylar": adaylar_tum}
+    raise ValueError("12 ay kur beklentisi bulunamadı; adaylar: " + "; ".join(adaylar_tum[:8]))
+
+def evds_resmi():
+    out = {}
+    for ad, code in EVDS_SERILER.items():
+        ser = safe(f"evds_{ad}", lambda code=code: _evds_frame(code))
+        if ser is None:
+            out[ad] = {"kod": code, "hata": "alınamadı"}
+            continue
+        o = {"kod": code, **_ozet(ser)}
+        if ad == "tufe_endeks" and len(ser) >= 13:
+            o["aylik_pct"] = pct(ser.iloc[-1], ser.iloc[-2])
+            o["yillik_pct"] = pct(ser.iloc[-1], ser.iloc[-13])
+        if "rezerv" in ad and len(ser) >= 5:
+            o["4hafta_degisim_pct"] = pct(ser.iloc[-1], ser.iloc[-5])
+        if ad.startswith("yabanci_"):
+            o["son_4_hafta_toplam"] = J(ser.tail(4).sum())
+        esik = EVDS_ESKI_ESIK["aylik"] if ad in ("tufe_endeks", "pka_12ay_enflasyon") else EVDS_ESKI_ESIK["haftalik"]
+        if o["veri_yasi_gun"] > esik:
+            HEALTH[f"evds_{ad}"] = f"UYARI: son veri {o['veri_yasi_gun']} gün önce ({code}) — seri güncellenmiyor olabilir"
+        out[ad] = o
+    out["pka_kur_beklentisi"] = safe("evds_pka_kur", pka_kur_beklentisi) or {"hata": "alınamadı"}
+    return out
+
+
 def find_monthly_cpi(obj):
     """Enflasyon çıktısında aylık TÜFE değişimini arar."""
     if isinstance(obj, dict):
@@ -482,8 +556,12 @@ def main():
     if bp:
         R["tcmb"] = tcmb_block()
         if os.environ.get("EVDS_API_KEY"):
-            R["evds_kesif"] = safe("evds_kesif", evds_kesif)
-            R["evds_kesif2"] = safe("evds_kesif2", evds_kesif2)
+            if gunluk_saat or not prev.get("evds_resmi"):
+                R["evds_resmi"] = evds_resmi()
+                R["evds_resmi_zamani"] = NOW.strftime("%Y-%m-%d %H:%M")
+            else:
+                R["evds_resmi"] = prev["evds_resmi"]
+                R["evds_resmi_zamani"] = str(prev.get("evds_resmi_zamani", "")).split(" (önbellek")[0] + " (önbellek)"
         R["enflasyon"] = safe("enflasyon", lambda: J(bp.Inflation().latest()))
         R["tahvil"] = safe("tahvil", lambda: J(bp.bonds()))
         R["doviz_altin"] = {k: safe(f"fx_{k}", lambda k=k: J(bp.FX(k).current)) for k in FX_LIST}
@@ -588,9 +666,34 @@ def main():
     T["fon_kitlesel_cikis_alarm"] = akis_alarm   # Tera/Pusula dersi: erken uyarı
 
     # Reel getiri (Blok 5)
-    tufe = find_monthly_cpi(R.get("enflasyon"))
-    T["tufe_aylik"] = tufe if tufe is not None else TUFE_AYLIK_MANUEL
-    T["tufe_kaynak"] = "otomatik" if tufe is not None else "MANUEL (betikteki sabit)"
+    ev = R.get("evds_resmi") or {}
+    tu = ev.get("tufe_endeks") or {}
+    if tu.get("aylik_pct") is not None:
+        T["tufe_aylik"], T["tufe_kaynak"] = tu["aylik_pct"], f"TÜİK resmi (EVDS, {tu.get('tarih')})"
+        T["tufe_yillik"] = tu.get("yillik_pct")
+    else:
+        tufe = find_monthly_cpi(R.get("enflasyon"))
+        T["tufe_aylik"] = tufe if tufe is not None else TUFE_AYLIK_MANUEL
+        T["tufe_kaynak"] = "borsapy enflasyon" if tufe is not None else "MANUEL (betikteki sabit)"
+    try:
+        yh = ev.get("yabanci_hisse_net_haftalik") or {}
+        yd = ev.get("yabanci_dibs_net_haftalik") or {}
+        T["yabanci_hisse_net_son_hafta"] = yh.get("son"); T["yabanci_hisse_net_4hafta"] = yh.get("son_4_hafta_toplam")
+        T["yabanci_dibs_net_4hafta"] = yd.get("son_4_hafta_toplam"); T["yabanci_veri_tarihi"] = yh.get("tarih")
+        T["pka_12ay_enflasyon_beklentisi"] = (ev.get("pka_12ay_enflasyon") or {}).get("son")
+        T["brut_rezerv_4hafta_pct"] = (ev.get("brut_doviz_rezerv") or {}).get("4hafta_degisim_pct")
+        T["mevduat_tl_1ay_brut"] = (ev.get("mevduat_tl_1ay") or {}).get("son")
+        T["mevduat_tl_3ay_brut"] = (ev.get("mevduat_tl_3ay") or {}).get("son")
+        kb = (ev.get("pka_kur_beklentisi") or {}).get("son")
+        usd = ((R.get("doviz_altin") or {}).get("USD") or {}).get("last")
+        if kb is not None and usd:
+            artis = pct(kb, usd) if kb > 5 else kb          # seviye (TL) ise spota göre %, değilse zaten %
+            T["beklenen_kur_artisi_12ay_pct"] = artis
+            pf = POLITIKA_FAIZI["oran"]
+            T["dolar_makasi_puan"] = round(pf - artis, 2)
+            T["dolar_gecis_tetik"] = bool(pf - artis < 8)
+    except Exception as e:
+        T["evds_tetik_hata"] = str(e)[:150]
     reel = {}
     for c, fb in (R.get("fonlar") or {}).items():
         if c in CEPHANE and fb and fb.get("getiri_30g_pct") is not None:
