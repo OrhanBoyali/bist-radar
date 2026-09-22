@@ -380,7 +380,8 @@ def main():
         R["fonlar_zamani"] = NOW.strftime("%Y-%m-%d %H:%M")
     elif prev.get("fonlar"):
         R["fonlar"] = prev["fonlar"]
-        R["fonlar_zamani"] = prev.get("fonlar_zamani", "önceki çalışma") + " (önbellek — TEFAS günde 1 fiyat)"
+        onceki = str(prev.get("fonlar_zamani", "önceki çalışma")).split(" (önbellek")[0]
+        R["fonlar_zamani"] = onceki + " (önbellek — TEFAS günde 1 fiyat)"
     if bp:
         R["tcmb"] = tcmb_block()
         R["enflasyon"] = safe("enflasyon", lambda: J(bp.Inflation().latest()))
@@ -439,7 +440,14 @@ def main():
         if g.get("yukselen_orani_pct") is not None and g30.get("yukselen_orani_pct") is not None:
             fark = round(g30["yukselen_orani_pct"] - g["yukselen_orani_pct"], 1)
             T["generaller_eksi_ordu_puan"] = fark
-            T["yapay_taban_sinyali"] = bool(fark > 30 or (g.get("tabana_kilitli") or 0) >= 15)
+            taban = g.get("tabana_kilitli") or 0
+            medyan = g.get("medyan_degisim_pct")
+            genel_zayif = medyan is not None and medyan < -1.0
+            T["yapay_taban_sinyali"] = bool(fark > 30 or (taban >= 15 and genel_zayif))
+            T["yapay_taban_gerekce"] = ("generaller-ordu farkı >30 puan" if fark > 30 else
+                                        ("çok hisse tabanda VE medyan hisse < -%1" if (taban >= 15 and genel_zayif) else
+                                         ("tabanda çok hisse var ama genel piyasa zayıf değil — muhtemelen tasfiye hisseleri"
+                                          if taban >= 15 else "yok")))
         T["yabanci_1hafta_puan"] = R.get("yabanci", {}).get("1hafta_degisim_puan")
         k = R.get("kuresel", {})
         T["nasdaq_zirveden_pct"] = k.get("nasdaq", {}).get("zirveden_pct")
