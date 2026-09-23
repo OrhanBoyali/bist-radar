@@ -1,6 +1,6 @@
 {
  "surum": "v3",
- "uretim_zamani_tr": "2026-09-22 22:18:37",
+ "uretim_zamani_tr": "2026-09-23 08:17:38",
  "not": "Kişisel veri yok. BIST verisi ~15 dk gecikmeli. Günlük göstergeler tamamlanmış barlarla.",
  "bist100": {
   "kaynak": "borsapy",
@@ -219,29 +219,28 @@
   "medyan_degisim_pct": -0.31
  },
  "yabanci": {
-  "bugun_ort_yabanci_orani": 31.943,
-  "gecmis_gun_sayisi": 1,
-  "not": "1 haftalık geçmiş birikiyor",
-  "not_onbellek": "yabancı oranı günde 2 kez güncellenir"
+  "bugun_ort_yabanci_orani": 31.9777,
+  "gecmis_gun_sayisi": 2,
+  "not": "1 haftalık geçmiş birikiyor"
  },
  "fonlar": {
   "YLB": {
-   "fiyat": 1.8773,
-   "fiyat_tarihi": "2026-09-22",
+   "fiyat": 0.0,
+   "fiyat_tarihi": "2026-09-23",
    "akis": {
     "buyukluk_not": "veri boş",
     "yatirimci_not": "veri boş"
    },
-   "gunluk_getiri_pct": 0.09,
-   "getiri_30g_pct": 3.2,
+   "gunluk_getiri_pct": -100.0,
+   "getiri_30g_pct": -100.0,
    "bilgi": {
     "name": "YAPI KREDİ PORTFÖY PARA PİYASASI FONU",
-    "fund_size": 93852726511.89,
-    "investor_count": 358853,
+    "fund_size": 0.0,
+    "investor_count": 358780,
     "category": "Para Piyasası Fonu",
     "risk_value": 1,
-    "daily_return": 0.0922,
-    "category_rank": 58,
+    "daily_return": -100,
+    "category_rank": 75,
     "buy_valor": null,
     "sell_valor": null
    },
@@ -249,26 +248,26 @@
     "applied_fee": 1.48,
     "prospectus_fee": 1.48,
     "max_expense_ratio": 3.65,
-    "annual_return": 45.75
+    "annual_return": 0
    }
   },
   "IJV": {
-   "fiyat": 5.8236,
-   "fiyat_tarihi": "2026-09-22",
+   "fiyat": 0.0,
+   "fiyat_tarihi": "2026-09-23",
    "akis": {
     "buyukluk_not": "veri boş",
     "yatirimci_not": "veri boş"
    },
-   "gunluk_getiri_pct": 0.1,
-   "getiri_30g_pct": 3.37,
+   "gunluk_getiri_pct": -100.0,
+   "getiri_30g_pct": -100.0,
    "bilgi": {
     "name": "İSTANBUL PORTFÖY BİRİNCİ PARA PİYASASI (TL) FONU",
-    "fund_size": 3209372732.98,
-    "investor_count": 2478,
+    "fund_size": 0.0,
+    "investor_count": 2446,
     "category": "Para Piyasası Fonu",
     "risk_value": 1,
-    "daily_return": 0.1018,
-    "category_rank": 18,
+    "daily_return": -100,
+    "category_rank": 63,
     "buy_valor": 0,
     "sell_valor": 0
    },
@@ -276,26 +275,26 @@
     "applied_fee": 1.05,
     "prospectus_fee": 0.0,
     "max_expense_ratio": 1.65,
-    "annual_return": 47.19
+    "annual_return": 0
    }
   },
   "DLY": {
-   "fiyat": 6.2668,
-   "fiyat_tarihi": "2026-09-22",
+   "fiyat": 6.274,
+   "fiyat_tarihi": "2026-09-23",
    "akis": {
     "buyukluk_not": "veri boş",
     "yatirimci_not": "veri boş"
    },
-   "gunluk_getiri_pct": 0.09,
-   "getiri_30g_pct": 3.15,
+   "gunluk_getiri_pct": 0.11,
+   "getiri_30g_pct": 2.93,
    "bilgi": {
     "name": "DENİZ PORTFÖY PARA PİYASASI (TL) FONU",
-    "fund_size": 59950111745.53,
-    "investor_count": 306733,
+    "fund_size": 59640225259.23,
+    "investor_count": 306293,
     "category": "Para Piyasası Fonu",
     "risk_value": 1,
-    "daily_return": 0.0855,
-    "category_rank": 51,
+    "daily_return": 0.1145,
+    "category_rank": 39,
     "buy_valor": 0,
     "sell_valor": 0
    },
@@ -303,26 +302,26 @@
     "applied_fee": 1.45,
     "prospectus_fee": 0.0,
     "max_expense_ratio": 1.65,
-    "annual_return": 45.88
+    "annual_return": 45.89
    }
   },
   "TIE": {
-   "fiyat": 0.7556,
-   "fiyat_tarihi": "2026-09-22",
+   "fiyat": 0.0,
+   "fiyat_tarihi": "2026-09-23",
    "akis": {
     "buyukluk_not": "veri boş",
     "yatirimci_not": "veri boş"
    },
-   "gunluk_getiri_pct": 1.21,
-   "getiri_30g_pct": -0.55,
+   "gunluk_getiri_pct": -100.0,
+   "getiri_30g_pct": -100.0,
    "bilgi": {
     "name": "İŞ PORTFÖY BIST 30 ENDEKSİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)",
-    "fund_size": 2065872487.36,
-    "investor_count": 20449,
+    "fund_size": 0.0,
+    "investor_count": 20362,
     "category": "Hisse Senedi Fonu",
     "risk_value": 6,
-    "daily_return": 1.2149,
-    "category_rank": 45,
+    "daily_return": -100,
+    "category_rank": 159,
     "buy_valor": 1,
     "sell_valor": 2
    },
@@ -330,26 +329,26 @@
     "applied_fee": 1.9,
     "prospectus_fee": 0.0,
     "max_expense_ratio": 2.19,
-    "annual_return": 32.95
+    "annual_return": 0
    }
   },
   "AKU": {
-   "fiyat": 0.9735,
-   "fiyat_tarihi": "2026-09-22",
+   "fiyat": 0.9662,
+   "fiyat_tarihi": "2026-09-23",
    "akis": {
     "buyukluk_not": "veri boş",
     "yatirimci_not": "veri boş"
    },
-   "gunluk_getiri_pct": 1.51,
-   "getiri_30g_pct": -0.05,
+   "gunluk_getiri_pct": -0.75,
+   "getiri_30g_pct": -1.96,
    "bilgi": {
     "name": "AK PORTFÖY BIST 30 ENDEKSİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)",
-    "fund_size": 2508499642.93,
-    "investor_count": 18211,
+    "fund_size": 2466733651.15,
+    "investor_count": 18175,
     "category": "Hisse Senedi Fonu",
     "risk_value": 6,
-    "daily_return": 1.5068,
-    "category_rank": 28,
+    "daily_return": -0.7534,
+    "category_rank": 19,
     "buy_valor": 1,
     "sell_valor": 2
    },
@@ -357,11 +356,11 @@
     "applied_fee": 2.0,
     "prospectus_fee": 2.0,
     "max_expense_ratio": 2.56,
-    "annual_return": 36.2
+    "annual_return": 33.03
    }
   }
  },
- "fonlar_zamani": "2026-09-22 18:52 (önbellek — TEFAS günde 1 fiyat)",
+ "fonlar_zamani": "2026-09-23 08:17",
  "tcmb": {
   "politika_faizi": {
    "oran": 37.0,
@@ -369,7 +368,7 @@
    "sonraki_ppk": "2026-10-22",
    "kaynak": "MANUEL (PPK sonrası güncellenir)"
   },
-  "ppk_kalan_gun": 30,
+  "ppk_kalan_gun": 29,
   "aofm": {
    "oran": 37.0,
    "tarih": "2026-09-22",
@@ -383,7 +382,7 @@
    "son": 277.67,
    "tarih": "2026-09-11",
    "onceki": -647.63,
-   "veri_yasi_gun": 11,
+   "veri_yasi_gun": 12,
    "son_gozlemler": [
     {
      "t": "2026-08-07",
@@ -417,7 +416,7 @@
    "son": 151.15,
    "tarih": "2026-09-11",
    "onceki": 156.72,
-   "veri_yasi_gun": 11,
+   "veri_yasi_gun": 12,
    "son_gozlemler": [
     {
      "t": "2026-08-07",
@@ -451,7 +450,7 @@
    "son": 43.92,
    "tarih": "2026-09-11",
    "onceki": 44.48,
-   "veri_yasi_gun": 11,
+   "veri_yasi_gun": 12,
    "son_gozlemler": [
     {
      "t": "2026-08-07",
@@ -484,7 +483,7 @@
    "son": 43.9,
    "tarih": "2026-09-11",
    "onceki": 44.37,
-   "veri_yasi_gun": 11,
+   "veri_yasi_gun": 12,
    "son_gozlemler": [
     {
      "t": "2026-08-07",
@@ -517,7 +516,7 @@
    "son": 134.75,
    "tarih": "2026-08-01",
    "onceki": 132.31,
-   "veri_yasi_gun": 52,
+   "veri_yasi_gun": 53,
    "son_gozlemler": [
     {
      "t": "2026-03-01",
@@ -552,7 +551,7 @@
    "son": 23.69,
    "tarih": "2026-08-01",
    "onceki": 23.95,
-   "veri_yasi_gun": 52,
+   "veri_yasi_gun": 53,
    "son_gozlemler": [
     {
      "t": "2026-03-01",
@@ -585,7 +584,7 @@
    "son": 8671111862.0,
    "tarih": "2026-09-11",
    "onceki": 8905210105.0,
-   "veri_yasi_gun": 11,
+   "veri_yasi_gun": 12,
    "son_gozlemler": [
     {
      "t": "2026-08-07",
@@ -619,7 +618,7 @@
    "son": 3013427584.0,
    "tarih": "2026-09-11",
    "onceki": 3166251007.0,
-   "veri_yasi_gun": 11,
+   "veri_yasi_gun": 12,
    "son_gozlemler": [
     {
      "t": "2026-08-07",
@@ -655,7 +654,7 @@
    "son": 58.6,
    "tarih": "2026-09-01",
    "onceki": 57.43,
-   "veri_yasi_gun": 21,
+   "veri_yasi_gun": 22,
    "son_gozlemler": [
     {
      "t": "2026-04-01",
@@ -689,7 +688,7 @@
    ]
   }
  },
- "evds_resmi_zamani": "2026-09-22 18:52 (önbellek)",
+ "evds_resmi_zamani": "2026-09-23 08:17",
  "enflasyon": {
   "date": "2026-08-01",
   "year_month": "08-2026",
@@ -726,72 +725,72 @@
  "doviz_altin": {
   "USD": {
    "symbol": "USD",
-   "last": 48.8155,
-   "open": 48.8089,
-   "high": 48.9326,
-   "low": 48.7775,
-   "update_time": "2026-09-21T00:00:00"
+   "last": 48.8189,
+   "open": 48.8311,
+   "high": 48.9178,
+   "low": 48.7831,
+   "update_time": "2026-09-22T00:00:00"
   },
   "EUR": {
    "symbol": "EUR",
-   "last": 56.0372,
-   "open": 56.1346,
-   "high": 56.2086,
-   "low": 55.984,
-   "update_time": "2026-09-21T00:00:00"
+   "last": 55.9562,
+   "open": 56.0377,
+   "high": 56.1394,
+   "low": 55.8398,
+   "update_time": "2026-09-22T00:00:00"
   },
   "gram-altin": {
    "symbol": "gram-altin",
-   "last": 6812.904,
-   "open": 6865.9,
-   "high": 6876.543,
-   "low": 6783.14,
-   "update_time": "2026-09-21T00:00:00"
+   "last": 6837.282,
+   "open": 6813.202,
+   "high": 6868.615,
+   "low": 6736.483,
+   "update_time": "2026-09-22T00:00:00"
   },
   "ceyrek-altin": {
    "symbol": "ceyrek-altin",
-   "last": 11214.6707,
-   "open": 11298.3201,
-   "high": 11323.3001,
-   "low": 11158.8314,
-   "update_time": "2026-09-21T00:00:00"
+   "last": 11251.5473,
+   "open": 11214.6707,
+   "high": 11300.1925,
+   "low": 11082.9031,
+   "update_time": "2026-09-22T00:00:00"
   },
   "yarim-altin": {
    "symbol": "yarim-altin",
-   "last": 22463.4286,
-   "open": 22630.9815,
-   "high": 22681.0176,
-   "low": 22351.5802,
-   "update_time": "2026-09-21T00:00:00"
+   "last": 22537.2937,
+   "open": 22463.4286,
+   "high": 22634.7322,
+   "low": 22199.4928,
+   "update_time": "2026-09-22T00:00:00"
   },
   "tam-altin": {
    "symbol": "tam-altin",
-   "last": 44722.3343,
-   "open": 45055.9147,
-   "high": 45155.5313,
-   "low": 44499.6558,
-   "update_time": "2026-09-21T00:00:00"
+   "last": 44869.3921,
+   "open": 44722.3343,
+   "high": 45063.3818,
+   "low": 44196.8658,
+   "update_time": "2026-09-22T00:00:00"
   },
   "BRENT": {
    "symbol": "BRENT",
-   "last": 100.09,
-   "open": 104.86,
-   "high": 104.86,
-   "low": 95.79,
-   "update_time": "2026-09-21T00:00:00"
+   "last": 98.68,
+   "open": 100.09,
+   "high": 102.33,
+   "low": 94.22,
+   "update_time": "2026-09-22T00:00:00"
   }
  },
  "takvim_tr": [
   {
    "index": 0,
-   "Date": "2026-09-22T00:00:00",
-   "Time": "10:00",
+   "Date": "2026-09-24T00:00:00",
+   "Time": "14:30",
    "Country": "Türkiye",
-   "Importance": "high",
-   "Event": "Tüketici Güveni (-)",
-   "Actual": "91,9",
+   "Importance": "mid",
+   "Event": "Döviz Rezervleri (-)",
+   "Actual": null,
    "Forecast": null,
-   "Previous": "90,8",
+   "Previous": null,
    "Period": "-"
   }
  ],
@@ -810,106 +809,106 @@
   }
  ],
  "gram_altin_1y": {
-  "son": 6812.904,
+  "son": 6837.282,
   "zirve_1y": 7549.471,
-  "zirveden_pct": -9.76
+  "zirveden_pct": -9.43
  },
  "kuresel": {
   "sp500": {
    "kaynak": "yahoo",
-   "son_bar_tarihi": "2026-09-22",
+   "son_bar_tarihi": "2026-09-21",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 7771.9199,
-   "gunluk_degisim_pct": 0.09,
-   "rsi14_tamamlanmis": 59.7529,
+   "son_fiyat": 7764.7002,
+   "gunluk_degisim_pct": 1.49,
+   "rsi14_tamamlanmis": 59.2768,
    "rsi14_anlik": null,
-   "atr14": 67.3883,
+   "atr14": 70.5774,
    "52h_zirve_kapanis": 7798.9902,
-   "zirveden_pct": -0.35,
-   "haftalik_degisim_pct": 2.45,
-   "aylik_degisim_pct": 1.27,
-   "gun_ici_dusuk": 7756.2598,
-   "gun_ici_yuksek": 7782.1899
+   "zirveden_pct": -0.44,
+   "haftalik_degisim_pct": 1.9,
+   "aylik_degisim_pct": 1.62,
+   "gun_ici_dusuk": 7691.1899,
+   "gun_ici_yuksek": 7779.2202
   },
   "nasdaq": {
    "kaynak": "yahoo",
-   "son_bar_tarihi": "2026-09-22",
+   "son_bar_tarihi": "2026-09-21",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 27254.4121,
-   "gunluk_degisim_pct": 0.49,
-   "rsi14_tamamlanmis": 65.9039,
+   "son_fiyat": 27122.0898,
+   "gunluk_degisim_pct": 2.26,
+   "rsi14_tamamlanmis": 64.3279,
    "rsi14_anlik": null,
-   "atr14": 326.3177,
-   "52h_zirve_kapanis": 27254.4121,
+   "atr14": 339.8318,
+   "52h_zirve_kapanis": 27122.0898,
    "zirveden_pct": 0.0,
-   "haftalik_degisim_pct": 4.9,
-   "aylik_degisim_pct": 4.1,
-   "gun_ici_dusuk": 27161.1973,
-   "gun_ici_yuksek": 27272.7246
+   "haftalik_degisim_pct": 3.57,
+   "aylik_degisim_pct": 4.05,
+   "gun_ici_dusuk": 26707.4199,
+   "gun_ici_yuksek": 27183.9297
   },
   "vix": {
    "kaynak": "yahoo",
-   "son_bar_tarihi": "2026-09-22",
+   "son_bar_tarihi": "2026-09-21",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 14.21,
-   "gunluk_degisim_pct": -4.44,
-   "rsi14_tamamlanmis": 42.8102,
+   "son_fiyat": 14.87,
+   "gunluk_degisim_pct": 0.41,
+   "rsi14_tamamlanmis": 45.433,
    "rsi14_anlik": null,
-   "atr14": 1.3486,
+   "atr14": 1.3939,
    "52h_zirve_kapanis": 31.05,
-   "zirveden_pct": -54.24,
-   "haftalik_degisim_pct": -17.38,
-   "aylik_degisim_pct": -10.35,
-   "gun_ici_dusuk": 14.19,
-   "gun_ici_yuksek": 14.95
+   "zirveden_pct": -52.11,
+   "haftalik_degisim_pct": -13.04,
+   "aylik_degisim_pct": -1.72,
+   "gun_ici_dusuk": 14.6,
+   "gun_ici_yuksek": 15.13
   },
   "dolar_endeksi": {
    "kaynak": "yahoo",
-   "son_bar_tarihi": "2026-09-22",
+   "son_bar_tarihi": "2026-09-23",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 100.597,
-   "gunluk_degisim_pct": 0.17,
-   "rsi14_tamamlanmis": 64.9947,
+   "son_fiyat": 100.709,
+   "gunluk_degisim_pct": 0.28,
+   "rsi14_tamamlanmis": 66.2152,
    "rsi14_anlik": null,
-   "atr14": 0.4296,
+   "atr14": 0.4229,
    "52h_zirve_kapanis": 101.61,
-   "zirveden_pct": -1.0,
-   "haftalik_degisim_pct": 0.95,
-   "aylik_degisim_pct": 1.82,
-   "gun_ici_dusuk": 100.307,
-   "gun_ici_yuksek": 100.703
+   "zirveden_pct": -0.89,
+   "haftalik_degisim_pct": 1.06,
+   "aylik_degisim_pct": 1.93,
+   "gun_ici_dusuk": 100.544,
+   "gun_ici_yuksek": 100.732
   },
   "abd_10y": {
    "kaynak": "yahoo",
-   "son_bar_tarihi": "2026-09-22",
+   "son_bar_tarihi": "2026-09-21",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 4.968,
-   "gunluk_degisim_pct": 0.1,
-   "rsi14_tamamlanmis": 64.3855,
+   "son_fiyat": 4.963,
+   "gunluk_degisim_pct": -0.7,
+   "rsi14_tamamlanmis": 64.0073,
    "rsi14_anlik": null,
-   "atr14": 0.0608,
+   "atr14": 0.0611,
    "52h_zirve_kapanis": 5.006,
-   "zirveden_pct": -0.76,
-   "haftalik_degisim_pct": -0.56,
-   "aylik_degisim_pct": 4.85,
-   "gun_ici_dusuk": 4.926,
-   "gun_ici_yuksek": 4.982
+   "zirveden_pct": -0.86,
+   "haftalik_degisim_pct": 0.04,
+   "aylik_degisim_pct": 5.69,
+   "gun_ici_dusuk": 4.951,
+   "gun_ici_yuksek": 4.976
   },
   "ons_altin": {
    "kaynak": "yahoo",
-   "son_bar_tarihi": "2026-09-22",
+   "son_bar_tarihi": "2026-09-23",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 4395.2998,
-   "gunluk_degisim_pct": 0.26,
-   "rsi14_tamamlanmis": 47.9786,
+   "son_fiyat": 4379.2002,
+   "gunluk_degisim_pct": 0.06,
+   "rsi14_tamamlanmis": 46.5991,
    "rsi14_anlik": null,
-   "atr14": 104.1722,
+   "atr14": 99.4099,
    "52h_zirve_kapanis": 5318.3999,
-   "zirveden_pct": -17.36,
-   "haftalik_degisim_pct": 1.44,
-   "aylik_degisim_pct": -6.1,
-   "gun_ici_dusuk": 4327.6001,
-   "gun_ici_yuksek": 4414.1001
+   "zirveden_pct": -17.66,
+   "haftalik_degisim_pct": -0.19,
+   "aylik_degisim_pct": -6.78,
+   "gun_ici_dusuk": 4370.0,
+   "gun_ici_yuksek": 4407.5
   }
  },
  "tetikler": {
@@ -933,14 +932,14 @@
   "yabanci_1hafta_puan": null,
   "nasdaq_zirveden_pct": 0.0,
   "nasdaq_duzeltme_tetik": false,
-  "altin_zirveden_pct": -17.36,
+  "altin_zirveden_pct": -17.66,
   "altin_duzeltme_tetik": true,
-  "vix": 14.21,
-  "brent": 100.09,
+  "vix": 14.87,
+  "brent": 98.68,
   "brent_kaynak": "borsapy",
-  "gram_altin_zirveden_pct": -9.76,
+  "gram_altin_zirveden_pct": -9.43,
   "politika_faizi": 37.0,
-  "ppk_kalan_gun": 30,
+  "ppk_kalan_gun": 29,
   "aofm": 37.0,
   "aofm_eksi_politika": 0.0,
   "ortulu_para_politikasi": "NÖTR",
@@ -963,30 +962,30 @@
   "dolar_gecis_tetik": false,
   "reel_getiri": {
    "YLB": {
-    "brut_30g_pct": 3.2,
-    "net_30g_pct": 2.64,
-    "reel_net_pct": 0.8,
-    "reel_brut_pct": 1.36,
-    "durum": "OK"
+    "brut_30g_pct": -100.0,
+    "net_30g_pct": -82.5,
+    "reel_net_pct": -84.34,
+    "reel_brut_pct": -101.84,
+    "durum": "ACIL"
    },
    "IJV": {
-    "brut_30g_pct": 3.37,
-    "net_30g_pct": 2.78,
-    "reel_net_pct": 0.94,
-    "reel_brut_pct": 1.53,
-    "durum": "OK"
+    "brut_30g_pct": -100.0,
+    "net_30g_pct": -82.5,
+    "reel_net_pct": -84.34,
+    "reel_brut_pct": -101.84,
+    "durum": "ACIL"
    },
    "DLY": {
-    "brut_30g_pct": 3.15,
-    "net_30g_pct": 2.6,
-    "reel_net_pct": 0.76,
-    "reel_brut_pct": 1.31,
+    "brut_30g_pct": 2.93,
+    "net_30g_pct": 2.42,
+    "reel_net_pct": 0.58,
+    "reel_brut_pct": 1.09,
     "durum": "OK"
    }
   },
   "reel_getiri_yontem": "NET: getiri×(1-0.175) − aylık TÜFE; ALARM <0.5, ACİL ≤0.0"
  },
- "arsiv": "1 gün kayıtlı",
+ "arsiv": "saat değil",
  "saglik": {
   "ozet": "TAMAM",
   "hatali_moduller": {},
@@ -1002,7 +1001,33 @@
    "borsapy_endeks_XUMAL": "OK",
    "genislik_tum_piyasa": "OK",
    "genislik_bist30": "OK",
+   "yabanci_orani": "OK",
+   "yabanci_trend": "OK",
+   "fon_bilgi_YLB": "OK",
+   "fon_ucret_YLB": "OK",
+   "fon_YLB": "OK",
+   "fon_bilgi_IJV": "OK",
+   "fon_ucret_IJV": "OK",
+   "fon_IJV": "OK",
+   "fon_bilgi_DLY": "OK",
+   "fon_ucret_DLY": "OK",
+   "fon_DLY": "OK",
+   "fon_bilgi_TIE": "OK",
+   "fon_ucret_TIE": "OK",
+   "fon_TIE": "OK",
+   "fon_bilgi_AKU": "OK",
+   "fon_ucret_AKU": "OK",
+   "fon_AKU": "OK",
    "evds_aofm": "OK",
+   "evds_yabanci_hisse_net_haftalik": "OK",
+   "evds_yabanci_dibs_net_haftalik": "OK",
+   "evds_mevduat_tl_1ay": "OK",
+   "evds_mevduat_tl_3ay": "OK",
+   "evds_tufe_endeks": "OK",
+   "evds_pka_12ay_enflasyon": "OK",
+   "evds_brut_doviz_rezerv": "OK",
+   "evds_net_uluslararasi_rezerv": "OK",
+   "evds_pka_kur": "OK",
    "enflasyon": "OK",
    "tahvil": "OK",
    "fx_USD": "OK",
