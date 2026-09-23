@@ -1,11 +1,9 @@
 name: BIST Radar (günlük)
 
 on:
-  schedule:
-    # Saat başları GitHub'ın en yoğun anı → işler gecikiyor/atlanıyor. Dakikalar bilinçli kaydırıldı.
-    - cron: "17 5 * * 1-5"     # 08:17 TR — sabah kontrolü + fonlar
-    - cron: "17 7-15 * * 1-5"  # 10:17-18:17 TR — saatlik
-    - cron: "52 15 * * 1-5"    # 18:52 TR — kapanış + fonlar
+  # Zamanlama cron-job.org'dan yapılır (hafta içi 08:17-18:17 saatlik + 18:52, İstanbul saati).
+  # GitHub'ın kendi zamanlayıcısı 23 Eyl'de kapatıldı: saatlerce gecikip mesai dışında çalışıyor,
+  # cron-job.org'un çalışmalarıyla çakışıyordu.
   workflow_dispatch:
 
 permissions:
@@ -21,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main          # tetiklendiği anın değil, başladığı anın en güncel hali (22 Eyl çakışma hatası)
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -34,9 +34,17 @@ jobs:
           git config user.name "bist-radar-bot"
           git config user.email "bot@users.noreply.github.com"
           git add output/
-          git diff --cached --quiet || git commit -m "radar: $(date -u +'%Y-%m-%d %H:%M UTC')"
-          git pull --rebase -q || true
-          git push
+          if git diff --cached --quiet; then echo "Değişiklik yok"; exit 0; fi
+          git commit -q -m "radar: $(date -u +'%Y-%m-%d %H:%M UTC')"
+          for i in 1 2 3 4 5; do
+            if git pull --rebase -X theirs -q origin main; then
+              git push -q origin HEAD:main && { echo "Yazıldı (deneme $i)"; exit 0; }
+            else
+              git rebase --abort 2>/dev/null || true
+            fi
+            sleep $((i * 5))
+          done
+          echo "::error::Depoya yazılamadı (5 deneme)"; exit 1
 
       - name: Kırılma varsa Issue aç (e-posta bildirimi)
         if: always()
@@ -47,8 +55,16 @@ jobs:
             BODY="radar.json hiç üretilmedi — betik çalışmadı. Actions loguna bak."
             STATUS="SORUN VAR"
           else
-            STATUS=$(python -c "import json;print(json.load(open('output/radar.json'))['saglik']['ozet'])")
-            BODY=$(python -c "import json;d=json.load(open('output/radar.json'))['saglik']['hatali_moduller'];print('\n'.join(f'- **{k}**: {v}' for k,v in d.items()))")
+            STATUS=$(python -c "
+          import json
+          try: print(json.load(open('output/radar.json'))['saglik']['ozet'])
+          except Exception as e: print('SORUN VAR')")
+            BODY=$(python -c "
+          import json
+          try:
+              d=json.load(open('output/radar.json'))['saglik']['hatali_moduller']
+              print('\n'.join(f'- **{k}**: {v}' for k,v in d.items()))
+          except Exception as e: print(f'- **radar.json okunamadı**: {e}')")
           fi
           echo "Sağlık: $STATUS"
           if [ "$STATUS" != "TAMAM" ]; then
