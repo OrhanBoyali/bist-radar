@@ -505,6 +505,38 @@ def evds_resmi():
     return out
 
 
+FON_HIST = "output/fon_gecmis.json"
+
+def fon_akis_trend(fonlar):
+    """Fon künyesindeki büyüklük ve yatırımcı sayısını günlük kaydeder, ≤30 günlük değişimi hesaplar."""
+    hist = {}
+    if os.path.exists(FON_HIST):
+        try:
+            hist = json.load(open(FON_HIST, encoding="utf-8"))
+        except Exception:
+            hist = {}
+    bugun = NOW.strftime("%Y-%m-%d")
+    snap = {}
+    for c, fb in (fonlar or {}).items():
+        bi = (fb or {}).get("bilgi") or {}
+        if bi.get("fund_size") and bi.get("investor_count"):
+            snap[c] = {"b": bi["fund_size"], "y": bi["investor_count"]}
+    if snap:
+        hist[bugun] = snap
+    hist = dict(sorted(hist.items())[-60:])
+    json.dump(hist, open(FON_HIST, "w", encoding="utf-8"), ensure_ascii=False)
+    tarihler = sorted(hist)
+    esik = (NOW - timedelta(days=30)).strftime("%Y-%m-%d")
+    uygun = [t for t in tarihler if t <= esik]
+    ref = uygun[-1] if uygun else tarihler[0]
+    out = {"referans_tarih": ref, "gun": (NOW.date() - datetime.strptime(ref, "%Y-%m-%d").date()).days}
+    for c, v in hist.get(bugun, {}).items():
+        r = hist[ref].get(c)
+        if r:
+            out[c] = {"buyukluk_degisim_pct": pct(v["b"], r["b"]), "yatirimci_degisim_pct": pct(v["y"], r["y"])}
+    return out
+
+
 ARSIV_FILE = "output/gunluk_arsiv.csv"
 
 def gunluk_arsiv(R):
@@ -605,10 +637,12 @@ def main():
     if bp and fon_saati:
         R["fonlar"] = {c: safe(f"fon_{c}", lambda c=c: fund_block(c)) for c in FUNDS}
         R["fonlar_zamani"] = NOW.strftime("%Y-%m-%d %H:%M")
+        R["fon_akis"] = safe("fon_akis", lambda: fon_akis_trend(R["fonlar"]))
     elif prev.get("fonlar"):
         R["fonlar"] = prev["fonlar"]
         onceki = str(prev.get("fonlar_zamani", "önceki çalışma")).split(" (önbellek")[0]
         R["fonlar_zamani"] = onceki + " (önbellek — TEFAS günde 1 fiyat)"
+        R["fon_akis"] = prev.get("fon_akis", {})
     if bp:
         R["tcmb"] = tcmb_block()
         if os.environ.get("EVDS_API_KEY"):
@@ -714,12 +748,29 @@ def main():
         T["tcmb_tetik_hata"] = str(e)[:120]
 
     akis_alarm = {}
-    for c, fb in (R.get("fonlar") or {}).items():
-        a = (fb or {}).get("akis") or {}
-        b_ = a.get("buyukluk_30g_degisim_pct"); y_ = a.get("yatirimci_30g_degisim_pct")
+    fa = R.get("fon_akis") or {}
+    T["fon_akis_pencere_gun"] = fa.get("gun")
+    for c in FUNDS:
+        a = fa.get(c) or {}
+        b_ = a.get("buyukluk_degisim_pct"); y_ = a.get("yatirimci_degisim_pct")
         if (b_ is not None and b_ <= -20) or (y_ is not None and y_ <= -15):
             akis_alarm[c] = {"buyukluk_30g": b_, "yatirimci_30g": y_}
     T["fon_kitlesel_cikis_alarm"] = akis_alarm   # Tera/Pusula dersi: erken uyarı
+
+    try:
+        b = R["bist100"]
+        kap = [x["k"] for x in b["son_5_kapanis"]]
+        if b["son_bar_kismi_mi"]:
+            kap = kap[:-1]
+        ma200 = (b.get("hareketli_ortalamalar") or {}).get("sma200")
+        iki_gun = bool(ma200 and len(kap) >= 2 and all(x > ma200 for x in kap[-2:]))
+        gen_ok = ((R.get("genislik") or {}).get("yukselen_orani_pct") or 0) >= 55
+        yab_ok = (T.get("yabanci_hisse_net_son_hafta") or 0) > 0
+        T["k3_donus_kapisi"] = {"ma200": ma200, "ma200_ustu_2gun": iki_gun, "genislik_katilim": gen_ok,
+                                "yabanci_net_alici": yab_ok, "TETIK": bool(iki_gun and gen_ok and yab_ok)}
+        T["k3_dusus_kapisi_TETIK"] = T.get("k3_tetik_13000_alti_kapanis")
+    except Exception as e:
+        T["k3_kapi_hata"] = str(e)[:120]
 
     # Reel getiri (Blok 5)
     ev = R.get("evds_resmi") or {}
