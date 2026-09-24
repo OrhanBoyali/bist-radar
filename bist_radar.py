@@ -193,7 +193,13 @@ def fund_block(code):
     if pc is None:
         nums = [c for c in h.columns if pd.api.types.is_numeric_dtype(h[c])]
         pc = nums[0]
-    s = h[pc].dropna()
+    s = pd.to_numeric(h[pc], errors="coerce").dropna()
+    s = s[s > 0]                         # TEFAS bazen günün fiyatını 0 yayınlıyor (24 Eyl DLY) → at
+    if len(s) >= 2 and abs(s.iloc[-1] / s.iloc[-2] - 1) > 0.15:
+        s = s.iloc[:-1]                  # tek günde %15+ sıçrama = veri hatası, son noktayı at
+        HEALTH[f"fon_{code}_veri"] = f"UYARI: {code} son fiyatı şüpheli (%15+ günlük değişim), bir önceki gün kullanıldı"
+    if s.empty:
+        raise ValueError("geçerli fiyat yok")
     last_d = s.index[-1]
     past = s[s.index <= last_d - pd.Timedelta(days=30)]
     trend = {}
@@ -757,20 +763,6 @@ def main():
             akis_alarm[c] = {"buyukluk_30g": b_, "yatirimci_30g": y_}
     T["fon_kitlesel_cikis_alarm"] = akis_alarm   # Tera/Pusula dersi: erken uyarı
 
-    try:
-        b = R["bist100"]
-        kap = [x["k"] for x in b["son_5_kapanis"]]
-        if b["son_bar_kismi_mi"]:
-            kap = kap[:-1]
-        ma200 = (b.get("hareketli_ortalamalar") or {}).get("sma200")
-        iki_gun = bool(ma200 and len(kap) >= 2 and all(x > ma200 for x in kap[-2:]))
-        gen_ok = ((R.get("genislik") or {}).get("yukselen_orani_pct") or 0) >= 55
-        yab_ok = (T.get("yabanci_hisse_net_son_hafta") or 0) > 0
-        T["k3_donus_kapisi"] = {"ma200": ma200, "ma200_ustu_2gun": iki_gun, "genislik_katilim": gen_ok,
-                                "yabanci_net_alici": yab_ok, "TETIK": bool(iki_gun and gen_ok and yab_ok)}
-        T["k3_dusus_kapisi_TETIK"] = T.get("k3_tetik_13000_alti_kapanis")
-    except Exception as e:
-        T["k3_kapi_hata"] = str(e)[:120]
 
     # Reel getiri (Blok 5)
     ev = R.get("evds_resmi") or {}
@@ -801,6 +793,20 @@ def main():
             T["dolar_gecis_tetik"] = bool(pf - artis < 8)
     except Exception as e:
         T["evds_tetik_hata"] = str(e)[:150]
+    try:
+        b = R["bist100"]
+        kap = [x["k"] for x in b["son_5_kapanis"]]
+        if b["son_bar_kismi_mi"]:
+            kap = kap[:-1]
+        ma200 = (b.get("hareketli_ortalamalar") or {}).get("sma200")
+        iki_gun = bool(ma200 and len(kap) >= 2 and all(x > ma200 for x in kap[-2:]))
+        gen_ok = ((R.get("genislik") or {}).get("yukselen_orani_pct") or 0) >= 55
+        yab_ok = (T.get("yabanci_hisse_net_son_hafta") or 0) > 0
+        T["k3_donus_kapisi"] = {"ma200": ma200, "ma200_ustu_2gun": iki_gun, "genislik_katilim": gen_ok,
+                                "yabanci_net_alici": yab_ok, "TETIK": bool(iki_gun and gen_ok and yab_ok)}
+        T["k3_dusus_kapisi_TETIK"] = T.get("k3_tetik_13000_alti_kapanis")
+    except Exception as e:
+        T["k3_kapi_hata"] = str(e)[:120]
     reel = {}
     for c, fb in (R.get("fonlar") or {}).items():
         if c in CEPHANE and fb and fb.get("getiri_30g_pct") is not None:
