@@ -346,7 +346,7 @@ def tcmb_block():
         out["aofm"] = {"not": "EVDS_API_KEY tanımlı değil — fiili fonlama maliyeti alınmıyor"}
         return out
     def _aofm():
-        ev = bp.evds_series("TP.APIFON4", period="3mo")
+        ev = bp.evds_series("TP.APIFON4", period="3mo", frequency="daily")   # frekans açıkça (22 Eyl dersi)
         df = ev.to_frame() if isinstance(ev, pd.Series) else ev
         df = to_dt_index(df.copy())
         num = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
