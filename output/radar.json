@@ -1,6 +1,6 @@
 {
  "surum": "v3",
- "uretim_zamani_tr": "2026-09-24 08:17:37",
+ "uretim_zamani_tr": "2026-09-24 09:17:40",
  "not": "Kişisel veri yok. BIST verisi ~15 dk gecikmeli. Günlük göstergeler tamamlanmış barlarla.",
  "bist100": {
   "kaynak": "borsapy",
@@ -240,7 +240,7 @@
     "category": "Para Piyasası Fonu",
     "risk_value": 1,
     "daily_return": 0.1086,
-    "category_rank": 55,
+    "category_rank": 58,
     "buy_valor": null,
     "sell_valor": null
    },
@@ -267,7 +267,7 @@
     "category": "Para Piyasası Fonu",
     "risk_value": 1,
     "daily_return": 0.0937,
-    "category_rank": 16,
+    "category_rank": 18,
     "buy_valor": 0,
     "sell_valor": 0
    },
@@ -279,22 +279,22 @@
    }
   },
   "DLY": {
-   "fiyat": 0.0,
+   "fiyat": 6.281,
    "fiyat_tarihi": "2026-09-24",
    "akis": {
     "buyukluk_not": "veri boş",
     "yatirimci_not": "veri boş"
    },
-   "gunluk_getiri_pct": -100.0,
-   "getiri_30g_pct": -100.0,
+   "gunluk_getiri_pct": 0.11,
+   "getiri_30g_pct": 2.94,
    "bilgi": {
     "name": "DENİZ PORTFÖY PARA PİYASASI (TL) FONU",
-    "fund_size": 0.0,
+    "fund_size": 60053227792.33,
     "investor_count": 306085,
     "category": "Para Piyasası Fonu",
     "risk_value": 1,
-    "daily_return": -100,
-    "category_rank": 72,
+    "daily_return": 0.1127,
+    "category_rank": 50,
     "buy_valor": 0,
     "sell_valor": 0
    },
@@ -302,7 +302,7 @@
     "applied_fee": 1.45,
     "prospectus_fee": 0.0,
     "max_expense_ratio": 1.65,
-    "annual_return": 0
+    "annual_return": 45.9
    }
   },
   "TIE": {
@@ -321,7 +321,7 @@
     "category": "Hisse Senedi Fonu",
     "risk_value": 6,
     "daily_return": 0.6903,
-    "category_rank": 45,
+    "category_rank": 48,
     "buy_valor": 1,
     "sell_valor": 2
    },
@@ -348,7 +348,7 @@
     "category": "Hisse Senedi Fonu",
     "risk_value": 6,
     "daily_return": 0.875,
-    "category_rank": 27,
+    "category_rank": 29,
     "buy_valor": 1,
     "sell_valor": 2
    },
@@ -360,7 +360,7 @@
    }
   }
  },
- "fonlar_zamani": "2026-09-24 08:17",
+ "fonlar_zamani": "2026-09-24 09:17",
  "fon_akis": {
   "referans_tarih": "2026-09-24",
   "gun": 0,
@@ -369,6 +369,10 @@
    "yatirimci_degisim_pct": 0.0
   },
   "IJV": {
+   "buyukluk_degisim_pct": 0.0,
+   "yatirimci_degisim_pct": 0.0
+  },
+  "DLY": {
    "buyukluk_degisim_pct": 0.0,
    "yatirimci_degisim_pct": 0.0
   },
@@ -708,7 +712,7 @@
    ]
   }
  },
- "evds_resmi_zamani": "2026-09-24 08:17",
+ "evds_resmi_zamani": "2026-09-24 09:17",
  "enflasyon": {
   "date": "2026-08-01",
   "year_month": "08-2026",
@@ -910,14 +914,14 @@
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-09-24",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 101.087,
+   "son_fiyat": 101.088,
    "gunluk_degisim_pct": -0.01,
-   "rsi14_tamamlanmis": 69.6107,
+   "rsi14_tamamlanmis": 69.6315,
    "rsi14_anlik": null,
    "atr14": 0.4371,
    "52h_zirve_kapanis": 101.61,
    "zirveden_pct": -0.51,
-   "haftalik_degisim_pct": 0.77,
+   "haftalik_degisim_pct": 0.78,
    "aylik_degisim_pct": 2.11,
    "gun_ici_dusuk": 101.06,
    "gun_ici_yuksek": 101.219
@@ -942,15 +946,15 @@
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-09-24",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 4325.2002,
-   "gunluk_degisim_pct": 0.16,
-   "rsi14_tamamlanmis": 42.4858,
+   "son_fiyat": 4318.7002,
+   "gunluk_degisim_pct": 0.01,
+   "rsi14_tamamlanmis": 41.805,
    "rsi14_anlik": null,
    "atr14": 98.3852,
    "52h_zirve_kapanis": 5318.3999,
-   "zirveden_pct": -18.67,
-   "haftalik_degisim_pct": -1.69,
-   "aylik_degisim_pct": -7.87,
+   "zirveden_pct": -18.8,
+   "haftalik_degisim_pct": -1.84,
+   "aylik_degisim_pct": -8.01,
    "gun_ici_dusuk": 4308.0,
    "gun_ici_yuksek": 4338.0
   }
@@ -976,7 +980,7 @@
   "yabanci_1hafta_puan": null,
   "nasdaq_zirveden_pct": -0.69,
   "nasdaq_duzeltme_tetik": false,
-  "altin_zirveden_pct": -18.67,
+  "altin_zirveden_pct": -18.8,
   "altin_duzeltme_tetik": true,
   "vix": 15.18,
   "brent": 103.47,
@@ -1029,11 +1033,11 @@
     "durum": "OK"
    },
    "DLY": {
-    "brut_30g_pct": -100.0,
-    "net_30g_pct": -82.5,
-    "reel_net_pct": -84.34,
-    "reel_brut_pct": -101.84,
-    "durum": "ACIL"
+    "brut_30g_pct": 2.94,
+    "net_30g_pct": 2.43,
+    "reel_net_pct": 0.59,
+    "reel_brut_pct": 1.1,
+    "durum": "OK"
    }
   },
   "reel_getiri_yontem": "NET: getiri×(1-0.175) − aylık TÜFE; ALARM <0.5, ACİL ≤0.0"
