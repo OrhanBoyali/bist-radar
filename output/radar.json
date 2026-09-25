@@ -1,6 +1,6 @@
 {
  "surum": "v3",
- "uretim_zamani_tr": "2026-09-25 08:17:39",
+ "uretim_zamani_tr": "2026-09-25 09:17:41",
  "not": "Kişisel veri yok. BIST verisi ~15 dk gecikmeli. Günlük göstergeler tamamlanmış barlarla.",
  "bist100": {
   "kaynak": "borsapy",
@@ -225,22 +225,22 @@
  },
  "fonlar": {
   "YLB": {
-   "fiyat": 1.8813,
-   "fiyat_tarihi": "2026-09-24",
+   "fiyat": 1.8831,
+   "fiyat_tarihi": "2026-09-25",
    "akis": {
     "buyukluk_not": "veri boş",
     "yatirimci_not": "veri boş"
    },
-   "gunluk_getiri_pct": 0.11,
+   "gunluk_getiri_pct": 0.1,
    "getiri_30g_pct": 2.98,
    "bilgi": {
     "name": "YAPI KREDİ PORTFÖY PARA PİYASASI FONU",
-    "fund_size": 0.0,
+    "fund_size": 95729881296.12,
     "investor_count": 358985,
     "category": "Para Piyasası Fonu",
     "risk_value": 1,
-    "daily_return": -100,
-    "category_rank": 76,
+    "daily_return": 0.0973,
+    "category_rank": 58,
     "buy_valor": null,
     "sell_valor": null
    },
@@ -248,7 +248,7 @@
     "applied_fee": 1.48,
     "prospectus_fee": 1.48,
     "max_expense_ratio": 3.65,
-    "annual_return": 0
+    "annual_return": 45.73
    }
   },
   "IJV": {
@@ -267,7 +267,7 @@
     "category": "Para Piyasası Fonu",
     "risk_value": 1,
     "daily_return": 0.0937,
-    "category_rank": 14,
+    "category_rank": 18,
     "buy_valor": 0,
     "sell_valor": 0
    },
@@ -294,7 +294,7 @@
     "category": "Para Piyasası Fonu",
     "risk_value": 1,
     "daily_return": 0.0958,
-    "category_rank": 41,
+    "category_rank": 50,
     "buy_valor": 0,
     "sell_valor": 0
    },
@@ -321,7 +321,7 @@
     "category": "Hisse Senedi Fonu",
     "risk_value": 6,
     "daily_return": -2.6481,
-    "category_rank": 38,
+    "category_rank": 48,
     "buy_valor": 1,
     "sell_valor": 2
    },
@@ -348,7 +348,7 @@
     "category": "Hisse Senedi Fonu",
     "risk_value": 6,
     "daily_return": -2.2975,
-    "category_rank": 27,
+    "category_rank": 32,
     "buy_valor": 1,
     "sell_valor": 2
    },
@@ -360,10 +360,14 @@
    }
   }
  },
- "fonlar_zamani": "2026-09-25 08:17",
+ "fonlar_zamani": "2026-09-25 09:17",
  "fon_akis": {
   "referans_tarih": "2026-09-24",
   "gun": 1,
+  "YLB": {
+   "buyukluk_degisim_pct": 0.71,
+   "yatirimci_degisim_pct": 0.04
+  },
   "IJV": {
    "buyukluk_degisim_pct": 5.61,
    "yatirimci_degisim_pct": -0.86
@@ -708,7 +712,7 @@
    ]
   }
  },
- "evds_resmi_zamani": "2026-09-25 08:17",
+ "evds_resmi_zamani": "2026-09-25 09:17",
  "enflasyon": {
   "date": "2026-08-01",
   "year_month": "08-2026",
@@ -898,16 +902,16 @@
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-09-25",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 101.233,
-   "gunluk_degisim_pct": -0.06,
-   "rsi14_tamamlanmis": 70.2796,
+   "son_fiyat": 101.154,
+   "gunluk_degisim_pct": -0.13,
+   "rsi14_tamamlanmis": 68.6558,
    "rsi14_anlik": null,
-   "atr14": 0.4287,
+   "atr14": 0.4328,
    "52h_zirve_kapanis": 101.61,
-   "zirveden_pct": -0.37,
-   "haftalik_degisim_pct": 1.01,
-   "aylik_degisim_pct": 2.34,
-   "gun_ici_dusuk": 101.209,
+   "zirveden_pct": -0.45,
+   "haftalik_degisim_pct": 0.93,
+   "aylik_degisim_pct": 2.26,
+   "gun_ici_dusuk": 101.151,
    "gun_ici_yuksek": 101.305
   },
   "abd_10y": {
@@ -930,15 +934,15 @@
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-09-25",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 4294.3999,
-   "gunluk_degisim_pct": -0.08,
-   "rsi14_tamamlanmis": 40.0036,
+   "son_fiyat": 4314.8999,
+   "gunluk_degisim_pct": 0.39,
+   "rsi14_tamamlanmis": 42.1265,
    "rsi14_anlik": null,
    "atr14": 96.2348,
    "52h_zirve_kapanis": 5318.3999,
-   "zirveden_pct": -19.25,
-   "haftalik_degisim_pct": -2.95,
-   "aylik_degisim_pct": -7.71,
+   "zirveden_pct": -18.87,
+   "haftalik_degisim_pct": -2.49,
+   "aylik_degisim_pct": -7.27,
    "gun_ici_dusuk": 4290.2998,
    "gun_ici_yuksek": 4331.0
   }
@@ -964,7 +968,7 @@
   "yabanci_1hafta_puan": null,
   "nasdaq_zirveden_pct": -0.67,
   "nasdaq_duzeltme_tetik": false,
-  "altin_zirveden_pct": -19.25,
+  "altin_zirveden_pct": -18.87,
   "altin_duzeltme_tetik": true,
   "vix": 15.67,
   "brent": 107.08,
