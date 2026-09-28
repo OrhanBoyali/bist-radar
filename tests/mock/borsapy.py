@@ -32,6 +32,8 @@ class Fund:
         p = np.linspace(5.0, 5.5, len(idx))
         if self.c == "DLY": p[-1] = 0.0                      # TEST 1: TEFAS sıfır fiyat hatası
         if self.c == "YLB": p[-1] = p[-2] * 1.30              # TEST 2: %30 şüpheli sıçrama
+        if self.c == "AKU": p[-1] = p[-2] * 1.05              # TEST: endeks +%0,x iken fon +%5 → takip sapması
+        if self.c == "TIE": p = p[:-3]; idx = idx[:-3]        # TEST: 3 iş günü bayat fiyat
         return pd.DataFrame({"Price": p, "FundSize": np.full(len(idx), np.nan), "Investors": np.full(len(idx), np.nan)}, index=idx)
     @property
     def info(self):
