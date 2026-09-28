@@ -51,6 +51,10 @@ def main():
         ("GBX" in adaylar("bist30_endeks", "TIE"),                  "Rakip: BIST 30'da TIE'den iyi takip eden fon bulunur"),
         ("AKU" in adaylar("bist30_endeks", "TIE"),                  "Rakip: AKU, TIE'ye karşı aday çıkar (28 Eyl gözlemi)"),
         ("IDH" not in str(rt.get("bist100_endeks", {})),            "Rakip: 'BIST 100 dışı' fon endeks grubuna girmez (hata #1)"),
+        # --- Fon veri tutarlılığı (28 Eyl) ---
+        ("fon_TIE_bayat" in d["saglik"]["hatali_moduller"],         "Tutarlılık: bayat fon fiyatı uyarı verir"),
+        ("fon_AKU_takip_sapmasi" in d["saglik"]["hatali_moduller"], "Tutarlılık: endeks fonu endeksten koparsa uyarı verir"),
+        ("fon_IJV_bayat" not in d["saglik"]["hatali_moduller"],     "Tutarlılık: güncel fiyat yanlış alarm üretmez"),
     ]
     gecen = 0
     for i, (kosul, aciklama) in enumerate(testler, 1):
