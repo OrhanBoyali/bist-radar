@@ -511,6 +511,90 @@ def evds_resmi():
     return out
 
 
+# ---- RAKİP FON TARAMASI (28 Eyl) -------------------------------------------
+TASFIYE_KURUCULAR = ["TERA", "PUSULA", "HEDEF", "ATLAS", "A1 CAPITAL", "A1 PORTFOY", "PARDUS", "BULLS"]
+def _tr_up(x):
+    x = str(x).upper()
+    for a, b in (("İ", "I"), ("Ş", "S"), ("Ğ", "G"), ("Ü", "U"), ("Ö", "O"), ("Ç", "C")):
+        x = x.replace(a, b)
+    return x
+RAKIP_GRUPLARI = {
+    "para_piyasasi": {"bizim": ["YLB", "IJV", "DLY"],
+                      "filtre": lambda n: "PARA PIYASASI" in n and "SERBEST" not in n,
+                      "esik": {"1m": 0.15, "3m": 0.40, "1y": 1.5}, "supheli_1m": 0.6},
+    "bist30_endeks": {"bizim": ["TIE", "AKU"],
+                      "filtre": lambda n: "BIST 30" in n and "ENDEKS" in n,
+                      "esik": {"1m": 0.0, "3m": 0.5, "1y": 2.0}, "supheli_1m": 3.0},
+    "bist100_endeks": {"bizim": [],
+                       "filtre": lambda n: ("BIST 100 ENDEKS" in n or "BIST100 ENDEKS" in n) and "DISI" not in n,
+                       "esik": {"1m": 0.0, "3m": 0.5, "1y": 2.0}, "supheli_1m": 3.0},
+}
+MIN_FON_BUYUKLUGU = 500_000_000   # aday için asgari büyüklük (likidite)
+
+def rakip_tarama():
+    """TEFAS'taki tüm yatırım fonlarını çekip her fonumuzu kendi grubuyla karşılaştırır."""
+    df = bp.screen_funds(fund_type="YAT", limit=5000)
+    if df is None or len(df) < 50:
+        raise ValueError(f"fon evreni eksik: {0 if df is None else len(df)}")
+    df = df.copy()
+    df["_n"] = df["name"].map(_tr_up)
+    df["elenen"] = df["_n"].map(lambda n: next((k for k in TASFIYE_KURUCULAR if k in n), None))
+    out = {"evren": int(len(df)), "zaman": NOW.strftime("%Y-%m-%d %H:%M")}
+    for grup, g in RAKIP_GRUPLARI.items():
+        d = df[df["_n"].map(g["filtre"])].copy()
+        if d.empty:
+            out[grup] = {"hata": "grup boş"}
+            continue
+        temiz = d[d["elenen"].isna()]
+        med1 = temiz["return_1m"].median()
+        d["supheli"] = d["return_1m"] > med1 + g["supheli_1m"]
+        aday_havuz = d[d["elenen"].isna() & ~d["supheli"]]
+        cols = ["fund_code", "name", "return_1m", "return_3m", "return_1y"]
+        res = {"fon_sayisi": int(len(d)), "medyan_1m": J(med1),
+               "elenen_tasfiye": d.loc[d["elenen"].notna(), "fund_code"].tolist(),
+               "supheli_yuksek": d.loc[d["supheli"] & d["elenen"].isna(), "fund_code"].tolist(),
+               "en_iyi_5_1y": J(aday_havuz.sort_values("return_1y", ascending=False)[cols].head(5)),
+               "bizim": {}}
+        for kod in g["bizim"]:
+            r = d[d["fund_code"] == kod]
+            if r.empty:
+                res["bizim"][kod] = {"hata": "grupta bulunamadı"}
+                continue
+            r = r.iloc[0]
+            sira = int((aday_havuz["return_1y"].fillna(-1e9) > (r["return_1y"] if pd.notna(r["return_1y"]) else -1e9)).sum()) + 1
+            e = g["esik"]
+            def gecer(x):
+                ok = True
+                for per, col in (("1m", "return_1m"), ("3m", "return_3m"), ("1y", "return_1y")):
+                    if pd.notna(x[col]) and pd.notna(r[col]):
+                        ok &= (x[col] - r[col]) >= e[per]
+                    elif per != "1y":
+                        ok = False
+                return bool(ok)
+            adaylar = aday_havuz[(aday_havuz["fund_code"] != kod) & aday_havuz.apply(gecer, axis=1)]
+            adaylar = adaylar.sort_values("return_1y", ascending=False).head(3)
+            aday_list = []
+            for _, a in adaylar.iterrows():
+                item = {"kod": a["fund_code"], "ad": a["name"],
+                        "fark_1m": J(a["return_1m"] - r["return_1m"]) if pd.notna(a["return_1m"]) else None,
+                        "fark_3m": J(a["return_3m"] - r["return_3m"]) if pd.notna(a["return_3m"]) else None,
+                        "fark_1y": J(a["return_1y"] - r["return_1y"]) if pd.notna(a["return_1y"]) and pd.notna(r["return_1y"]) else None}
+                try:
+                    bi = bp.Fund(a["fund_code"]).info or {}
+                    item.update({"buyukluk": J(bi.get("fund_size")), "yatirimci": J(bi.get("investor_count")),
+                                 "satis_valoru": J(bi.get("sell_valor")), "risk": J(bi.get("risk_value"))})
+                    if bi.get("fund_size") and bi["fund_size"] < MIN_FON_BUYUKLUGU:
+                        item["not"] = "küçük fon — likidite riski"
+                except Exception:
+                    item["not"] = "künye alınamadı"
+                aday_list.append(item)
+            res["bizim"][kod] = {"return_1m": J(r["return_1m"]), "return_3m": J(r["return_3m"]),
+                                 "return_1y": J(r["return_1y"]), "gruptaki_sira_1y": sira,
+                                 "aday_havuz_sayisi": int(len(aday_havuz)), "gecis_adaylari": aday_list}
+        out[grup] = res
+    return out
+
+
 FON_HIST = "output/fon_gecmis.json"
 
 def fon_akis_trend(fonlar):
@@ -649,6 +733,10 @@ def main():
         onceki = str(prev.get("fonlar_zamani", "önceki çalışma")).split(" (önbellek")[0]
         R["fonlar_zamani"] = onceki + " (önbellek — TEFAS günde 1 fiyat)"
         R["fon_akis"] = prev.get("fon_akis", {})
+    if bp and (gunluk_saat or not prev.get("rakip_tarama")):
+        R["rakip_tarama"] = safe("rakip_tarama", rakip_tarama)
+    else:
+        R["rakip_tarama"] = prev.get("rakip_tarama")
     if bp:
         R["tcmb"] = tcmb_block()
         if os.environ.get("EVDS_API_KEY"):
@@ -763,6 +851,19 @@ def main():
             akis_alarm[c] = {"buyukluk_30g": b_, "yatirimci_30g": y_}
     T["fon_kitlesel_cikis_alarm"] = akis_alarm   # Tera/Pusula dersi: erken uyarı
 
+
+    try:
+        rt = R.get("rakip_tarama") or {}
+        ozet = {}
+        for grup in ("para_piyasasi", "bist30_endeks"):
+            for kod, v in ((rt.get(grup) or {}).get("bizim") or {}).items():
+                ad = [a["kod"] for a in (v.get("gecis_adaylari") or []) if not a.get("not")]
+                if ad:
+                    ozet[kod] = ad
+        T["rakip_gecis_adaylari"] = ozet
+        T["rakip_supheli"] = {g: (rt.get(g) or {}).get("supheli_yuksek") for g in ("para_piyasasi", "bist30_endeks")}
+    except Exception as e:
+        T["rakip_hata"] = str(e)[:120]
 
     # Reel getiri (Blok 5)
     ev = R.get("evds_resmi") or {}
