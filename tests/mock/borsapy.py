@@ -1,8 +1,11 @@
 """Sahte borsapy — gerçek API yerine kontrollü veri döndürür."""
 import numpy as np, pandas as pd
 from datetime import datetime, timedelta
+def _son_is_gunu():
+    """Hangi gün çalışırsa çalışsın (hafta sonu, pazartesi) son tamamlanmış iş günü."""
+    return (pd.Timestamp.today().normalize() - pd.offsets.BDay(1)).date()
 def _ohlc(n=300, start=14000, end=13250, seed=1):
-    idx = pd.bdate_range(end=datetime.now().date() - timedelta(days=1), periods=n)
+    idx = pd.bdate_range(end=_son_is_gunu(), periods=n); n = len(idx)
     rng = np.random.default_rng(seed)
     c = np.linspace(start, end, n) + rng.normal(0, 60, n)
     return pd.DataFrame({"Open": c, "High": c + 80, "Low": c - 80, "Close": c, "Volume": rng.integers(1e6, 2e6, n)}, index=idx)
@@ -25,13 +28,15 @@ def scan(index, cond, limit=800):
 class Fund:
     def __init__(self, c): self.c = c
     def history(self, period="3mo"):
-        idx = pd.bdate_range(end=datetime.now().date(), periods=70)
-        p = np.linspace(5.0, 5.5, 70)
+        idx = pd.bdate_range(end=_son_is_gunu(), periods=70)
+        p = np.linspace(5.0, 5.5, len(idx))
         if self.c == "DLY": p[-1] = 0.0                      # TEST 1: TEFAS sıfır fiyat hatası
         if self.c == "YLB": p[-1] = p[-2] * 1.30              # TEST 2: %30 şüpheli sıçrama
-        return pd.DataFrame({"Price": p, "FundSize": np.nan, "Investors": np.nan}, index=idx)
+        return pd.DataFrame({"Price": p, "FundSize": np.full(len(idx), np.nan), "Investors": np.full(len(idx), np.nan)}, index=idx)
     @property
-    def info(self): return {"fund_size": 1e9, "investor_count": 1000, "sell_valor": 0}
+    def info(self):
+        size = 1e8 if self.c == "KCK" else 1e9           # KCK: küçük fon senaryosu
+        return {"fund_size": size, "investor_count": 1000, "sell_valor": 0, "risk_value": 1}
     @property
     def management_fee(self): return 1.0
 class Inflation:
@@ -58,3 +63,26 @@ class EVDS:
         return pd.DataFrame({"SERIE_CODE": ["TP.PKAUO.S05.C.U"], "SERIE_NAME": ["12 ay sonrası ABD Doları kuru beklentisi"]})
     def datagroups(self): return pd.DataFrame()
 def evds_search(t): return pd.DataFrame()
+
+def screen_funds(fund_type="YAT", limit=50, **k):
+    """Sahte fon evreni — bilinçli senaryolar içerir."""
+    rows = [
+        # para piyasası: bizimkiler
+        ("YLB", "YAPI KREDİ PORTFÖY PARA PİYASASI FONU", 3.06, 9.8, 46.5),
+        ("IJV", "İSTANBUL PORTFÖY PARA PİYASASI FONU", 3.13, 10.0, 47.2),
+        ("DLY", "DENİZ PORTFÖY PARA PİYASASI FONU", 3.02, 9.7, 45.9),
+        ("ZPX", "ZİRAAT PORTFÖY PARA PİYASASI FONU", 3.30, 10.6, 49.5),        # gerçek aday
+        ("KCK", "KÜÇÜK PORTFÖY PARA PİYASASI FONU", 3.35, 10.7, 50.0),         # aday ama küçük
+        ("SUS", "ÖRNEK PORTFÖY PARA PİYASASI FONU", 4.20, 12.5, 60.0),         # şüpheli yüksek
+        ("TP2", "TERA PORTFÖY PARA PİYASASI FONU", 4.10, 12.4, 60.2),          # tasfiye kurucu
+        ("SRB", "XYZ PORTFÖY PARA PİYASASI SERBEST FON", 3.50, 11.0, 52.0),    # nitelikli, gruba girmez
+        # BIST 30 endeks
+        ("TIE", "İŞ PORTFÖY BIST 30 ENDEKSİ HİSSE SENEDİ FONU", -5.02, 2.0, 31.28),
+        ("AKU", "AK PORTFÖY BIST 30 ENDEKSİ HİSSE SENEDİ FONU", -3.54, 3.0, 35.68),
+        ("GBX", "GARANTİ PORTFÖY BIST 30 ENDEKSİ HİSSE SENEDİ FONU", -3.00, 3.8, 38.0),
+        ("DZE", "DENİZ PORTFÖY BIST 100 ENDEKSİ HİSSE SENEDİ FONU", -4.0, 2.5, 33.0),
+        ("IDH", "İŞ PORTFÖY BIST 100 DIŞI ŞİRKETLER HİSSE SENEDİ FONU", -8.0, -5.0, 20.0),
+    ]
+    rows += [(f"F{i:02d}", f"DOLGU PORTFÖY BORÇLANMA ARAÇLARI FONU {i}", 2.5, 8.0, 40.0) for i in range(50)]
+    return pd.DataFrame([{"fund_code": c, "name": n, "fund_type": "", "return_1m": a, "return_3m": b,
+                          "return_1y": y} for c, n, a, b, y in rows])
