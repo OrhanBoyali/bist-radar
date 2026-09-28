@@ -22,6 +22,9 @@ def calistir():
 
 def main():
     d = calistir(); T = d["tetikler"]; k = T.get("k3_donus_kapisi", {}); fon = d.get("fonlar", {})
+    rt = d.get("rakip_tarama") or {}; pp = rt.get("para_piyasasi") or {}
+    def adaylar(grup, kod):
+        return [a["kod"] for a in ((rt.get(grup) or {}).get("bizim", {}).get(kod, {}).get("gecis_adaylari") or [])]
     testler = [
         # (koşul, açıklama, eklendiği tarih/sebep)
         (fon["DLY"]["fiyat"] > 0,                                   "Sıfır fon fiyatı elenir (24 Eyl TEFAS DLY=0)"),
@@ -38,6 +41,16 @@ def main():
         (d["genislik"].get("hisse_sayisi", 0) >= 100,               "Tüm piyasa genişliği tek taramayla gelir"),
         (T.get("reel_getiri_yontem", "").startswith("NET"),         "Reel getiri NET (stopaj sonrası) hesaplanır"),
         ("TIE" not in T.get("reel_getiri", {}),                     "Reel getiri sadece cephane fonlarına uygulanır"),
+        # --- Rakip fon taraması (28 Eyl) ---
+        ("TP2" in pp.get("elenen_tasfiye", []),                     "Rakip: tasfiye kurucusunun fonu elenir (Tera dersi)"),
+        ("SUS" in pp.get("supheli_yuksek", []),                     "Rakip: grubundan şüpheli yüksek getirili fon işaretlenir"),
+        ("SUS" not in adaylar("para_piyasasi", "YLB"),              "Rakip: şüpheli fon aday gösterilmez"),
+        ("SRB" not in str(pp),                                      "Rakip: nitelikli (serbest) fon gruba girmez"),
+        ("ZPX" in adaylar("para_piyasasi", "YLB"),                  "Rakip: 1a+3a+1y'de geçen gerçek aday bulunur"),
+        ("KCK" not in T.get("rakip_gecis_adaylari", {}).get("YLB", []), "Rakip: küçük fon özet aday listesine girmez"),
+        ("GBX" in adaylar("bist30_endeks", "TIE"),                  "Rakip: BIST 30'da TIE'den iyi takip eden fon bulunur"),
+        ("AKU" in adaylar("bist30_endeks", "TIE"),                  "Rakip: AKU, TIE'ye karşı aday çıkar (28 Eyl gözlemi)"),
+        ("IDH" not in str(rt.get("bist100_endeks", {})),            "Rakip: 'BIST 100 dışı' fon endeks grubuna girmez (hata #1)"),
     ]
     gecen = 0
     for i, (kosul, aciklama) in enumerate(testler, 1):
