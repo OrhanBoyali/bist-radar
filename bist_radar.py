@@ -595,6 +595,39 @@ def rakip_tarama():
     return out
 
 
+def fon_tutarlilik(R):
+    """Bağımsız kaynak yok → iç tutarlılık kontrolleri (28 Eyl). Sapma varsa HEALTH'e yazar."""
+    fon = R.get("fonlar") or {}
+    son_is = (pd.Timestamp(NOW.date()) - pd.offsets.BDay(1)).date()
+    b30 = R.get("bist30") or {}
+    # BIST 30'un son TAMAMLANMIŞ gününün getirisi (fon fiyatı bir gün geriden gelir)
+    kap = [x["k"] for x in (b30.get("son_5_kapanis") or [])]
+    if b30.get("son_bar_kismi_mi"):
+        kap = kap[:-1]
+    endeks_gun = pct(kap[-1], kap[-2]) if len(kap) >= 2 else None
+    out = {}
+    for c, fb in fon.items():
+        if not fb or fb.get("fiyat_tarihi") is None:
+            continue
+        r = {}
+        ft = datetime.strptime(fb["fiyat_tarihi"], "%Y-%m-%d").date()
+        yas = (son_is - ft).days
+        r["fiyat_yasi_is_gunu"] = yas
+        if yas > 1:
+            HEALTH[f"fon_{c}_bayat"] = f"UYARI: {c} fiyatı {fb['fiyat_tarihi']} tarihli, son iş günü {son_is} — bayat olabilir"
+        g = fb.get("gunluk_getiri_pct")
+        if c in CEPHANE and g is not None and abs(g) > 0.35:
+            HEALTH[f"fon_{c}_gunluk_sapma"] = f"UYARI: para piyasası fonu {c} günde %{g} hareket etti (normal ±0,15) — veri şüpheli"
+            r["sapma"] = "para piyasası için anormal günlük hareket"
+        if c in ("TIE", "AKU") and g is not None and endeks_gun is not None:
+            fark = round(g - endeks_gun, 2)
+            r["endeks_gun"] = endeks_gun; r["fon_eksi_endeks"] = fark
+            if abs(fark) > 1.5:
+                HEALTH[f"fon_{c}_takip_sapmasi"] = f"UYARI: {c} günlük %{g}, BIST 30 %{endeks_gun} — {fark} puan sapma, veri veya takip sorunu"
+        out[c] = r
+    return out
+
+
 FON_HIST = "output/fon_gecmis.json"
 
 def fon_akis_trend(fonlar):
@@ -728,6 +761,7 @@ def main():
         R["fonlar"] = {c: safe(f"fon_{c}", lambda c=c: fund_block(c)) for c in FUNDS}
         R["fonlar_zamani"] = NOW.strftime("%Y-%m-%d %H:%M")
         R["fon_akis"] = safe("fon_akis", lambda: fon_akis_trend(R["fonlar"]))
+        R["fon_tutarlilik"] = safe("fon_tutarlilik", lambda: fon_tutarlilik(R))
     elif prev.get("fonlar"):
         R["fonlar"] = prev["fonlar"]
         onceki = str(prev.get("fonlar_zamani", "önceki çalışma")).split(" (önbellek")[0]
