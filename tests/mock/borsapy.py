@@ -78,6 +78,8 @@ def screen_funds(fund_type="YAT", limit=50, **k):
         ("SUS", "ÖRNEK PORTFÖY PARA PİYASASI FONU", 4.20, 12.5, 60.0),         # şüpheli yüksek
         ("TP2", "TERA PORTFÖY PARA PİYASASI FONU", 4.10, 12.4, 60.2),          # tasfiye kurucu
         ("SRB", "XYZ PORTFÖY PARA PİYASASI SERBEST FON", 3.50, 11.0, 52.0),    # nitelikli, gruba girmez
+        ("ZSP", "KUVEYT TÜRK PORTFÖY İKİNCİ SEPET HESAP PARA PİYASASI KATILIM FONU", 3.40, 10.5, 62.0),  # TEFAS'ta kapalı
+        ("Y1O", "ÖRNEK2 PORTFÖY PARA PİYASASI FONU", 3.20, 10.3, 60.0),       # aylık normal, yıllık aşırı yüksek
         # BIST 30 endeks
         ("TIE", "İŞ PORTFÖY BIST 30 ENDEKSİ HİSSE SENEDİ FONU", -5.02, 2.0, 31.28),
         ("AKU", "AK PORTFÖY BIST 30 ENDEKSİ HİSSE SENEDİ FONU", -3.54, 3.0, 35.68),
