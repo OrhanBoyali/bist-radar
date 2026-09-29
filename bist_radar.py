@@ -522,14 +522,15 @@ def _tr_up(x):
     return x
 RAKIP_GRUPLARI = {
     "para_piyasasi": {"bizim": ["YLB", "IJV", "DLY"],
-                      "filtre": lambda n: "PARA PIYASASI" in n and "SERBEST" not in n,
-                      "esik": {"1m": 0.15, "3m": 0.40, "1y": 1.5}, "supheli_1m": 0.6},
+                      # "SEPET HESAP": bankaya özel, TEFAS'ta işleme kapalı fonlar (29 Eyl ZA2 dersi)
+                      "filtre": lambda n: "PARA PIYASASI" in n and "SERBEST" not in n and "SEPET HESAP" not in n,
+                      "esik": {"1m": 0.15, "3m": 0.40, "1y": 1.5}, "supheli_1m": 0.6, "supheli_1y": 8.0},
     "bist30_endeks": {"bizim": ["TIE", "AKU"],
                       "filtre": lambda n: "BIST 30" in n and "ENDEKS" in n,
-                      "esik": {"1m": 0.0, "3m": 0.5, "1y": 2.0}, "supheli_1m": 3.0},
+                      "esik": {"1m": 0.0, "3m": 0.5, "1y": 2.0}, "supheli_1m": 3.0, "supheli_1y": 10.0},
     "bist100_endeks": {"bizim": [],
                        "filtre": lambda n: ("BIST 100 ENDEKS" in n or "BIST100 ENDEKS" in n) and "DISI" not in n,
-                       "esik": {"1m": 0.0, "3m": 0.5, "1y": 2.0}, "supheli_1m": 3.0},
+                       "esik": {"1m": 0.0, "3m": 0.5, "1y": 2.0}, "supheli_1m": 3.0, "supheli_1y": 10.0},
 }
 MIN_FON_BUYUKLUGU = 500_000_000   # aday için asgari büyüklük (likidite)
 
@@ -549,7 +550,9 @@ def rakip_tarama():
             continue
         temiz = d[d["elenen"].isna()]
         med1 = temiz["return_1m"].median()
-        d["supheli"] = d["return_1m"] > med1 + g["supheli_1m"]
+        med1y = temiz["return_1y"].median()
+        # Tera dersi: grubundan kısa VEYA uzun vadede belirgin ayrışan getiri = şüpheli, aday değil
+        d["supheli"] = (d["return_1m"] > med1 + g["supheli_1m"]) | (d["return_1y"] > med1y + g.get("supheli_1y", 99))
         aday_havuz = d[d["elenen"].isna() & ~d["supheli"]]
         cols = ["fund_code", "name", "return_1m", "return_3m", "return_1y"]
         res = {"fon_sayisi": int(len(d)), "medyan_1m": J(med1),
