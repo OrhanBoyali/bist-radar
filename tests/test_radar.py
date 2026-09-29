@@ -61,6 +61,9 @@ def main():
         ("GBX" in adaylar("bist30_endeks", "TIE"),                  "Rakip: BIST 30'da TIE'den iyi takip eden fon bulunur"),
         ("AKU" in adaylar("bist30_endeks", "TIE"),                  "Rakip: AKU, TIE'ye karşı aday çıkar (28 Eyl gözlemi)"),
         ("IDH" not in str(rt.get("bist100_endeks", {})),            "Rakip: 'BIST 100 dışı' fon endeks grubuna girmez (hata #1)"),
+        ("ZSP" not in str(pp),                                      "Rakip: TEFAS'ta kapalı 'sepet hesap' fonu gruba girmez (29 Eyl ZA2)"),
+        ("Y1O" in pp.get("supheli_yuksek", []),                     "Rakip: yıllık getirisi grubundan aşırı yüksek fon şüpheli sayılır"),
+        ("Y1O" not in adaylar("para_piyasasi", "YLB"),              "Rakip: yıllık aykırı fon aday gösterilmez"),
         # --- Fon veri tutarlılığı (28 Eyl) ---
         ("fon_TIE_bayat" in d["saglik"]["hatali_moduller"],         "Tutarlılık: bayat fon fiyatı uyarı verir"),
         ("fon_AKU_takip_sapmasi" in d["saglik"]["hatali_moduller"], "Tutarlılık: endeks fonu endeksten koparsa uyarı verir"),
