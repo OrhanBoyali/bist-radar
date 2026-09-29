@@ -666,16 +666,24 @@ def fon_capraz(fonoloji, borsapy_fon):
     return out
 
 
+def onceki_islem_gunu_getirisi(kapanislar, fon_tarihi):
+    """Hisse fonunun 'D' tarihli fiyatı, D'den önceki son işlem gününün kapanışıyla hesaplanır (TEFAS).
+    Bu yüzden fonun D günkü getirisi, endeksin D'den ÖNCEKİ son işlem günündeki getirisiyle karşılaştırılır.
+    kapanislar: [{"t": "YYYY-MM-DD", "k": fiyat}, ...] (tamamlanmış günler)."""
+    once = [x for x in kapanislar if x["t"] < fon_tarihi]
+    if len(once) < 2:
+        return None
+    return pct(once[-1]["k"], once[-2]["k"])
+
+
 def fon_tutarlilik(R):
     """Bağımsız kaynak yok → iç tutarlılık kontrolleri (28 Eyl). Sapma varsa HEALTH'e yazar."""
     fon = R.get("fonlar") or {}
     son_is = (pd.Timestamp(NOW.date()) - pd.offsets.BDay(1)).date()
     b30 = R.get("bist30") or {}
-    # BIST 30'un son TAMAMLANMIŞ gününün getirisi (fon fiyatı bir gün geriden gelir)
-    kap = [x["k"] for x in (b30.get("son_5_kapanis") or [])]
+    kap = list(b30.get("son_5_kapanis") or [])
     if b30.get("son_bar_kismi_mi"):
         kap = kap[:-1]
-    endeks_gun = pct(kap[-1], kap[-2]) if len(kap) >= 2 else None
     out = {}
     for c, fb in fon.items():
         if not fb or fb.get("fiyat_tarihi") is None:
@@ -690,6 +698,7 @@ def fon_tutarlilik(R):
         if c in CEPHANE and g is not None and abs(g) > 0.35:
             HEALTH[f"fon_{c}_gunluk_sapma"] = f"UYARI: para piyasası fonu {c} günde %{g} hareket etti (normal ±0,15) — veri şüpheli"
             r["sapma"] = "para piyasası için anormal günlük hareket"
+        endeks_gun = onceki_islem_gunu_getirisi(kap, fb["fiyat_tarihi"]) if c in ("TIE", "AKU") else None
         if c in ("TIE", "AKU") and g is not None and endeks_gun is not None:
             fark = round(g - endeks_gun, 2)
             r["endeks_gun"] = endeks_gun; r["fon_eksi_endeks"] = fark
