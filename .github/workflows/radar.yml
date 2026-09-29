@@ -24,10 +24,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install --upgrade borsapy yfinance pandas
+      - run: pip install --upgrade borsapy yfinance pandas requests
       - run: python bist_radar.py
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
+          FONOLOJI_KEY: ${{ secrets.FONOLOJI_KEY }}
 
       - name: JSON'u depoya yaz
         run: |
