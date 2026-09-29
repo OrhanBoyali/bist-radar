@@ -12,6 +12,8 @@ import pandas as pd
 
 TR_TZ = timezone(timedelta(hours=3))
 NOW = datetime.now(TR_TZ)
+if os.environ.get("RADAR_TEST_NOW"):     # SADECE testler için: günün farklı saatlerini canlandırmak
+    NOW = datetime.strptime(os.environ["RADAR_TEST_NOW"], "%Y-%m-%d %H:%M").replace(tzinfo=TR_TZ)
 OUT = "output/radar.json"
 YAB_HIST = "output/yabanci_gecmis.json"
 TICKERS_FILE = "tickers.txt"
@@ -595,6 +597,75 @@ def rakip_tarama():
     return out
 
 
+# ---- FONOLOJİ (28 Eyl): fonlar için BİRİNCİL kaynak; borsapy çapraz kontrol/yedek --------
+FONOLOJI_BASE = "https://fonoloji.com/v1"
+
+def fonoloji_get(path, params=None, timeout=20):
+    import requests
+    key = os.environ.get("FONOLOJI_KEY")
+    if not key:
+        raise ValueError("FONOLOJI_KEY tanımlı değil")
+    r = requests.get(FONOLOJI_BASE + path, params=params or {}, headers={"X-API-Key": key}, timeout=timeout)
+    if r.status_code == 429:
+        raise ValueError(f"Fonoloji kota/limit (429), retry-after={r.headers.get('retry-after')}")
+    r.raise_for_status()
+    return r.json()
+
+def fonoloji_fund(code):
+    """Tek fon: künye + son 1 yıllık fiyat/büyüklük/yatırımcı geçmişi. Kota: 2 kayıt."""
+    d = fonoloji_get(f"/funds/{code}")
+    f = d.get("fund") or {}
+    h = fonoloji_get(f"/funds/{code}/history", {"period": "1y"})
+    pts = [p for p in (h.get("points") or []) if p.get("price")]
+    if not f.get("current_price") or not pts:
+        raise ValueError("fonoloji boş yanıt")
+    ser = pd.Series({pd.Timestamp(p["date"]): float(p["price"]) for p in pts}).sort_index()
+    aum = pd.Series({pd.Timestamp(p["date"]): p.get("total_value") for p in pts}).dropna().sort_index()
+    inv = pd.Series({pd.Timestamp(p["date"]): p.get("investor_count") for p in pts}).dropna().sort_index()
+    last_d = ser.index[-1]
+    past = ser[ser.index <= last_d - pd.Timedelta(days=30)]
+    def chg30(x):
+        if not len(x):
+            return None
+        xp = x[x.index <= x.index[-1] - pd.Timedelta(days=30)]
+        return pct(x.iloc[-1], xp.iloc[-1]) if len(xp) else None
+    return {"kaynak": "fonoloji",
+            "fiyat": J(ser.iloc[-1]), "fiyat_tarihi": last_d.strftime("%Y-%m-%d"),
+            "gunluk_getiri_pct": pct(ser.iloc[-1], ser.iloc[-2]) if len(ser) > 1 else None,
+            "getiri_30g_pct": pct(ser.iloc[-1], past.iloc[-1]) if len(past) else None,
+            "getiri_1y_pct": J(f["return_1y"] * 100) if f.get("return_1y") is not None else None,
+            "akis": {"buyukluk_son": J(aum.iloc[-1]) if len(aum) else None,
+                     "buyukluk_30g_degisim_pct": chg30(aum),
+                     "yatirimci_son": J(inv.iloc[-1]) if len(inv) else None,
+                     "yatirimci_30g_degisim_pct": chg30(inv)},
+            "bilgi": {"name": f.get("name"), "category": f.get("category"), "risk_value": f.get("risk_score"),
+                      "buy_valor": f.get("buy_valor"), "sell_valor": f.get("sell_valor"),
+                      "fund_size": f.get("aum"), "investor_count": f.get("investor_count"),
+                      "trading_status": f.get("trading_status"), "management_company": f.get("management_company")},
+            "portfoy": d.get("portfolio")}
+
+def fon_capraz(fonoloji, borsapy_fon):
+    """İki bağımsız aktarım hattını karşılaştırır. Fark → HEALTH uyarısı."""
+    out = {}
+    for c, a in (fonoloji or {}).items():
+        b = (borsapy_fon or {}).get(c)
+        if not a or not b or not a.get("fiyat") or not b.get("fiyat"):
+            continue
+        r = {"fonoloji_fiyat": a["fiyat"], "borsapy_fiyat": b["fiyat"],
+             "fonoloji_tarih": a["fiyat_tarihi"], "borsapy_tarih": b["fiyat_tarihi"]}
+        if a["fiyat_tarihi"] == b["fiyat_tarihi"]:
+            fark = pct(a["fiyat"], b["fiyat"])
+            r["fark_pct"] = fark
+            if fark is not None and abs(fark) > 0.05:
+                HEALTH[f"fon_{c}_kaynak_celiskisi"] = (f"UYARI: {c} fiyatı iki kaynakta farklı — fonoloji {a['fiyat']} vs "
+                                                        f"borsapy {b['fiyat']} ({fark}%) — aktarım hatası olabilir")
+        else:
+            r["not"] = "tarihler farklı — biri geriden geliyor"
+            HEALTH[f"fon_{c}_tarih_farki"] = f"UYARI: {c} fonoloji {a['fiyat_tarihi']}, borsapy {b['fiyat_tarihi']}"
+        out[c] = r
+    return out
+
+
 def fon_tutarlilik(R):
     """Bağımsız kaynak yok → iç tutarlılık kontrolleri (28 Eyl). Sapma varsa HEALTH'e yazar."""
     fon = R.get("fonlar") or {}
@@ -757,16 +828,24 @@ def main():
             R["yabanci"] = {**R["yabanci"], "not_onbellek": "yabancı oranı günde 2 kez güncellenir"}
 
     fon_saati = gunluk_saat or not prev.get("fonlar")
-    if bp and fon_saati:
-        R["fonlar"] = {c: safe(f"fon_{c}", lambda c=c: fund_block(c)) for c in FUNDS}
+    if fon_saati:
+        fono = {c: safe(f"fonoloji_{c}", lambda c=c: fonoloji_fund(c)) for c in FUNDS} if os.environ.get("FONOLOJI_KEY") else {}
+        bors = {c: safe(f"fon_{c}", lambda c=c: fund_block(c)) for c in FUNDS} if bp else {}
+        R["fonlar_borsapy"], R["fonlar_fonoloji"] = bors, fono
+        R["fonlar"] = {c: (fono.get(c) or bors.get(c)) for c in FUNDS}          # birincil: fonoloji
+        R["fonlar_kaynak"] = {c: ("fonoloji" if fono.get(c) else ("borsapy" if bors.get(c) else "yok")) for c in FUNDS}
+        R["fon_capraz"] = fon_capraz(fono, bors)
         R["fonlar_zamani"] = NOW.strftime("%Y-%m-%d %H:%M")
         R["fon_akis"] = safe("fon_akis", lambda: fon_akis_trend(R["fonlar"]))
         R["fon_tutarlilik"] = safe("fon_tutarlilik", lambda: fon_tutarlilik(R))
+
     elif prev.get("fonlar"):
         R["fonlar"] = prev["fonlar"]
         onceki = str(prev.get("fonlar_zamani", "önceki çalışma")).split(" (önbellek")[0]
         R["fonlar_zamani"] = onceki + " (önbellek — TEFAS günde 1 fiyat)"
         R["fon_akis"] = prev.get("fon_akis", {})
+        for k in ("fonlar_borsapy", "fonlar_fonoloji", "fonlar_kaynak", "fon_capraz"):
+            R[k] = prev.get(k)
     if bp and (gunluk_saat or not prev.get("rakip_tarama")):
         R["rakip_tarama"] = safe("rakip_tarama", rakip_tarama)
     else:
@@ -880,7 +959,9 @@ def main():
     T["fon_akis_pencere_gun"] = fa.get("gun")
     for c in FUNDS:
         a = fa.get(c) or {}
-        b_ = a.get("buyukluk_degisim_pct"); y_ = a.get("yatirimci_degisim_pct")
+        fk = ((R.get("fonlar") or {}).get(c) or {}).get("akis") or {}
+        b_ = fk["buyukluk_30g_degisim_pct"] if fk.get("buyukluk_30g_degisim_pct") is not None else a.get("buyukluk_degisim_pct")
+        y_ = fk["yatirimci_30g_degisim_pct"] if fk.get("yatirimci_30g_degisim_pct") is not None else a.get("yatirimci_degisim_pct")
         if (b_ is not None and b_ <= -20) or (y_ is not None and y_ <= -15):
             akis_alarm[c] = {"buyukluk_30g": b_, "yatirimci_30g": y_}
     T["fon_kitlesel_cikis_alarm"] = akis_alarm   # Tera/Pusula dersi: erken uyarı
