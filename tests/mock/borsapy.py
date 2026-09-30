@@ -73,6 +73,7 @@ def screen_funds(fund_type="YAT", limit=50, **k):
         ("YLB", "YAPI KREDİ PORTFÖY PARA PİYASASI FONU", 3.06, 9.8, 46.5),
         ("IJV", "İSTANBUL PORTFÖY PARA PİYASASI FONU", 3.13, 10.0, 47.2),
         ("DLY", "DENİZ PORTFÖY PARA PİYASASI FONU", 3.02, 9.7, 45.9),
+        ("ZBJ", "ZİRAAT PORTFÖY BAŞAK PARA PİYASASI FONU", 3.10, 9.9, 47.0),  # 30 Eyl: portföye girdi
         ("ZPX", "ZİRAAT PORTFÖY PARA PİYASASI FONU", 3.30, 10.6, 49.5),        # gerçek aday
         ("KCK", "KÜÇÜK PORTFÖY PARA PİYASASI FONU", 3.35, 10.7, 50.0),         # aday ama küçük
         ("SUS", "ÖRNEK PORTFÖY PARA PİYASASI FONU", 4.20, 12.5, 60.0),         # şüpheli yüksek
