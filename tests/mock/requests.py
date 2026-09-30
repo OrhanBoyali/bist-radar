@@ -29,8 +29,10 @@ def get(url, params=None, headers=None, timeout=20):
                         "total_value": 1e9 * (0.75 if i > n - 12 else 1.0),   # TEST: son 2 haftada %25 küçülme
                         "investor_count": 10000 - (2000 if i > n - 12 else 0)})
         return _Resp({"code": code, "period": "1y", "points": pts})
+    aum = 1e8 if code == "KCK" else 7.5e8                        # KCK: küçük fon senaryosu
+    durum = "TEFAS'TA İŞLEME KAPALI" if code == "TKP" else "AKTİF" # TKP: kapalı fon senaryosu
     return _Resp({"fund": {"code": code, "name": f"{code} FONU", "category": "Para Piyasası", "risk_score": 1,
                            "buy_valor": 0, "sell_valor": 0, "current_price": 5.5, "current_date": str(son),
-                           "return_1y": 0.47, "aum": 7.5e8, "investor_count": 9970, "trading_status": "AKTİF",
+                           "return_1y": 0.47, "aum": aum, "investor_count": 9970, "trading_status": durum,
                            "management_company": "Test Portföy"},
                   "portfolio": {"stock": 0, "cash": 100}})
