@@ -13,9 +13,14 @@ KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MOCK = os.path.join(KOK, "tests", "mock")
 
 EVREN = {}
-def calistir():
+def calistir(tohum=None):
     tmp = tempfile.mkdtemp()
-    EVREN["klasor"] = tmp
+    if tohum:                                  # önceden birikmiş dosyalarla başlatma (kalıcılık testi)
+        os.makedirs(os.path.join(tmp, "output"), exist_ok=True)
+        for ad, icerik in tohum.items():
+            json.dump(icerik, open(os.path.join(tmp, "output", ad), "w", encoding="utf-8"))
+    else:
+        EVREN["klasor"] = tmp
     shutil.copy(os.path.join(KOK, "bist_radar.py"), tmp)
     env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK)
     subprocess.run([sys.executable, "bist_radar.py"], cwd=tmp, env=env, capture_output=True, timeout=300)
@@ -33,6 +38,10 @@ def birim_tarih_hizalama():
 
 def main():
     hz = birim_tarih_hizalama()
+    from datetime import date as _d, timedelta as _td
+    _gecmis = [(_d.today() - _td(days=i)).strftime("%Y-%m-%d") for i in range(40, 5, -1) if (_d.today() - _td(days=i)).weekday() < 5]
+    d_olgun = calistir({"aday_izleme.json": {"YLB": {"ZPX": {"ilk": _gecmis[0], "gunler": _gecmis}}}})
+    olgun_ylb = [a["kod"] for a in d_olgun["tetikler"].get("rakip_olgun_adaylar", {}).get("YLB", [])]
     import csv as _csv
     d = calistir(); T = d["tetikler"]; k = T.get("k3_donus_kapisi", {}); fon = d.get("fonlar_borsapy") or d.get("fonlar", {})   # borsapy filtre testleri ham borsapy verisine bakar
     rt = d.get("rakip_tarama") or {}; pp = rt.get("para_piyasasi") or {}
@@ -80,6 +89,14 @@ def main():
         (not {"KCK", "TKP"} & set(T.get("rakip_gecis_adaylari", {}).get("YLB", [])), "Rakip v2: küçük ve kapalı fon büyük adaylara girmez"),
         (all(r.get("buyukluk") for r in pp.get("siralama", []) if r.get("bizim")), "Rakip v2: bizim fonların künyesi dolu"),
         # --- Fon evreni (29 Eyl): bütün fonlar tek tabloda + kategori özetleri ---
+        # --- Geçiş karar çerçevesi (30 Eyl): kalıcılık + başabaş + risk ---
+        (T.get("rakip_olgun_adaylar") == {},                        "Karar: ilk gün görülen aday 'olgun' sayılmaz (kalıcılık şartı)"),
+        ("ZPX" in olgun_ylb,                                        "Karar: 4+ hafta, 20+ iş günü aday kalan fon olgunlaşır"),
+        ("BY1" not in olgun_ylb,                                    "Karar: yeni çıkan aday, eskisi olgunlaşsa da beklemede kalır"),
+        (all(isinstance(a.get("basabas_gun"), (int, float)) for a in pp["bizim"]["YLB"]["buyuk_adaylar"]),
+                                                                    "Karar: para piyasası adayları için başabaş süresi hesaplanır"),
+        (all(a.get("piyasa_disi_gun", 0) >= 2 for a in (rt.get("bist30_endeks") or {}).get("bizim", {}).get("TIE", {}).get("gecis_adaylari", [])),
+                                                                    "Karar: hisse fonu geçişinde piyasa dışı gün (T+2) raporlanır"),
         (ev_satir == rt.get("evren"),                               "Evren: bütün fonlar tabloya yazılır (satır sayısı = evren)"),
         (os.path.exists(os.path.join(EVREN["klasor"], "output", "fon_kunye.json")), "Evren: künye önbelleği dosyası oluşur"),
         ((rt.get("kunye_durumu") or {}).get("kapsam", 0) > 0,       "Evren: künye kapsamı raporlanır"),
