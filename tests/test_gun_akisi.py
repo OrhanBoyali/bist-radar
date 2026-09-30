@@ -61,6 +61,8 @@ def main():
     kontrol("tez_cizgisi_haftalik_kirildi" in d["tetikler"],         "18:52 — haftalık tez çizgisi kontrolü var")
     kontrol(d["tetikler"].get("reel_getiri"),                         "18:52 — net reel getiri hesaplandı")
     kontrol(((d.get("rakip_tarama") or {}).get("kunye_durumu") or {}).get("yenilenen", 1) == 0, "18:52 — künyeler önbellekten (aynı gün tekrar çekilmedi, kota korunuyor)")
+    _iz = ((d.get("rakip_tarama") or {}).get("aday_izleme") or {}).get("YLB", {})
+    kontrol(bool(_iz) and all(v["aday_gun_sayisi"] == 1 for v in _iz.values()), "18:52 — aynı gün iki tarama adayı iki kez saymaz (kalıcılık doğru ölçülür)")
     with open(os.path.join(tmp, "output", "gunluk_arsiv.csv"), encoding="utf-8") as f:
         satirlar = [r for r in csv.DictReader(f) if r["tarih"] == g]
     kontrol(len(satirlar) == 1,                                      "18:52 — arşivde bugün için TEK satır (18:17'nin üzerine yazıldı)")
