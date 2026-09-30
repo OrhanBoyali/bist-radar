@@ -533,6 +533,134 @@ RAKIP_GRUPLARI = {
                        "esik": {"1m": 0.0, "3m": 0.5, "1y": 2.0}, "supheli_1m": 3.0, "supheli_1y": 10.0},
 }
 MIN_FON_BUYUKLUGU = 500_000_000   # aday için asgari büyüklük (likidite)
+RAKIP_SURUM = 3                   # yapı değişince artır → ilk çalışmada tarama önbelleği yenilenir
+RAKIP_KUNYE_MAX = 60              # grup başına künyesi çekilecek en fazla fon (kota/limit koruması)
+RAKIP_ADAY_MAX = 20               # listelenecek en fazla aday (eskiden 3'tü — 29 Eyl kullanıcı talebi)
+
+KUNYE_FILE = "output/fon_kunye.json"      # tüm evren için künye önbelleği
+EVREN_CSV = "output/fon_evreni.csv"        # bütün fonlar tek tabloda (analiz için)
+KUNYE_TTL_GUN = 7                          # künye bu kadar günden eskiyse yenilenir
+KUNYE_GUNLUK_LIMIT = 150                   # bir çalışmada en fazla yenilenecek künye (Fonoloji varken)
+KUNYE_GUNLUK_LIMIT_BORSAPY = 40            # Fonoloji yoksa (TEFAS'ı yormamak için)
+
+def _kunye_cek(code):
+    """Tek fon künyesi — önce Fonoloji (1 kayıt), yoksa borsapy."""
+    if os.environ.get("FONOLOJI_KEY"):
+        try:
+            f = (fonoloji_get(f"/funds/{code}") or {}).get("fund") or {}
+            if f:
+                return {"buyukluk": J(f.get("aum")), "yatirimci": J(f.get("investor_count")),
+                        "satis_valoru": f.get("sell_valor"), "risk": f.get("risk_score"),
+                        "kurucu": f.get("management_company"), "tefas_durum": f.get("trading_status"),
+                        "kunye_kaynak": "fonoloji"}
+        except Exception:
+            pass
+    import time
+    bi = bp.Fund(code).info or {}
+    time.sleep(0.3)
+    return {"buyukluk": J(bi.get("fund_size")), "yatirimci": J(bi.get("investor_count")),
+            "satis_valoru": J(bi.get("sell_valor")), "risk": J(bi.get("risk_value")), "kunye_kaynak": "borsapy"}
+
+def _kunye_isaretle(k):
+    durum = _tr_up((k or {}).get("tefas_durum") or "")
+    k["tefas_kapali"] = bool(durum) and ("KAPAL" in durum or "CLOSED" in durum or "PASIF" in durum)
+    k["kucuk"] = bool(k.get("buyukluk")) and k["buyukluk"] < MIN_FON_BUYUKLUGU
+    return k
+
+def kunye_onbellek_guncelle(evren_df, oncelikli):
+    """Künye önbelleğini yükler; eksik/eskimiş olanlardan günlük limit kadarını yeniler.
+    Öncelik: bizim gruplardaki fonlar, sonra 1 yıllık getirisi yüksek olanlar."""
+    cache = {}
+    if os.path.exists(KUNYE_FILE):
+        try:
+            cache = json.load(open(KUNYE_FILE, encoding="utf-8"))
+        except Exception:
+            cache = {}
+    bugun = NOW.date()
+    def eski(code):
+        t = (cache.get(code) or {}).get("t")
+        return (not t) or (bugun - datetime.strptime(t, "%Y-%m-%d").date()).days >= KUNYE_TTL_GUN
+    sirali = list(dict.fromkeys(list(oncelikli) +
+                                list(evren_df.sort_values("return_1y", ascending=False)["fund_code"])))
+    limit = KUNYE_GUNLUK_LIMIT if os.environ.get("FONOLOJI_KEY") else KUNYE_GUNLUK_LIMIT_BORSAPY
+    yenilenen, hata = 0, 0
+    for code in sirali:
+        if yenilenen >= limit:
+            break
+        if not eski(code):
+            continue
+        try:
+            k = _kunye_cek(code)
+            k["t"] = bugun.strftime("%Y-%m-%d")
+            cache[code] = _kunye_isaretle(k)
+            yenilenen += 1
+        except Exception:
+            hata += 1
+            if hata > 25:
+                break
+    os.makedirs("output", exist_ok=True)
+    json.dump(cache, open(KUNYE_FILE, "w", encoding="utf-8"), ensure_ascii=False)
+    kapsam = sum(1 for c in evren_df["fund_code"] if c in cache)
+    return cache, {"yenilenen": yenilenen, "hata": hata, "kapsam": kapsam, "evren": int(len(evren_df))}
+
+def evren_tablosu(df, cache, supheli_kodlar):
+    """Bütün fonlar tek tabloda + kategori özetleri."""
+    rows = []
+    for _, x in df.iterrows():
+        k = cache.get(x["fund_code"]) or {}
+        n = x["_n"]
+        rows.append({"kod": x["fund_code"], "ad": x["name"], "kategori": x.get("fund_type") or "",
+                     "1a": x.get("return_1m"), "3a": x.get("return_3m"), "6a": x.get("return_6m"),
+                     "yb": x.get("return_ytd"), "1y": x.get("return_1y"), "3y": x.get("return_3y"),
+                     "buyukluk": k.get("buyukluk"), "yatirimci": k.get("yatirimci"), "kurucu": k.get("kurucu"),
+                     "satis_valoru": k.get("satis_valoru"), "risk": k.get("risk"),
+                     "tasfiye_kurucu": isinstance(x.get("elenen"), str), "nitelikli_serbest": "SERBEST" in n,
+                     "sepet": "SEPET HESAP" in n, "tefas_kapali": bool(k.get("tefas_kapali")),
+                     "kucuk": bool(k.get("kucuk")), "supheli": x["fund_code"] in supheli_kodlar,
+                     "kunye_tarihi": k.get("t")})
+    tab = pd.DataFrame(rows)
+    os.makedirs("output", exist_ok=True)
+    tab.to_csv(EVREN_CSV, index=False)
+    temiz = tab[~(tab["tasfiye_kurucu"] | tab["nitelikli_serbest"] | tab["sepet"] | tab["tefas_kapali"] | tab["supheli"])]
+    ozet = {}
+    for kat, g in temiz.groupby("kategori"):
+        if not kat:
+            continue
+        uygun = g[~g["kucuk"] & g["buyukluk"].notna()].sort_values("1y", ascending=False)
+        ozet[kat] = {"fon_sayisi": int(len(g)),
+                     "medyan_1a": J(g["1a"].median()), "medyan_3a": J(g["3a"].median()), "medyan_1y": J(g["1y"].median()),
+                     "en_iyi_5_buyuk": J(uygun[["kod", "ad", "1a", "3a", "1y", "buyukluk", "kurucu"]].head(5))}
+    return {"toplam_fon": int(len(tab)), "temiz_fon": int(len(temiz)), "kategori_sayisi": len(ozet),
+            "kategoriler": ozet, "tablo_dosyasi": EVREN_CSV}
+
+
+def _kunye(code, cache):
+    """Fon künyesi: büyüklük, yatırımcı, valör, kurucu, TEFAS durumu. Önce Fonoloji (1 kayıt), yoksa borsapy."""
+    if code in cache:
+        return cache[code]
+    out = {}
+    if os.environ.get("FONOLOJI_KEY"):
+        try:
+            f = (fonoloji_get(f"/funds/{code}") or {}).get("fund") or {}
+            out = {"buyukluk": J(f.get("aum")), "yatirimci": J(f.get("investor_count")),
+                   "satis_valoru": f.get("sell_valor"), "risk": f.get("risk_score"),
+                   "kurucu": f.get("management_company"), "tefas_durum": f.get("trading_status"), "kunye_kaynak": "fonoloji"}
+        except Exception:
+            out = {}
+    if not out:
+        try:
+            import time
+            bi = bp.Fund(code).info or {}
+            out = {"buyukluk": J(bi.get("fund_size")), "yatirimci": J(bi.get("investor_count")),
+                   "satis_valoru": J(bi.get("sell_valor")), "risk": J(bi.get("risk_value")), "kunye_kaynak": "borsapy"}
+            time.sleep(0.3)
+        except Exception:
+            out = {"kunye_kaynak": "alınamadı"}
+    durum = _tr_up(out.get("tefas_durum") or "")
+    out["tefas_kapali"] = bool(durum) and ("KAPAL" in durum or "CLOSED" in durum or "PASIF" in durum)
+    out["kucuk"] = bool(out.get("buyukluk")) and out["buyukluk"] < MIN_FON_BUYUKLUGU
+    cache[code] = out
+    return out
 
 def rakip_tarama():
     """TEFAS'taki tüm yatırım fonlarını çekip her fonumuzu kendi grubuyla karşılaştırır."""
@@ -543,6 +671,9 @@ def rakip_tarama():
     df["_n"] = df["name"].map(_tr_up)
     df["elenen"] = df["_n"].map(lambda n: next((k for k in TASFIYE_KURUCULAR if k in n), None))
     out = {"evren": int(len(df)), "zaman": NOW.strftime("%Y-%m-%d %H:%M")}
+    oncelikli = df.loc[df["_n"].map(lambda n: any(g["filtre"](n) for g in RAKIP_GRUPLARI.values())), "fund_code"].tolist()
+    kcache_global, out["kunye_durumu"] = kunye_onbellek_guncelle(df[df["elenen"].isna()], oncelikli)
+    supheli_tum = set()
     for grup, g in RAKIP_GRUPLARI.items():
         d = df[df["_n"].map(g["filtre"])].copy()
         if d.empty:
@@ -553,20 +684,39 @@ def rakip_tarama():
         med1y = temiz["return_1y"].median()
         # Tera dersi: grubundan kısa VEYA uzun vadede belirgin ayrışan getiri = şüpheli, aday değil
         d["supheli"] = (d["return_1m"] > med1 + g["supheli_1m"]) | (d["return_1y"] > med1y + g.get("supheli_1y", 99))
-        aday_havuz = d[d["elenen"].isna() & ~d["supheli"]]
+        aday_havuz = d[d["elenen"].isna() & ~d["supheli"]].copy()
+        aday_havuz = aday_havuz.sort_values("return_1y", ascending=False, na_position="last").reset_index(drop=True)
+        aday_havuz["sira"] = aday_havuz.index + 1
         cols = ["fund_code", "name", "return_1m", "return_3m", "return_1y"]
-        res = {"fon_sayisi": int(len(d)), "medyan_1m": J(med1),
+        # künye: bizim en zayıf fonumuzdan daha iyi (ya da ona eşit) sıradaki herkes + bizimkiler
+        bizim_sira = aday_havuz.loc[aday_havuz["fund_code"].isin(g["bizim"]), "sira"]
+        kesme = int(bizim_sira.max()) if len(bizim_sira) else 10
+        kunye_kodlari = list(aday_havuz.loc[aday_havuz["sira"] <= kesme, "fund_code"])[:RAKIP_KUNYE_MAX]
+        kunye_kodlari += [k for k in g["bizim"] if k not in kunye_kodlari]
+        kcache = {c: v for c, v in kcache_global.items()}
+        siralama = []
+        for _, x in aday_havuz.iterrows():
+            row = {"sira": int(x["sira"]), "kod": x["fund_code"], "ad": x["name"],
+                   "1a": J(x["return_1m"]), "3a": J(x["return_3m"]), "1y": J(x["return_1y"]),
+                   "bizim": x["fund_code"] in g["bizim"]}
+            if x["fund_code"] in kcache or x["fund_code"] in kunye_kodlari:
+                row.update(_kunye(x["fund_code"], kcache))
+            siralama.append(row)
+        supheli_tum |= set(d.loc[d["supheli"], "fund_code"])
+        res = {"surum": RAKIP_SURUM, "fon_sayisi": int(len(d)), "temiz_havuz": int(len(aday_havuz)),
+               "medyan_1m": J(med1), "medyan_1y": J(med1y),
                "elenen_tasfiye": d.loc[d["elenen"].notna(), "fund_code"].tolist(),
                "supheli_yuksek": d.loc[d["supheli"] & d["elenen"].isna(), "fund_code"].tolist(),
-               "en_iyi_5_1y": J(aday_havuz.sort_values("return_1y", ascending=False)[cols].head(5)),
-               "bizim": {}}
+               "tefas_kapali": [r["kod"] for r in siralama if r.get("tefas_kapali")],
+               "en_iyi_5_1y": J(aday_havuz[cols].head(5)),
+               "siralama": siralama, "bizim": {}}
+        sira_map = {r["kod"]: r for r in siralama}
         for kod in g["bizim"]:
             r = d[d["fund_code"] == kod]
             if r.empty:
                 res["bizim"][kod] = {"hata": "grupta bulunamadı"}
                 continue
             r = r.iloc[0]
-            sira = int((aday_havuz["return_1y"].fillna(-1e9) > (r["return_1y"] if pd.notna(r["return_1y"]) else -1e9)).sum()) + 1
             e = g["esik"]
             def gecer(x):
                 ok = True
@@ -576,27 +726,38 @@ def rakip_tarama():
                     elif per != "1y":
                         ok = False
                 return bool(ok)
-            adaylar = aday_havuz[(aday_havuz["fund_code"] != kod) & aday_havuz.apply(gecer, axis=1)]
-            adaylar = adaylar.sort_values("return_1y", ascending=False).head(3)
+            gecen = aday_havuz[(aday_havuz["fund_code"] != kod) & aday_havuz.apply(gecer, axis=1)].head(RAKIP_ADAY_MAX)
             aday_list = []
-            for _, a in adaylar.iterrows():
-                item = {"kod": a["fund_code"], "ad": a["name"],
+            for _, a in gecen.iterrows():
+                kun = sira_map.get(a["fund_code"], {})
+                if "kunye_kaynak" not in kun:
+                    kun = {**kun, **_kunye(a["fund_code"], kcache)}
+                item = {"kod": a["fund_code"], "ad": a["name"], "sira": int(a["sira"]),
                         "fark_1m": J(a["return_1m"] - r["return_1m"]) if pd.notna(a["return_1m"]) else None,
                         "fark_3m": J(a["return_3m"] - r["return_3m"]) if pd.notna(a["return_3m"]) else None,
-                        "fark_1y": J(a["return_1y"] - r["return_1y"]) if pd.notna(a["return_1y"]) and pd.notna(r["return_1y"]) else None}
-                try:
-                    bi = bp.Fund(a["fund_code"]).info or {}
-                    item.update({"buyukluk": J(bi.get("fund_size")), "yatirimci": J(bi.get("investor_count")),
-                                 "satis_valoru": J(bi.get("sell_valor")), "risk": J(bi.get("risk_value"))})
-                    if bi.get("fund_size") and bi["fund_size"] < MIN_FON_BUYUKLUGU:
-                        item["not"] = "küçük fon — likidite riski"
-                except Exception:
-                    item["not"] = "künye alınamadı"
+                        "fark_1y": J(a["return_1y"] - r["return_1y"]) if pd.notna(a["return_1y"]) and pd.notna(r["return_1y"]) else None,
+                        "buyukluk": kun.get("buyukluk"), "yatirimci": kun.get("yatirimci"),
+                        "satis_valoru": kun.get("satis_valoru"), "kurucu": kun.get("kurucu"),
+                        "tefas_kapali": kun.get("tefas_kapali"), "kucuk": kun.get("kucuk")}
+                if kun.get("kucuk"):
+                    item["not"] = "küçük fon — likidite riski"
+                if kun.get("tefas_kapali"):
+                    item["not"] = "TEFAS'ta işleme kapalı"
                 aday_list.append(item)
+            buyuk = [a for a in aday_list if not a.get("not") and a.get("buyukluk")][:5]
             res["bizim"][kod] = {"return_1m": J(r["return_1m"]), "return_3m": J(r["return_3m"]),
-                                 "return_1y": J(r["return_1y"]), "gruptaki_sira_1y": sira,
-                                 "aday_havuz_sayisi": int(len(aday_havuz)), "gecis_adaylari": aday_list}
+                                 "return_1y": J(r["return_1y"]),
+                                 "gruptaki_sira_1y": sira_map.get(kod, {}).get("sira"),
+                                 "aday_havuz_sayisi": int(len(aday_havuz)),
+                                 "gecis_adaylari": aday_list, "buyuk_adaylar": buyuk}
         out[grup] = res
+    # kategori içi şüpheli (Tera dersi) — tüm kategoriler için
+    for kat, g in df[df["elenen"].isna()].groupby("fund_type"):
+        if len(g) >= 5:
+            m1, m1y = g["return_1m"].median(), g["return_1y"].median()
+            supheli_tum |= set(g.loc[(g["return_1m"] > m1 + 3 * max(g["return_1m"].std(), 0.2)) |
+                                     (g["return_1y"] > m1y + 3 * max(g["return_1y"].std(), 2.0)), "fund_code"])
+    out["evren_ozeti"] = evren_tablosu(df, kcache_global, supheli_tum)
     return out
 
 
@@ -858,7 +1019,9 @@ def main():
         R["fon_akis"] = prev.get("fon_akis", {})
         for k in ("fonlar_borsapy", "fonlar_fonoloji", "fonlar_kaynak", "fon_capraz"):
             R[k] = prev.get(k)
-    if bp and (gunluk_saat or not prev.get("rakip_tarama")):
+    _prt = prev.get("rakip_tarama") or {}
+    _prt_surum = ((_prt.get("para_piyasasi") or {}).get("surum")) if isinstance(_prt, dict) else None
+    if bp and (gunluk_saat or not _prt or _prt_surum != RAKIP_SURUM):
         R["rakip_tarama"] = safe("rakip_tarama", rakip_tarama)
     else:
         R["rakip_tarama"] = prev.get("rakip_tarama")
@@ -984,7 +1147,7 @@ def main():
         ozet = {}
         for grup in ("para_piyasasi", "bist30_endeks"):
             for kod, v in ((rt.get(grup) or {}).get("bizim") or {}).items():
-                ad = [a["kod"] for a in (v.get("gecis_adaylari") or []) if not a.get("not")]
+                ad = [a["kod"] for a in (v.get("buyuk_adaylar") or [])]
                 if ad:
                     ozet[kod] = ad
         T["rakip_gecis_adaylari"] = ozet
