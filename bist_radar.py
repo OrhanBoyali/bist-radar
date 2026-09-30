@@ -20,8 +20,8 @@ TICKERS_FILE = "tickers.txt"
 
 # ---- SİSTEM AYARLARI (ana kayıttan; değişince güncelle) -------------------
 LEVELS = {"korunan_taban": 13000, "tez_cizgisi_haftalik": 12600}
-FUNDS = ["YLB", "IJV", "DLY", "TIE", "AKU"]          # portföydeki fonlar
-CEPHANE = ["YLB", "IJV", "DLY"]                      # reel getiri kuralı SADECE bunlara
+FUNDS = ["YLB", "IJV", "DLY", "ZBJ", "TIE", "AKU"]   # portföydeki fonlar (30 Eyl: ZBJ eklendi)
+CEPHANE = ["YLB", "IJV", "DLY", "ZBJ"]               # reel getiri kuralı SADECE bunlara
 STOPAJ_PP = 0.175          # para piyasası fonu stopajı (kârdan). Değişirse güncelle.
 REEL_ALARM, REEL_ACIL = 0.5, 0.0   # NET reel getiri eşikleri (aylık %)
 TUFE_AYLIK_MANUEL = 1.84   # otomatik alınamazsa kullanılır (Ağustos 2026)
@@ -521,7 +521,7 @@ def _tr_up(x):
         x = x.replace(a, b)
     return x
 RAKIP_GRUPLARI = {
-    "para_piyasasi": {"bizim": ["YLB", "IJV", "DLY"],
+    "para_piyasasi": {"bizim": ["YLB", "IJV", "DLY", "ZBJ"],
                       # "SEPET HESAP": bankaya özel, TEFAS'ta işleme kapalı fonlar (29 Eyl ZA2 dersi)
                       "filtre": lambda n: "PARA PIYASASI" in n and "SERBEST" not in n and "SEPET HESAP" not in n,
                       "esik": {"1m": 0.15, "3m": 0.40, "1y": 1.5}, "supheli_1m": 0.6, "supheli_1y": 8.0},
