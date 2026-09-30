@@ -533,7 +533,7 @@ RAKIP_GRUPLARI = {
                        "esik": {"1m": 0.0, "3m": 0.5, "1y": 2.0}, "supheli_1m": 3.0, "supheli_1y": 10.0},
 }
 MIN_FON_BUYUKLUGU = 500_000_000   # aday için asgari büyüklük (likidite)
-RAKIP_SURUM = 3                   # yapı değişince artır → ilk çalışmada tarama önbelleği yenilenir
+RAKIP_SURUM = 4                   # yapı değişince artır → ilk çalışmada tarama önbelleği yenilenir
 RAKIP_KUNYE_MAX = 60              # grup başına künyesi çekilecek en fazla fon (kota/limit koruması)
 RAKIP_ADAY_MAX = 20               # listelenecek en fazla aday (eskiden 3'tü — 29 Eyl kullanıcı talebi)
 
@@ -549,10 +549,12 @@ def _kunye_cek(code):
         try:
             f = (fonoloji_get(f"/funds/{code}") or {}).get("fund") or {}
             if f:
+                pc = lambda v: J(v * 100) if isinstance(v, (int, float)) else None
                 return {"buyukluk": J(f.get("aum")), "yatirimci": J(f.get("investor_count")),
-                        "satis_valoru": f.get("sell_valor"), "risk": f.get("risk_score"),
+                        "alis_valoru": f.get("buy_valor"), "satis_valoru": f.get("sell_valor"), "risk": f.get("risk_score"),
                         "kurucu": f.get("management_company"), "tefas_durum": f.get("trading_status"),
-                        "kunye_kaynak": "fonoloji"}
+                        "max_dusus_1y": pc(f.get("max_drawdown_1y")), "reel_getiri_1y": pc(f.get("real_return_1y")),
+                        "yonetim_ucreti": f.get("management_fee"), "kunye_kaynak": "fonoloji"}
         except Exception:
             pass
     import time
@@ -632,6 +634,63 @@ def evren_tablosu(df, cache, supheli_kodlar):
                      "en_iyi_5_buyuk": J(uygun[["kod", "ad", "1a", "3a", "1y", "buyukluk", "kurucu"]].head(5))}
     return {"toplam_fon": int(len(tab)), "temiz_fon": int(len(temiz)), "kategori_sayisi": len(ozet),
             "kategoriler": ozet, "tablo_dosyasi": EVREN_CSV}
+
+
+ADAY_IZLEME_FILE = "output/aday_izleme.json"
+OLGUNLUK_IS_GUNU = 20            # aday en az bu kadar iş günü görülmeli (~4 hafta)
+OLGUNLUK_TAKVIM_GUN = 28         # ve ilk görülmesinin üstünden en az bu kadar gün geçmeli
+BASABAS_MAX_GUN = 30             # geçiş maliyeti avantajla en fazla bu kadar günde çıkmalı
+
+def gecis_basabas(bizim, aday, kategori_hisse):
+    """Geçişte para kaç gün piyasa dışında kalır, bu maliyeti aday avantajı kaç günde çıkarır."""
+    sat = bizim.get("satis_valoru")
+    al = aday.get("alis_valoru")
+    sat = int(sat) if isinstance(sat, (int, float)) else (2 if kategori_hisse else 0)
+    al = int(al) if isinstance(al, (int, float)) else (1 if kategori_hisse else 0)
+    # T+0 satışta para genelde öğleden sonra gelir → alım ertesi günün fiyatından: en az 1 gün boşluk
+    bosluk = max(1, sat) + (0 if kategori_hisse else 0)
+    y_biz = bizim.get("1y")
+    fark_1y = aday.get("fark_1y")
+    if y_biz is None or not fark_1y or fark_1y <= 0:
+        return {"piyasa_disi_gun": bosluk, "basabas_gun": None}
+    gunluk_biz = y_biz / 365.0
+    gunluk_avantaj = fark_1y / 365.0
+    # para piyasasında maliyet = kaçan getiri; hisse fonunda kaçan getiri yerine piyasa riski (gün olarak raporlanır)
+    maliyet = bosluk * gunluk_biz if not kategori_hisse else 0.0
+    return {"piyasa_disi_gun": bosluk,
+            "basabas_gun": round(maliyet / gunluk_avantaj, 1) if gunluk_avantaj > 0 and maliyet > 0 else 0.0}
+
+def aday_izleme_guncelle(rt):
+    """Her büyük adayın kaç farklı günde aday olduğunu kaydeder (günde bir kez sayılır)."""
+    iz = {}
+    if os.path.exists(ADAY_IZLEME_FILE):
+        try:
+            iz = json.load(open(ADAY_IZLEME_FILE, encoding="utf-8"))
+        except Exception:
+            iz = {}
+    bugun = NOW.strftime("%Y-%m-%d")
+    for grup in ("para_piyasasi", "bist30_endeks"):
+        for kod, v in ((rt.get(grup) or {}).get("bizim") or {}).items():
+            for a in v.get("buyuk_adaylar") or []:
+                k = iz.setdefault(kod, {}).setdefault(a["kod"], {"ilk": bugun, "gunler": []})
+                if bugun not in k["gunler"]:
+                    k["gunler"].append(bugun)
+                k["gunler"] = k["gunler"][-80:]
+                k["son"] = bugun
+                k["son_fark_1y"] = a.get("fark_1y")
+    os.makedirs("output", exist_ok=True)
+    json.dump(iz, open(ADAY_IZLEME_FILE, "w", encoding="utf-8"), ensure_ascii=False)
+    ozet = {}
+    for kod, adaylar in iz.items():
+        for ak, k in adaylar.items():
+            gun_sayisi = len(k["gunler"])
+            takvim = (NOW.date() - datetime.strptime(k["ilk"], "%Y-%m-%d").date()).days
+            aktif = k.get("son") == bugun
+            ozet.setdefault(kod, {})[ak] = {"ilk_goruldu": k["ilk"], "aday_gun_sayisi": gun_sayisi,
+                                             "takvim_gun": takvim, "bugun_hala_aday": aktif,
+                                             "olgun": bool(aktif and gun_sayisi >= OLGUNLUK_IS_GUNU and takvim >= OLGUNLUK_TAKVIM_GUN),
+                                             "son_fark_1y": k.get("son_fark_1y")}
+    return ozet
 
 
 def _kunye(code, cache):
@@ -738,7 +797,11 @@ def rakip_tarama():
                         "fark_1y": J(a["return_1y"] - r["return_1y"]) if pd.notna(a["return_1y"]) and pd.notna(r["return_1y"]) else None,
                         "buyukluk": kun.get("buyukluk"), "yatirimci": kun.get("yatirimci"),
                         "satis_valoru": kun.get("satis_valoru"), "kurucu": kun.get("kurucu"),
-                        "tefas_kapali": kun.get("tefas_kapali"), "kucuk": kun.get("kucuk")}
+                        "tefas_kapali": kun.get("tefas_kapali"), "kucuk": kun.get("kucuk"),
+                        "risk": kun.get("risk"), "max_dusus_1y": kun.get("max_dusus_1y"),
+                        "yonetim_ucreti": kun.get("yonetim_ucreti"), "alis_valoru": kun.get("alis_valoru")}
+                bizim_kun = {**sira_map.get(kod, {}), "1y": J(r["return_1y"])}
+                item.update(gecis_basabas(bizim_kun, item, grup != "para_piyasasi"))
                 if kun.get("kucuk"):
                     item["not"] = "küçük fon — likidite riski"
                 if kun.get("tefas_kapali"):
@@ -758,6 +821,7 @@ def rakip_tarama():
             supheli_tum |= set(g.loc[(g["return_1m"] > m1 + 3 * max(g["return_1m"].std(), 0.2)) |
                                      (g["return_1y"] > m1y + 3 * max(g["return_1y"].std(), 2.0)), "fund_code"])
     out["evren_ozeti"] = evren_tablosu(df, kcache_global, supheli_tum)
+    out["aday_izleme"] = aday_izleme_guncelle(out)
     return out
 
 
@@ -1151,6 +1215,20 @@ def main():
                 if ad:
                     ozet[kod] = ad
         T["rakip_gecis_adaylari"] = ozet
+        olgun = {}
+        for kod, adaylar in (rt.get("aday_izleme") or {}).items():
+            grup = "para_piyasasi" if kod in RAKIP_GRUPLARI["para_piyasasi"]["bizim"] else "bist30_endeks"
+            guncel = {a["kod"]: a for a in (((rt.get(grup) or {}).get("bizim") or {}).get(kod) or {}).get("buyuk_adaylar") or []}
+            o = []
+            for ak, v in adaylar.items():
+                bb = (guncel.get(ak) or {}).get("basabas_gun")
+                if v.get("olgun") and (bb is None or bb <= BASABAS_MAX_GUN):
+                    o.append({"kod": ak, "aday_gun": v["aday_gun_sayisi"], "basabas_gun": bb,
+                              "fark_1y": v.get("son_fark_1y")})
+            if o:
+                olgun[kod] = o
+        # kalıcılık (≥20 iş günü, ≥28 gün) + başabaş (≤30 gün) şartlarını geçmiş adaylar → kullanıcıyla değerlendirilir
+        T["rakip_olgun_adaylar"] = olgun
         T["rakip_supheli"] = {g: (rt.get(g) or {}).get("supheli_yuksek") for g in ("para_piyasasi", "bist30_endeks")}
     except Exception as e:
         T["rakip_hata"] = str(e)[:120]
