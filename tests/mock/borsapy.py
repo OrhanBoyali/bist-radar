@@ -80,6 +80,10 @@ def screen_funds(fund_type="YAT", limit=50, **k):
         ("SRB", "XYZ PORTFÖY PARA PİYASASI SERBEST FON", 3.50, 11.0, 52.0),    # nitelikli, gruba girmez
         ("ZSP", "KUVEYT TÜRK PORTFÖY İKİNCİ SEPET HESAP PARA PİYASASI KATILIM FONU", 3.40, 10.5, 62.0),  # TEFAS'ta kapalı
         ("Y1O", "ÖRNEK2 PORTFÖY PARA PİYASASI FONU", 3.20, 10.3, 60.0),       # aylık normal, yıllık aşırı yüksek
+        ("BY1", "BÜYÜK1 PORTFÖY PARA PİYASASI FONU", 3.25, 10.5, 49.0),       # 3'ten fazla aday senaryosu
+        ("BY2", "BÜYÜK2 PORTFÖY PARA PİYASASI FONU", 3.25, 10.5, 48.8),
+        ("BY3", "BÜYÜK3 PORTFÖY PARA PİYASASI FONU", 3.25, 10.5, 48.5),
+        ("TKP", "KAPALI PORTFÖY PARA PİYASASI FONU", 3.28, 10.55, 49.2),     # künyede TEFAS'ta kapalı
         # BIST 30 endeks
         ("TIE", "İŞ PORTFÖY BIST 30 ENDEKSİ HİSSE SENEDİ FONU", -5.02, 2.0, 31.28),
         ("AKU", "AK PORTFÖY BIST 30 ENDEKSİ HİSSE SENEDİ FONU", -3.54, 3.0, 35.68),
@@ -88,5 +92,9 @@ def screen_funds(fund_type="YAT", limit=50, **k):
         ("IDH", "İŞ PORTFÖY BIST 100 DIŞI ŞİRKETLER HİSSE SENEDİ FONU", -8.0, -5.0, 20.0),
     ]
     rows += [(f"F{i:02d}", f"DOLGU PORTFÖY BORÇLANMA ARAÇLARI FONU {i}", 2.5, 8.0, 40.0) for i in range(50)]
-    return pd.DataFrame([{"fund_code": c, "name": n, "fund_type": "", "return_1m": a, "return_3m": b,
+    def kat(n):
+        if "PARA PİYASASI" in n: return "Para Piyasası Fonu"
+        if "HİSSE" in n: return "Hisse Senedi Fonu"
+        return "Borçlanma Araçları Fonu"
+    return pd.DataFrame([{"fund_code": c, "name": n, "fund_type": kat(n), "return_1m": a, "return_3m": b,
                           "return_1y": y} for c, n, a, b, y in rows])
