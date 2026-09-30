@@ -12,8 +12,10 @@ import json, os, shutil, subprocess, sys, tempfile
 KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MOCK = os.path.join(KOK, "tests", "mock")
 
+EVREN = {}
 def calistir():
     tmp = tempfile.mkdtemp()
+    EVREN["klasor"] = tmp
     shutil.copy(os.path.join(KOK, "bist_radar.py"), tmp)
     env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK)
     subprocess.run([sys.executable, "bist_radar.py"], cwd=tmp, env=env, capture_output=True, timeout=300)
@@ -31,8 +33,12 @@ def birim_tarih_hizalama():
 
 def main():
     hz = birim_tarih_hizalama()
+    import csv as _csv
     d = calistir(); T = d["tetikler"]; k = T.get("k3_donus_kapisi", {}); fon = d.get("fonlar_borsapy") or d.get("fonlar", {})   # borsapy filtre testleri ham borsapy verisine bakar
     rt = d.get("rakip_tarama") or {}; pp = rt.get("para_piyasasi") or {}
+    _p = os.path.join(EVREN["klasor"], "output", "fon_evreni.csv")
+    _rows = list(_csv.DictReader(open(_p, encoding="utf-8"))) if os.path.exists(_p) else []
+    ev_satir = len(_rows); ev_bayrak = {r["kod"]: r for r in _rows}
     def adaylar(grup, kod):
         return [a["kod"] for a in ((rt.get(grup) or {}).get("bizim", {}).get(kod, {}).get("gecis_adaylari") or [])]
     testler = [
@@ -64,6 +70,26 @@ def main():
         ("ZSP" not in str(pp),                                      "Rakip: TEFAS'ta kapalı 'sepet hesap' fonu gruba girmez (29 Eyl ZA2)"),
         ("Y1O" in pp.get("supheli_yuksek", []),                     "Rakip: yıllık getirisi grubundan aşırı yüksek fon şüpheli sayılır"),
         ("Y1O" not in adaylar("para_piyasasi", "YLB"),              "Rakip: yıllık aykırı fon aday gösterilmez"),
+        # --- Rakip taraması v2: tam sıralama + künye + sınırsız aday (29 Eyl) ---
+        (len(pp.get("siralama", [])) == pp.get("temiz_havuz") and pp.get("temiz_havuz", 0) > 0 and all(pp["siralama"][i]["1y"] >= pp["siralama"][i+1]["1y"]
+            for i in range(len(pp["siralama"]) - 1) if pp["siralama"][i+1]["1y"] is not None),
+                                                                    "Rakip v2: grubun tamamı 1 yıllık getiriye göre sıralı yazılır"),
+        (len(adaylar("para_piyasasi", "YLB")) > 3,                  "Rakip v2: 3'ten fazla aday listelenebilir"),
+        ("TKP" in pp.get("tefas_kapali", []),                       "Rakip v2: künyede TEFAS'ta kapalı görünen fon işaretlenir"),
+        ({"ZPX", "BY1"} <= set(T.get("rakip_gecis_adaylari", {}).get("YLB", [])), "Rakip v2: büyük adaylar özet listede"),
+        (not {"KCK", "TKP"} & set(T.get("rakip_gecis_adaylari", {}).get("YLB", [])), "Rakip v2: küçük ve kapalı fon büyük adaylara girmez"),
+        (all(r.get("buyukluk") for r in pp.get("siralama", []) if r.get("bizim")), "Rakip v2: bizim fonların künyesi dolu"),
+        # --- Fon evreni (29 Eyl): bütün fonlar tek tabloda + kategori özetleri ---
+        (ev_satir == rt.get("evren"),                               "Evren: bütün fonlar tabloya yazılır (satır sayısı = evren)"),
+        (os.path.exists(os.path.join(EVREN["klasor"], "output", "fon_kunye.json")), "Evren: künye önbelleği dosyası oluşur"),
+        ((rt.get("kunye_durumu") or {}).get("kapsam", 0) > 0,       "Evren: künye kapsamı raporlanır"),
+        ({"Para Piyasası Fonu", "Borçlanma Araçları Fonu"} <= set((rt.get("evren_ozeti") or {}).get("kategoriler", {})),
+                                                                    "Evren: her kategori için özet çıkar"),
+        (ev_bayrak.get("TP2", {}).get("tasfiye_kurucu") == "True",  "Evren: tasfiye kurucusu tabloda işaretli"),
+        (ev_bayrak.get("YLB", {}).get("tasfiye_kurucu") == "False", "Evren: temiz fon YANLIŞLIKLA işaretlenmez (29 Eyl hata)"),
+        ((rt.get("evren_ozeti") or {}).get("temiz_fon", 0) > 0,     "Evren: temiz fon sayısı sıfır değil"),
+        (ev_bayrak.get("SRB", {}).get("nitelikli_serbest") == "True", "Evren: nitelikli yatırımcı fonu tabloda işaretli"),
+        (ev_bayrak.get("KCK", {}).get("kucuk") == "True",           "Evren: küçük fon tabloda işaretli"),
         # --- Fon veri tutarlılığı (28 Eyl) ---
         ("fon_TIE_bayat" in d["saglik"]["hatali_moduller"],         "Tutarlılık: bayat fon fiyatı uyarı verir"),
         ("fon_AKU_takip_sapmasi" in d["saglik"]["hatali_moduller"], "Tutarlılık: endeks fonu endeksten koparsa uyarı verir"),
