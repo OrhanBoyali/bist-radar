@@ -31,8 +31,10 @@ def get(url, params=None, headers=None, timeout=20):
         return _Resp({"code": code, "period": "1y", "points": pts})
     aum = 1e8 if code == "KCK" else 7.5e8                        # KCK: küçük fon senaryosu
     durum = "TEFAS'TA İŞLEME KAPALI" if code == "TKP" else "AKTİF" # TKP: kapalı fon senaryosu
-    return _Resp({"fund": {"code": code, "name": f"{code} FONU", "category": "Para Piyasası", "risk_score": 1,
-                           "buy_valor": 0, "sell_valor": 0, "current_price": 5.5, "current_date": str(son),
+    hisse = code in ("TIE", "AKU", "GBX", "DZE", "IDH")         # gerçekteki gibi: hisse fonu alış T+1, satış T+2
+    return _Resp({"fund": {"code": code, "name": f"{code} FONU", "category": "Hisse Senedi" if hisse else "Para Piyasası",
+                           "risk_score": 6 if hisse else 1,
+                           "buy_valor": 1 if hisse else 0, "sell_valor": 2 if hisse else 0, "current_price": 5.5, "current_date": str(son),
                            "return_1y": 0.47, "aum": aum, "investor_count": 9970, "trading_status": durum,
                            "management_company": "Test Portföy"},
                   "portfolio": {"stock": 0, "cash": 100}})
