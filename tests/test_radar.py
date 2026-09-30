@@ -66,6 +66,8 @@ def main():
         (d["genislik"].get("hisse_sayisi", 0) >= 100,               "Tüm piyasa genişliği tek taramayla gelir"),
         (T.get("reel_getiri_yontem", "").startswith("NET"),         "Reel getiri NET (stopaj sonrası) hesaplanır"),
         ("TIE" not in T.get("reel_getiri", {}),                     "Reel getiri sadece cephane fonlarına uygulanır"),
+        ("ZBJ" in fon and "ZBJ" in T.get("reel_getiri", {}),        "Portföydeki her fon takipte (30 Eyl: ZBJ eksik kalmıştı)"),
+        ((pp.get("bizim") or {}).get("ZBJ", {}).get("gruptaki_sira_1y") is not None, "ZBJ rakip taramasında bizim fon olarak sıralanıyor"),
         # --- Rakip fon taraması (28 Eyl) ---
         ("TP2" in pp.get("elenen_tasfiye", []),                     "Rakip: tasfiye kurucusunun fonu elenir (Tera dersi)"),
         ("SUS" in pp.get("supheli_yuksek", []),                     "Rakip: grubundan şüpheli yüksek getirili fon işaretlenir"),
