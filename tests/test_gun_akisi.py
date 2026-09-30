@@ -40,6 +40,7 @@ def main():
     kontrol(bool(d.get("rakip_tarama")) and "hata" not in str(d.get("rakip_tarama"))[:40], "08:17 — rakip taraması çalıştı")
     kontrol(bool(d.get("evds_resmi")),                               "08:17 — resmi (EVDS) veriler çekildi")
     kontrol(d.get("arsiv") == "saat değil",                          "08:17 — arşive yazılmadı (doğru)")
+    kontrol(((d.get("rakip_tarama") or {}).get("kunye_durumu") or {}).get("yenilenen", 0) > 0, "08:17 — fon künyeleri ilk kez çekildi")
 
     d, p = calistir(tmp, f"{g} 12:17")
     kontrol("ana_akis" not in d["saglik"]["hatali_moduller"],       "12:17 — betik çökmeden tamamlandı (önbellek yolu)")
@@ -59,6 +60,7 @@ def main():
     kontrol("k3_donus_kapisi" in d["tetikler"],                      "18:52 — üçüncü kademe kapıları hesaplandı")
     kontrol("tez_cizgisi_haftalik_kirildi" in d["tetikler"],         "18:52 — haftalık tez çizgisi kontrolü var")
     kontrol(d["tetikler"].get("reel_getiri"),                         "18:52 — net reel getiri hesaplandı")
+    kontrol(((d.get("rakip_tarama") or {}).get("kunye_durumu") or {}).get("yenilenen", 1) == 0, "18:52 — künyeler önbellekten (aynı gün tekrar çekilmedi, kota korunuyor)")
     with open(os.path.join(tmp, "output", "gunluk_arsiv.csv"), encoding="utf-8") as f:
         satirlar = [r for r in csv.DictReader(f) if r["tarih"] == g]
     kontrol(len(satirlar) == 1,                                      "18:52 — arşivde bugün için TEK satır (18:17'nin üzerine yazıldı)")
