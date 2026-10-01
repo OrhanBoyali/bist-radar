@@ -533,7 +533,7 @@ RAKIP_GRUPLARI = {
                        "esik": {"1m": 0.0, "3m": 0.5, "1y": 2.0}, "supheli_1m": 3.0, "supheli_1y": 10.0},
 }
 MIN_FON_BUYUKLUGU = 500_000_000   # aday için asgari büyüklük (likidite)
-RAKIP_SURUM = 4                   # yapı değişince artır → ilk çalışmada tarama önbelleği yenilenir
+RAKIP_SURUM = 5                   # yapı değişince artır → ilk çalışmada tarama önbelleği yenilenir
 RAKIP_KUNYE_MAX = 60              # grup başına künyesi çekilecek en fazla fon (kota/limit koruması)
 RAKIP_ADAY_MAX = 20               # listelenecek en fazla aday (eskiden 3'tü — 29 Eyl kullanıcı talebi)
 
@@ -822,6 +822,14 @@ def rakip_tarama():
                                      (g["return_1y"] > m1y + 3 * max(g["return_1y"].std(), 2.0)), "fund_code"])
     out["evren_ozeti"] = evren_tablosu(df, kcache_global, supheli_tum)
     out["aday_izleme"] = aday_izleme_guncelle(out)
+    try:
+        out["sektor_akis"] = sektor_akis(out, kcache_global)
+    except Exception as e:
+        out["sektor_akis"] = {"hata": str(e)[:120]}
+    try:
+        out["varlik_siniflari"] = varlik_siniflari(df, kcache_global, supheli_tum)
+    except Exception as e:
+        out["varlik_siniflari"] = {"hata": f"{type(e).__name__}: {str(e)[:120]}"}
     return out
 
 
@@ -871,6 +879,156 @@ def fonoloji_fund(code):
                       "fund_size": f.get("aum"), "investor_count": f.get("investor_count"),
                       "trading_status": f.get("trading_status"), "management_company": f.get("management_company")},
             "portfoy": d.get("portfolio")}
+
+SEKTOR_REFERANS_N = 12          # sektör akışı için en büyük kaç rakip fonun geçmişine bakılır
+GORELI_ESIK_BUYUKLUK = 15.0     # fonun 30 günlük büyüklük değişimi sektör ortancasından bu kadar puan kötüyse alarm
+GORELI_ESIK_YATIRIMCI = 10.0    # yatırımcı sayısında aynı mantık
+MUTLAK_ACIL_ESIK = -50.0        # sektörden bağımsız: büyüklük %50+ erirse her durumda alarm
+
+def _akis30(code):
+    """Fonoloji geçmişinden 30 günlük büyüklük ve yatırımcı değişimi (1 kayıt)."""
+    h = fonoloji_get(f"/funds/{code}/history", {"period": "3m"})
+    pts = h.get("points") or []
+    aum = pd.Series({pd.Timestamp(p["date"]): p.get("total_value") for p in pts}).dropna().sort_index()
+    inv = pd.Series({pd.Timestamp(p["date"]): p.get("investor_count") for p in pts}).dropna().sort_index()
+    def chg(x):
+        if len(x) < 2:
+            return None
+        xp = x[x.index <= x.index[-1] - pd.Timedelta(days=30)]
+        return pct(x.iloc[-1], xp.iloc[-1]) if len(xp) else None
+    return {"buyukluk_30g": chg(aum), "yatirimci_30g": chg(inv)}
+
+def sektor_akis(rt, kunye):
+    """Her grubun en büyük rakiplerinin 30 günlük akış ortancası → 'sektör geneli mi, fona özgü mü?'"""
+    if not os.environ.get("FONOLOJI_KEY"):
+        return {"not": "FONOLOJI_KEY yok — sektör referansı hesaplanamadı"}
+    out = {}
+    for grup in ("para_piyasasi", "bist30_endeks"):
+        g = rt.get(grup) or {}
+        bizim = set((g.get("bizim") or {}).keys())
+        adaylar = [r for r in g.get("siralama") or [] if r["kod"] not in bizim and (kunye.get(r["kod"]) or {}).get("buyukluk")]
+        adaylar = sorted(adaylar, key=lambda r: -(kunye[r["kod"]]["buyukluk"]))[:SEKTOR_REFERANS_N]
+        degerler = []
+        for r in adaylar:
+            try:
+                degerler.append(_akis30(r["kod"]))
+            except Exception:
+                pass
+        b = [v["buyukluk_30g"] for v in degerler if v["buyukluk_30g"] is not None]
+        y = [v["yatirimci_30g"] for v in degerler if v["yatirimci_30g"] is not None]
+        out[grup] = {"referans_fon_sayisi": len(degerler),
+                     "medyan_buyukluk_30g": J(float(np.median(b))) if b else None,
+                     "medyan_yatirimci_30g": J(float(np.median(y))) if y else None}
+    return out
+
+
+SINIF_IZLEME_FILE = "output/sinif_izleme.json"
+SINIF_ESIK_1A, SINIF_ESIK_3A = 0.2, 0.5     # PPF'yi bu kadar puan geçmeli (1 ay VE 3 ay)
+SINIF_OLGUNLUK_IS_GUNU = 10                  # ~2 hafta kesintisiz üstünlük
+
+def _sinif(n, kat):
+    n, kat = _tr_up(n), _tr_up(kat)
+    if "PARA PIYASASI" in kat or "PARA PIYASASI" in n:
+        return "Para piyasası"
+    if "ALTIN" in n or "KIYMETLI MADEN" in kat or "GUMUS" in n:
+        return "Altın / kıymetli maden"
+    if "TUFE" in n or "ENFLASYON" in n:
+        return "Enflasyona endeksli"
+    if "EUROBOND" in n or "DOVIZ" in n or "DOLAR" in n or "YABANCI BORCLANMA" in n:
+        return "Eurobond / döviz"
+    if "HISSE" in n or "HISSE" in kat:
+        if "ENDEKS" in n and "DISI" not in n:
+            return "BIST endeks hisse"
+        return "Hisse (aktif)"
+    if "KIRA SERTIFIKA" in n or ("KATILIM" in kat and "BORCLANMA" not in kat):
+        return "Kira sertifikası / katılım"
+    if "BORCLANMA" in kat or "BORCLANMA" in n or "TAHVIL" in n or "BONO" in n:
+        return "Kısa vadeli borçlanma" if "KISA VADE" in n else "Borçlanma / tahvil"
+    if "KARMA" in kat or "DEGISKEN" in kat:
+        return "Karma / değişken"
+    return None
+
+def _getiri_serisi(ser):
+    ser = ser.dropna()
+    if len(ser) < 2:
+        return {}
+    son, t = ser.iloc[-1], ser.index[-1]
+    def onceki(gun):
+        x = ser[ser.index <= t - pd.Timedelta(days=gun)]
+        return pct(son, x.iloc[-1]) if len(x) else None
+    return {"1a": onceki(30), "3a": onceki(91), "1y": onceki(365)}
+
+def varlik_siniflari(df, kunye, supheli):
+    """Paranın gidebileceği her yer aynı panoda: fon sınıfları + mevduat, dolar, gram altın."""
+    d = df[df["elenen"].isna()].copy()
+    d = d[~d["_n"].str.contains("SERBEST|SEPET HESAP", regex=True) & ~d["fund_code"].isin(supheli)]
+    d = d[~d["fund_code"].map(lambda c: bool((kunye.get(c) or {}).get("tefas_kapali")))]
+    d["sinif"] = [_sinif(n, k) for n, k in zip(d["name"], d.get("fund_type", pd.Series([""] * len(d))).fillna(""))]
+    d = d[d["sinif"].notna()]
+    siniflar = {}
+    for snf, g in d.groupby("sinif"):
+        buyuk = g[g["fund_code"].map(lambda c: (kunye.get(c) or {}).get("buyukluk") or 0) >= MIN_FON_BUYUKLUGU]
+        siniflar[snf] = {"fon_sayisi": int(len(g)), "buyuk_fon_sayisi": int(len(buyuk)),
+                         "1a": J(g["return_1m"].median()), "3a": J(g["return_3m"].median()), "1y": J(g["return_1y"].median()),
+                         "en_iyi_3_buyuk": J(buyuk.sort_values("return_3m", ascending=False)[["fund_code", "name", "return_1m", "return_3m", "return_1y"]].head(3))}
+    # fon dışı karşılaştırmalar
+    disari = {}
+    try:
+        disari["Gram altın (fiziki)"] = _getiri_serisi(norm_ohlc(bp.FX("gram-altin").history(period="1y"))["Close"])
+    except Exception as e:
+        disari["Gram altın (fiziki)"] = {"hata": str(e)[:60]}
+    try:
+        disari["Dolar (USD/TRY)"] = _getiri_serisi(norm_ohlc(bp.FX("USD").history(period="1y"))["Close"])
+    except Exception as e:
+        disari["Dolar (USD/TRY)"] = {"hata": str(e)[:60]}
+    try:
+        ev = _evds_frame("TP.TRY.MT01", yil=1, freq="weekly")      # 1 aya kadar TL mevduat, yıllık %
+        r = float(ev.iloc[-1])
+        disari["TL mevduat (1 ay, brüt)"] = {"yillik_oran": round(r, 2), "1a": round(r * 30 / 365, 2), "3a": round(r * 91 / 365, 2),
+                                            "not": "faiz oranından hesaplanan beklenen getiri, gerçekleşen değil"}
+    except Exception as e:
+        disari["TL mevduat (1 ay, brüt)"] = {"hata": str(e)[:60]}
+    ppf = siniflar.get("Para piyasası") or {}
+    ustu = {}
+    for ad, v in list(siniflar.items()) + list(disari.items()):
+        if ad == "Para piyasası" or not isinstance(v, dict):
+            continue
+        if None in (v.get("1a"), v.get("3a"), ppf.get("1a"), ppf.get("3a")):
+            continue
+        f1, f3 = round(v["1a"] - ppf["1a"], 2), round(v["3a"] - ppf["3a"], 2)
+        v["ppf_farki_1a"], v["ppf_farki_3a"] = f1, f3
+        if f1 >= SINIF_ESIK_1A and f3 >= SINIF_ESIK_3A:
+            ustu[ad] = {"fark_1a": f1, "fark_3a": f3}
+    # kalıcılık takibi (günde bir kez sayılır)
+    iz = {}
+    if os.path.exists(SINIF_IZLEME_FILE):
+        try:
+            iz = json.load(open(SINIF_IZLEME_FILE, encoding="utf-8"))
+        except Exception:
+            iz = {}
+    bugun = NOW.strftime("%Y-%m-%d")
+    for ad in ustu:
+        k = iz.setdefault(ad, {"gunler": []})
+        if bugun not in k["gunler"]:
+            k["gunler"].append(bugun)
+        k["gunler"] = k["gunler"][-60:]
+    json.dump(iz, open(SINIF_IZLEME_FILE, "w", encoding="utf-8"), ensure_ascii=False)
+    for ad, v in ustu.items():
+        g = iz.get(ad, {}).get("gunler", [])
+        # kesintisiz: son kayıtlı günlerin bugüne kadar ardışık iş günleri olması
+        ardisik = 0
+        gun = pd.Timestamp(NOW.date())
+        for t in sorted(g, reverse=True):
+            if pd.Timestamp(t) == gun:
+                ardisik += 1
+                gun = gun - pd.offsets.BDay(1)
+            else:
+                break
+        v["ardisik_is_gunu"] = ardisik
+        v["olgun"] = ardisik >= SINIF_OLGUNLUK_IS_GUNU
+    return {"siniflar": siniflar, "fon_disi": disari, "para_piyasasi_ustu": ustu,
+            "not": "Vergi farkları (fon stopajı, hisse yoğun fon, mevduat, fiziki altın/döviz) karar anında ayrıca hesaplanır."}
+
 
 def fon_capraz(fonoloji, borsapy_fon):
     """İki bağımsız aktarım hattını karşılaştırır. Fark → HEALTH uyarısı."""
@@ -970,6 +1128,18 @@ def fon_akis_trend(fonlar):
 
 ARSIV_FILE = "output/gunluk_arsiv.csv"
 
+def _sinif_arsiv(R):
+    """Arşive kısa sütunlar: sınıf ortancaları (1a, 3a) — gidişatı izlemek için."""
+    kis = {"Para piyasası": "ppf", "Borçlanma / tahvil": "tahvil", "Kısa vadeli borçlanma": "kisa_borc",
+           "Enflasyona endeksli": "tufe", "Kira sertifikası / katılım": "katilim", "Altın / kıymetli maden": "altin_fon",
+           "Eurobond / döviz": "eurobond", "BIST endeks hisse": "bist_endeks"}
+    sn = (((R.get("rakip_tarama") or {}).get("varlik_siniflari") or {}).get("siniflar") or {})
+    out = {}
+    for ad, k in kis.items():
+        v = sn.get(ad) or {}
+        out[f"{k}_1a"], out[f"{k}_3a"] = v.get("1a"), v.get("3a")
+    return out
+
 def gunluk_arsiv(R):
     """Her iş günü akşam (18:00 sonrası ilk çalışmada) günün özetini tek satır ekler. Silinmez."""
     if NOW.weekday() >= 5 or NOW.hour < 18:
@@ -1000,6 +1170,7 @@ def gunluk_arsiv(R):
         "tufe_aylik": T.get("tufe_aylik"), "dolar_makasi": T.get("dolar_makasi_puan"),
         "usd": fxl("USD"), "gram_altin": fxl("gram-altin"), "brent": fxl("BRENT"),
         "vix": T.get("vix"), "nasdaq_zirveden": T.get("nasdaq_zirveden_pct"),
+        **{f"sinif_{k}": v for k, v in _sinif_arsiv(R).items()},
     }
     for c in FUNDS:
         satir[f"fiyat_{c}"] = (fon.get(c) or {}).get("fiyat")
@@ -1196,13 +1367,30 @@ def main():
     akis_alarm = {}
     fa = R.get("fon_akis") or {}
     T["fon_akis_pencere_gun"] = fa.get("gun")
+    sa = (R.get("rakip_tarama") or {}).get("sektor_akis") or {}
+    T["fon_akis_sektor"] = sa
+    akis_detay = {}
     for c in FUNDS:
         a = fa.get(c) or {}
         fk = ((R.get("fonlar") or {}).get(c) or {}).get("akis") or {}
         b_ = fk["buyukluk_30g_degisim_pct"] if fk.get("buyukluk_30g_degisim_pct") is not None else a.get("buyukluk_degisim_pct")
         y_ = fk["yatirimci_30g_degisim_pct"] if fk.get("yatirimci_30g_degisim_pct") is not None else a.get("yatirimci_degisim_pct")
-        if (b_ is not None and b_ <= -20) or (y_ is not None and y_ <= -15):
-            akis_alarm[c] = {"buyukluk_30g": b_, "yatirimci_30g": y_}
+        grup = "para_piyasasi" if c in CEPHANE else "bist30_endeks"
+        ref = sa.get(grup) or {}
+        mb, my = ref.get("medyan_buyukluk_30g"), ref.get("medyan_yatirimci_30g")
+        gb = round(b_ - mb, 2) if (b_ is not None and mb is not None) else None
+        gy = round(y_ - my, 2) if (y_ is not None and my is not None) else None
+        akis_detay[c] = {"buyukluk_30g": b_, "yatirimci_30g": y_, "sektor_buyukluk_30g": mb,
+                         "sektor_yatirimci_30g": my, "goreli_buyukluk": gb, "goreli_yatirimci": gy}
+        if gb is not None or gy is not None:
+            # sektör referansı varsa: fona ÖZGÜ çıkış (Tera/Pusula'yı ayırt eden buydu)
+            if (gb is not None and gb <= -GORELI_ESIK_BUYUKLUK) or (gy is not None and gy <= -GORELI_ESIK_YATIRIMCI):
+                akis_alarm[c] = {**akis_detay[c], "tur": "fona özgü (sektörden belirgin kötü)"}
+        elif (b_ is not None and b_ <= -20) or (y_ is not None and y_ <= -15):
+            akis_alarm[c] = {**akis_detay[c], "tur": "mutlak (sektör referansı yok)"}
+        if b_ is not None and b_ <= MUTLAK_ACIL_ESIK and c not in akis_alarm:
+            akis_alarm[c] = {**akis_detay[c], "tur": "mutlak acil (%50+ erime)"}
+    T["fon_akis_detay"] = akis_detay
     T["fon_kitlesel_cikis_alarm"] = akis_alarm   # Tera/Pusula dersi: erken uyarı
 
 
@@ -1229,6 +1417,9 @@ def main():
                 olgun[kod] = o
         # kalıcılık (≥20 iş günü, ≥28 gün) + başabaş (≤30 gün) şartlarını geçmiş adaylar → kullanıcıyla değerlendirilir
         T["rakip_olgun_adaylar"] = olgun
+        vs = (rt.get("varlik_siniflari") or {})
+        T["varlik_sinifi_ppf_ustu"] = vs.get("para_piyasasi_ustu") or {}
+        T["varlik_sinifi_olgun"] = [k for k, v in (vs.get("para_piyasasi_ustu") or {}).items() if v.get("olgun")]
         T["rakip_supheli"] = {g: (rt.get(g) or {}).get("supheli_yuksek") for g in ("para_piyasasi", "bist30_endeks")}
     except Exception as e:
         T["rakip_hata"] = str(e)[:120]
