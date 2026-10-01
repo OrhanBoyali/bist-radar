@@ -26,7 +26,8 @@ def get(url, params=None, headers=None, timeout=20):
             if code == "AKU" and i == n - 1:
                 price *= 1.05                                      # TEST: son gün +%5 → endeksten kopma
             pts.append({"date": d.strftime("%Y-%m-%d"), "price": round(price, 6),
-                        "total_value": 1e9 * (0.75 if i > n - 12 else 1.0),   # TEST: son 2 haftada %25 küçülme
+                        # TEST: sektörün tamamı son 2 haftada %25 küçülüyor; DLY %55 (fona özgü çıkış senaryosu)
+                        "total_value": 1e9 * ((0.45 if code == "DLY" else 0.75) if i > n - 12 else 1.0),
                         "investor_count": 10000 - (2000 if i > n - 12 else 0)})
         return _Resp({"code": code, "period": "1y", "points": pts})
     aum = 1e8 if code == "KCK" else 7.5e8                        # KCK: küçük fon senaryosu
