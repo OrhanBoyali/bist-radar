@@ -42,9 +42,15 @@ def main():
     _gecmis = [(_d.today() - _td(days=i)).strftime("%Y-%m-%d") for i in range(40, 5, -1) if (_d.today() - _td(days=i)).weekday() < 5]
     d_olgun = calistir({"aday_izleme.json": {"YLB": {"ZPX": {"ilk": _gecmis[0], "gunler": _gecmis}}}})
     olgun_ylb = [a["kod"] for a in d_olgun["tetikler"].get("rakip_olgun_adaylar", {}).get("YLB", [])]
+    import pandas as _pd
+    _isg = [(_pd.Timestamp(_d.today()) - _pd.offsets.BDay(i)).strftime("%Y-%m-%d") for i in range(12, 0, -1)]
+    d_sinif = calistir({"sinif_izleme.json": {"Kısa vadeli borçlanma": {"gunler": _isg},
+                                              "Enflasyona endeksli": {"gunler": _isg[:5]}}})
+    sinif_olgun = d_sinif["tetikler"].get("varlik_sinifi_olgun", [])
     import csv as _csv
     d = calistir(); T = d["tetikler"]; k = T.get("k3_donus_kapisi", {}); fon = d.get("fonlar_borsapy") or d.get("fonlar", {})   # borsapy filtre testleri ham borsapy verisine bakar
     rt = d.get("rakip_tarama") or {}; pp = rt.get("para_piyasasi") or {}
+    vs = rt.get("varlik_siniflari") or {}
     _p = os.path.join(EVREN["klasor"], "output", "fon_evreni.csv")
     _rows = list(_csv.DictReader(open(_p, encoding="utf-8"))) if os.path.exists(_p) else []
     ev_satir = len(_rows); ev_bayrak = {r["kod"]: r for r in _rows}
@@ -99,6 +105,18 @@ def main():
                                                                     "Karar: para piyasası adayları için başabaş süresi hesaplanır"),
         (all(a.get("piyasa_disi_gun", 0) >= 2 for a in (rt.get("bist30_endeks") or {}).get("bizim", {}).get("TIE", {}).get("gecis_adaylari", [])),
                                                                     "Karar: hisse fonu geçişinde piyasa dışı gün (T+2) raporlanır"),
+        # --- Varlık sınıfı panosu (1 Eki): paranın gidebileceği her yer ---
+        ({"Para piyasası", "Borçlanma / tahvil", "Kısa vadeli borçlanma", "Enflasyona endeksli", "Eurobond / döviz",
+          "Altın / kıymetli maden", "Kira sertifikası / katılım", "BIST endeks hisse"} <= set(vs.get("siniflar", {})),
+                                                                    "Pano: bütün varlık sınıfları ayrı ayrı ölçülür"),
+        ({"Gram altın (fiziki)", "Dolar (USD/TRY)", "TL mevduat (1 ay, brüt)"} <= set(vs.get("fon_disi", {})),
+                                                                    "Pano: mevduat, dolar ve gram altın da karşılaştırılır"),
+        ("Kısa vadeli borçlanma" in T.get("varlik_sinifi_ppf_ustu", {}), "Pano: para piyasasını 1a ve 3a'da geçen sınıf yakalanır"),
+        ("Borçlanma / tahvil" not in T.get("varlik_sinifi_ppf_ustu", {}), "Pano: geride kalan sınıf yanlış uyarı üretmez"),
+        (T.get("varlik_sinifi_olgun") == [],                         "Pano: ilk gün görülen üstünlük 'olgun' sayılmaz (kalıcılık)"),
+        ("Kısa vadeli borçlanma" in sinif_olgun,                    "Pano: 2 hafta kesintisiz üstün kalan sınıf olgunlaşır"),
+        ("Enflasyona endeksli" not in sinif_olgun,                  "Pano: bugün üstün olmayan sınıf, geçmişi olsa da olgun sayılmaz"),
+        ("IDH" not in str((vs.get("siniflar") or {}).get("BIST endeks hisse", {})), "Pano: 'BIST 100 dışı' fon endeks sınıfına girmez"),
         (ev_satir == rt.get("evren"),                               "Evren: bütün fonlar tabloya yazılır (satır sayısı = evren)"),
         (os.path.exists(os.path.join(EVREN["klasor"], "output", "fon_kunye.json")), "Evren: künye önbelleği dosyası oluşur"),
         ((rt.get("kunye_durumu") or {}).get("kapsam", 0) > 0,       "Evren: künye kapsamı raporlanır"),
@@ -120,7 +138,12 @@ def main():
         (d.get("fonlar_kaynak", {}).get("YLB") == "fonoloji",       "Fonoloji: anahtar varsa fonlar için birincil kaynak"),
         ("fon_IJV_kaynak_celiskisi" in d["saglik"]["hatali_moduller"], "Fonoloji: iki kaynak farklıysa çapraz uyarı düşer"),
         ("fon_YLB_kaynak_celiskisi" not in d["saglik"]["hatali_moduller"], "Fonoloji: kaynaklar uyumluysa uyarı yok"),
-        (bool(T.get("fon_kitlesel_cikis_alarm", {}).get("YLB")),   "Fonoloji: 1 yıllık büyüklük geçmişiyle kitlesel çıkış alarmı çalışır"),
+        # --- Göreli kitlesel çıkış (1 Eki): sektör geneli değil, fona özgü çıkış alarm verir ---
+        (not T.get("fon_kitlesel_cikis_alarm", {}).get("YLB"),     "Göreli akış: sektörle aynı oranda küçülen fon alarm vermez"),
+        ("fona özgü" in str(T.get("fon_kitlesel_cikis_alarm", {}).get("DLY", {}).get("tur", "")),
+                                                                    "Göreli akış: sektörden belirgin fazla para kaybeden fon alarm verir"),
+        ((T.get("fon_akis_sektor") or {}).get("para_piyasasi", {}).get("referans_fon_sayisi", 0) > 0,
+                                                                    "Göreli akış: sektör referansı en büyük rakiplerden hesaplanır"),
         (d["fonlar"]["YLB"].get("bilgi", {}).get("sell_valor") == 0, "Fonoloji: valör künyeden okunur"),
     ]
     gecen = 0
