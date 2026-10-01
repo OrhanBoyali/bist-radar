@@ -55,7 +55,8 @@ class EconomicCalendar:
 def evds_series(code, start=None, frequency=None, period=None):
     freq = {"weekly": "W-FRI", "daily": "B"}.get(frequency, "MS")
     idx = pd.date_range(end=datetime.now(), periods=60, freq=freq); n = len(idx)
-    val = {"TP.APIFON4": 37.0, "TP.MKNETHAR.M7": 277.67, "TP.TUKFIY2025.GENEL": None}.get(code, 100.0)
+    val = {"TP.APIFON4": 37.0, "TP.MKNETHAR.M7": 277.67, "TP.TUKFIY2025.GENEL": None,
+           "TP.TRY.MT01": 39.0, "TP.TRY.MT02": 39.5}.get(code, 100.0)
     if code == "TP.TUKFIY2025.GENEL": v = 100 * (1.0184 ** np.arange(n))
     elif code == "TP.APIFON4": v = np.r_[np.full(n - 20, 40.0), np.full(20, 37.0)]
     else: v = np.full(n, val)
@@ -93,6 +94,12 @@ def screen_funds(fund_type="YAT", limit=50, **k):
         ("IDH", "İŞ PORTFÖY BIST 100 DIŞI ŞİRKETLER HİSSE SENEDİ FONU", -8.0, -5.0, 20.0),
     ]
     rows += [(f"F{i:02d}", f"DOLGU PORTFÖY BORÇLANMA ARAÇLARI FONU {i}", 2.5, 8.0, 40.0) for i in range(50)]
+    # varlık sınıfı panosu senaryoları (30 Eyl)
+    rows += [(f"KV{i}", f"ÖRNEK{i} PORTFÖY KISA VADELİ BORÇLANMA ARAÇLARI FONU", 3.6, 11.0, 45.0) for i in range(3)]  # PPF'yi geçer
+    rows += [(f"TF{i}", f"ÖRNEK{i} PORTFÖY TÜFE'YE ENDEKSLİ BORÇLANMA ARAÇLARI FONU", 1.9, 7.0, 38.0) for i in range(3)]
+    rows += [(f"EB{i}", f"ÖRNEK{i} PORTFÖY EUROBOND BORÇLANMA ARAÇLARI FONU", 0.4, 2.5, 22.0) for i in range(3)]
+    rows += [(f"AL{i}", f"ÖRNEK{i} PORTFÖY ALTIN FONU", -2.0, 4.0, 25.0) for i in range(3)]
+    rows += [(f"KS{i}", f"ÖRNEK{i} PORTFÖY KİRA SERTİFİKASI KATILIM FONU", 2.8, 9.5, 41.0) for i in range(3)]
     def kat(n):
         if "PARA PİYASASI" in n: return "Para Piyasası Fonu"
         if "HİSSE" in n: return "Hisse Senedi Fonu"
