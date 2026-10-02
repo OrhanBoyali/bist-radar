@@ -15,7 +15,8 @@ KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MOCK = os.path.join(KOK, "tests", "mock")
 
 def son_is_gunu_bugun():
-    d = date.today()
+    from datetime import datetime, timezone
+    d = datetime.now(timezone(timedelta(hours=3))).date()   # 3 Eki: Türkiye saati (betikle aynı gün sınırı)
     while d.weekday() >= 5:
         d -= timedelta(days=1)
     return d
@@ -42,6 +43,10 @@ def main():
     kontrol(d.get("arsiv") == "saat değil",                          "08:17 — arşive yazılmadı (doğru)")
     kontrol(((d.get("rakip_tarama") or {}).get("kunye_durumu") or {}).get("yenilenen", 0) > 0, "08:17 — fon künyeleri ilk kez çekildi")
 
+    d, p = calistir(tmp, f"{g} 09:17")
+    kontrol(d.get("agir_calisma") is False,                         "09:17 — ağır işler TEKRAR çalışmadı (sabah slotu 08:17'de doldu)")
+    kontrol("önbellek" in str(d.get("fonlar_zamani")),              "09:17 — fonlar önbellekten (kota korunuyor)")
+
     d, p = calistir(tmp, f"{g} 12:17")
     kontrol("ana_akis" not in d["saglik"]["hatali_moduller"],       "12:17 — betik çökmeden tamamlandı (önbellek yolu)")
     kontrol("önbellek" in str(d.get("fonlar_zamani")),              "12:17 — fonlar önbellekten geldi")
@@ -53,7 +58,9 @@ def main():
     kontrol("ana_akis" not in d["saglik"]["hatali_moduller"],       "18:17 — betik çökmeden tamamlandı")
     kontrol("gün kayıtlı" in str(d.get("arsiv")),                   "18:17 — arşive yazıldı")
 
+    kontrol(d.get("agir_calisma") is False,                         "18:17 — hafif çalışma (kesin kapanış fiyatları 18:40 sonrası)")
     d, p = calistir(tmp, f"{g} 18:52")
+    kontrol(d.get("agir_calisma") is True,                          "18:52 — akşamın tek ağır çalışması")
     kontrol("ana_akis" not in d["saglik"]["hatali_moduller"],       "18:52 — KAPANIŞ çalışması çökmeden tamamlandı")
     kontrol("önbellek" not in str(d.get("fonlar_zamani")),          "18:52 — fonlar taze (kapanış fiyatı)")
     kontrol(d["bist100"].get("son_bar_kismi_mi") is False,          "18:52 — son bar kesinleşmiş kapanış sayılıyor")
