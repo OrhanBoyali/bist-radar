@@ -5,8 +5,9 @@ Piyasa verisi üretir → output/radar.json. KİŞİSEL VERİ (pay adedi, tutar)
 Her modül ayrı denenir; kırılan modül "saglik" bölümüne yazılır,
 iş akışı bunu GitHub Issue olarak açar (e-posta bildirimi).
 """
-import json, math, os
+import json, math, os, socket
 from datetime import datetime, timezone, timedelta
+socket.setdefaulttimeout(60)   # 3 Eki: cevap vermeyen kaynak betiği sonsuza kadar bekletmesin
 import numpy as np
 import pandas as pd
 
@@ -30,20 +31,30 @@ POLITIKA_FAIZI = {"oran": 37.0, "karar_tarihi": "2026-09-10", "sonraki_ppk": "20
 NASDAQ_ESIK, ALTIN_ESIK = -15.0, -5.0
 SEKTOR = ["XBANK", "XUSIN", "XHOLD", "XUTEK", "XUMAL"]
 YAHOO_INDEX = {"XU100": "XU100.IS", "XU030": "XU030.IS", "XBANK": "XBANK.IS", "XUSIN": "XUSIN.IS"}
-KURESEL = {"sp500": "^GSPC", "nasdaq": "^IXIC", "vix": "^VIX",
+KURESEL = {"brent_yahoo": "BZ=F",   # 3 Eki: sadece borsapy BRENT ile çapraz kontrol için
+           "sp500": "^GSPC", "nasdaq": "^IXIC", "vix": "^VIX",
            "dolar_endeksi": "DX-Y.NYB", "abd_10y": "^TNX", "ons_altin": "GC=F"}
 # Brent Yahoo'dan ALINMAZ: vade geçişinde sahte düşüş gösterdi (21 Eyl). borsapy BRENT kullanılır.
 FX_LIST = ["USD", "EUR", "gram-altin", "ceyrek-altin", "yarim-altin", "tam-altin", "BRENT"]  # ons-altin çıkarıldı: borsapy anlamsız değer veriyordu
 
 # ---- SAĞLIK TAKİBİ --------------------------------------------------------
 HEALTH = {}
+def _gizle(metin):
+    """Hata mesajlarında gizli anahtar değerlerini maskeler (depo ve Issue'lar herkese açık)."""
+    metin = str(metin)
+    for ad in ("FONOLOJI_KEY", "EVDS_API_KEY", "GH_TOKEN", "GITHUB_TOKEN"):
+        v = os.environ.get(ad) or ""
+        if len(v) >= 6:
+            metin = metin.replace(v, "***")
+    return metin
+
 def safe(name, fn):
     try:
         r = fn()
         HEALTH[name] = "OK"
         return r
     except Exception as e:
-        HEALTH[name] = f"HATA: {type(e).__name__}: {str(e)[:200]}"
+        HEALTH[name] = _gizle(f"HATA: {type(e).__name__}: {str(e)[:200]}")
         return None
 
 try:
@@ -574,7 +585,8 @@ def _kunye_cek(code):
                 pc = lambda v: J(v * 100) if isinstance(v, (int, float)) else None
                 pf = yan.get("portfolio") or {}
                 num = lambda k: float(pf.get(k) or 0)
-                portfoy = ({"kamu_payi": round(num("government_bond") + num("treasury_bill"), 2),
+                portfoy = {"portfoy_yok": True} if not pf else {}
+                portfoy = portfoy or ({"kamu_payi": round(num("government_bond") + num("treasury_bill"), 2),
                             "ozel_payi": round(num("corporate_bond"), 2), "hisse_payi": round(num("stock"), 2),
                             "nakit_repo_payi": round(num("cash"), 2), "eurobond_payi": round(num("eurobond"), 2),
                             "altin_payi": round(num("gold"), 2), "fon_payi": round(num("fund"), 2)} if pf else {})
@@ -607,8 +619,13 @@ def kunye_onbellek_guncelle(evren_df, oncelikli):
         except Exception:
             cache = {}
     bugun = NOW.date()
+    fono = bool(os.environ.get("FONOLOJI_KEY"))
     def eski(code):
-        t = (cache.get(code) or {}).get("t")
+        e = cache.get(code) or {}
+        # 3 Eki: eski kodla çekilmiş, portföy bilgisi olmayan künyeler süresini beklemeden yenilenir
+        if fono and e.get("kunye_kaynak") == "fonoloji" and "kamu_payi" not in e and not e.get("portfoy_yok"):
+            return True
+        t = e.get("t")
         return (not t) or (bugun - datetime.strptime(t, "%Y-%m-%d").date()).days >= KUNYE_TTL_GUN
     sirali = list(dict.fromkeys(list(oncelikli) +
                                 list(evren_df.sort_values("return_1y", ascending=False)["fund_code"])))
@@ -872,13 +889,17 @@ def rakip_tarama():
 # ---- FONOLOJİ (28 Eyl): fonlar için BİRİNCİL kaynak; borsapy çapraz kontrol/yedek --------
 FONOLOJI_BASE = "https://fonoloji.com/v1"
 
+FONOLOJI_SAYAC = {"cagri": 0, "limit_429": 0}
+
 def fonoloji_get(path, params=None, timeout=20):
     import requests
     key = os.environ.get("FONOLOJI_KEY")
+    FONOLOJI_SAYAC["cagri"] += 1
     if not key:
         raise ValueError("FONOLOJI_KEY tanımlı değil")
     r = requests.get(FONOLOJI_BASE + path, params=params or {}, headers={"X-API-Key": key}, timeout=timeout)
     if r.status_code == 429:
+        FONOLOJI_SAYAC["limit_429"] += 1
         raise ValueError(f"Fonoloji kota/limit (429), retry-after={r.headers.get('retry-after')}")
     r.raise_for_status()
     return r.json()
@@ -1270,7 +1291,20 @@ def find_monthly_cpi(obj):
     return None
 
 # ---- ANA AKIŞ -------------------------------------------------------------
+def agir_slot():
+    """Bu çalışma hangi 'ağır iş' penceresinde? Hafta sonu ve gün içi: yok (önbellek)."""
+    if NOW.weekday() >= 5:
+        return None
+    if 7 <= NOW.hour < 12:
+        return NOW.strftime("%Y-%m-%d") + "-sabah"
+    if (NOW.hour == 18 and NOW.minute >= 40) or NOW.hour >= 19:
+        return NOW.strftime("%Y-%m-%d") + "-aksam"
+    return None
+
+
 def main():
+    if os.environ.get("RADAR_TEST_COKME"):
+        raise RuntimeError("test amaçlı kontrollü çökme")
     R = {"surum": "v3", "uretim_zamani_tr": NOW.strftime("%Y-%m-%d %H:%M:%S"),
          "not": "Kişisel veri yok. BIST verisi ~15 dk gecikmeli. Günlük göstergeler tamamlanmış barlarla."}
 
@@ -1284,7 +1318,13 @@ def main():
             prev = json.load(open(OUT, encoding="utf-8"))
         except Exception:
             prev = {}
-    gunluk_saat = NOW.hour in (8, 9, 18, 19)   # 08:17 ve 18:52 çalışmaları (gecikme payıyla)
+    # 3 Eki: ağır işler (fonlar, rakip/künye, EVDS, yabancı oranı) günde İKİ kez: sabah ilk çalışma ve
+    # kesin kapanış fiyatlarının geldiği 18:40 sonrası. Eskiden 08,09,18,19 saatlerinin hepsinde çalışıyordu
+    # (kota ve süre iki katı, TEFAS engelleme riski).
+    slot = agir_slot()
+    gunluk_saat = bool(slot) and prev.get("agir_slot") != slot
+    R["agir_slot"] = slot if gunluk_saat else prev.get("agir_slot")
+    R["agir_calisma"] = gunluk_saat
 
     R["genislik"] = (safe("genislik_tum_piyasa", lambda: breadth_scan("XUTUM", 100)) if bp else None) or {"hata": "alınamadı"}
     g30 = safe("genislik_bist30", lambda: breadth_scan("XU030", 25)) if bp else None
@@ -1358,6 +1398,11 @@ def main():
             df = safe(f"yahoo_{k}", lambda t=t: norm_ohlc(
                 yf.download(t, period="300d", interval="1d", auto_adjust=False, progress=False)))
             R["kuresel"][k] = summarize(df, "yahoo", with_ma=False, bist=False) if df is not None else {"hata": "yok"}
+            sb = R["kuresel"][k].get("son_bar_tarihi")
+            if sb:
+                yas = (NOW.date() - datetime.strptime(sb, "%Y-%m-%d").date()).days
+                if yas > 4:
+                    HEALTH[f"yahoo_{k}_bayat"] = f"UYARI: {k} son verisi {sb} ({yas} gün önce) — Yahoo güncellemiyor olabilir"
 
     # ---- TETİKLER ----
     T = {}
@@ -1409,6 +1454,13 @@ def main():
         br = (R.get("doviz_altin") or {}).get("BRENT") or {}
         T["brent"] = br.get("last") if isinstance(br, dict) else None
         T["brent_kaynak"] = "borsapy"
+        by = (k.get("brent_yahoo") or {}).get("son_fiyat")
+        if T["brent"] and by:
+            fark = round((T["brent"] / by - 1) * 100, 2)
+            T["brent_capraz"] = {"borsapy": T["brent"], "yahoo": by, "fark_pct": fark}
+            if abs(fark) > 3:
+                HEALTH["brent_kaynak_celiskisi"] = (f"UYARI: Brent borsapy {T['brent']} / Yahoo {by} (%{fark} fark) — "
+                                                   "biri bayat ya da vade geçişi; haberle teyit et")
         T["gram_altin_zirveden_pct"] = (R.get("gram_altin_1y") or {}).get("zirveden_pct")
     except Exception as e:
         T["kuresel_tetik_hata"] = str(e)[:150]
@@ -1567,6 +1619,9 @@ def main():
     R["arsiv"] = safe("gunluk_arsiv", lambda: gunluk_arsiv(R))
 
     # ---- SAĞLIK ----
+    R["fonoloji_cagri"] = dict(FONOLOJI_SAYAC)
+    for _k in list(HEALTH):
+        HEALTH[_k] = _gizle(HEALTH[_k])
     bad = {k: v for k, v in HEALTH.items() if v != "OK"}
     bp_bad = {k: v for k, v in bad.items() if not k.startswith("yahoo_yedek")}
     R["saglik"] = {"ozet": "TAMAM" if not bp_bad else "SORUN VAR",
@@ -1583,9 +1638,19 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
+        # 3 Eki: çökmede bir önceki çalışmanın verisi (önbellekler) korunur, sadece sağlık güncellenir
         os.makedirs("output", exist_ok=True)
-        json.dump({"surum": "v3", "uretim_zamani_tr": NOW.strftime("%Y-%m-%d %H:%M:%S"),
-                   "saglik": {"ozet": "SORUN VAR", "hatali_moduller": {"ana_akis": f"{type(e).__name__}: {e}"},
-                              "tum_moduller": HEALTH}},
-                  open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-        print("ANA AKIŞ ÇÖKTÜ:", e)
+        onceki = {}
+        try:
+            if os.path.exists(OUT):
+                onceki = json.load(open(OUT, encoding="utf-8"))
+        except Exception:
+            onceki = {}
+        onceki.update({"uretim_zamani_tr": NOW.strftime("%Y-%m-%d %H:%M:%S"),
+                       "cokme": _gizle(f"{type(e).__name__}: {e}"),
+                       "saglik": {"ozet": "SORUN VAR",
+                                  "hatali_moduller": {"ana_akis": _gizle(f"{type(e).__name__}: {e}")},
+                                  "tum_moduller": {k: _gizle(v) for k, v in HEALTH.items()},
+                                  "aciklama": "Ana akış çöktü; aşağıdaki veriler BİR ÖNCEKİ başarılı çalışmaya aittir."}})
+        json.dump(onceki, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+        print("ANA AKIŞ ÇÖKTÜ:", _gizle(e))
