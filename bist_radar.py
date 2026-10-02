@@ -470,6 +470,26 @@ def _ozet(ser, n=6):
             "veri_yasi_gun": (NOW.date() - ser.index[-1].date()).days,
             "son_gozlemler": [{"t": d.strftime("%Y-%m-%d"), "v": J(v)} for d, v in ser.tail(n).items()]}
 
+def pka_faiz_beklentisi():
+    """Piyasa katılımcılarının politika faizi beklentisi (grup içinden adla; seçimi doğrulama için yazar)."""
+    e = bp.EVDS()
+    adaylar = []
+    for grp in ("bie_pkauo", "bie_urbek"):
+        try:
+            df = e.series_in_group(grp)
+        except Exception:
+            continue
+        nc = next(c for c in df.columns if str(c).upper() == "SERIE_NAME")
+        cc = next(c for c in df.columns if str(c).upper() == "SERIE_CODE")
+        fz = df[df[nc].astype(str).str.contains("politika faiz|repo", case=False, regex=True)]
+        adaylar += [f"{r[cc]} | {r[nc]}" for _, r in fz.head(12).iterrows()]
+        sec = fz[fz[nc].astype(str).str.contains("12 ay|yıl sonu|yil sonu", case=False, regex=True)]
+        if len(sec):
+            row = sec.iloc[0]
+            ser = _evds_frame(row[cc], freq="monthly")
+            return {"kod": row[cc], "ad": row[nc], **_ozet(ser), "adaylar": adaylar}
+    raise ValueError("politika faizi beklentisi bulunamadı; adaylar: " + "; ".join(adaylar[:8]))
+
 def pka_kur_beklentisi():
     """Kur beklentisi serisini grup içinden adla bulur; seçimi ve adayları yazar (doğrulama için)."""
     e = bp.EVDS()
@@ -510,6 +530,7 @@ def evds_resmi():
             HEALTH[f"evds_{ad}"] = f"UYARI: son veri {o['veri_yasi_gun']} gün önce ({code}) — seri güncellenmiyor olabilir"
         out[ad] = o
     out["pka_kur_beklentisi"] = safe("evds_pka_kur", pka_kur_beklentisi) or {"hata": "alınamadı"}
+    out["pka_faiz_beklentisi"] = safe("evds_pka_faiz", pka_faiz_beklentisi) or {"hata": "alınamadı"}
     return out
 
 
@@ -523,17 +544,17 @@ def _tr_up(x):
 RAKIP_GRUPLARI = {
     "para_piyasasi": {"bizim": ["YLB", "IJV", "DLY", "ZBJ"],
                       # "SEPET HESAP": bankaya özel, TEFAS'ta işleme kapalı fonlar (29 Eyl ZA2 dersi)
-                      "filtre": lambda n: "PARA PIYASASI" in n and "SERBEST" not in n and "SEPET HESAP" not in n,
+                      "filtre": lambda n: "PARA PIYASASI" in n and "SERBEST" not in n and "SEPET HESAP" not in n and "OZEL FON" not in n,
                       "esik": {"1m": 0.15, "3m": 0.40, "1y": 1.5}, "supheli_1m": 0.6, "supheli_1y": 8.0},
     "bist30_endeks": {"bizim": ["TIE", "AKU"],
-                      "filtre": lambda n: "BIST 30" in n and "ENDEKS" in n,
+                      "filtre": lambda n: "BIST 30" in n and "ENDEKS" in n and "OZEL FON" not in n,
                       "esik": {"1m": 0.0, "3m": 0.5, "1y": 2.0}, "supheli_1m": 3.0, "supheli_1y": 10.0},
     "bist100_endeks": {"bizim": [],
                        "filtre": lambda n: ("BIST 100 ENDEKS" in n or "BIST100 ENDEKS" in n) and "DISI" not in n,
                        "esik": {"1m": 0.0, "3m": 0.5, "1y": 2.0}, "supheli_1m": 3.0, "supheli_1y": 10.0},
 }
 MIN_FON_BUYUKLUGU = 500_000_000   # aday için asgari büyüklük (likidite)
-RAKIP_SURUM = 5                   # yapı değişince artır → ilk çalışmada tarama önbelleği yenilenir
+RAKIP_SURUM = 6                   # yapı değişince artır → ilk çalışmada tarama önbelleği yenilenir
 RAKIP_KUNYE_MAX = 60              # grup başına künyesi çekilecek en fazla fon (kota/limit koruması)
 RAKIP_ADAY_MAX = 20               # listelenecek en fazla aday (eskiden 3'tü — 29 Eyl kullanıcı talebi)
 
@@ -547,10 +568,17 @@ def _kunye_cek(code):
     """Tek fon künyesi — önce Fonoloji (1 kayıt), yoksa borsapy."""
     if os.environ.get("FONOLOJI_KEY"):
         try:
-            f = (fonoloji_get(f"/funds/{code}") or {}).get("fund") or {}
+            yan = fonoloji_get(f"/funds/{code}") or {}
+            f = yan.get("fund") or {}
             if f:
                 pc = lambda v: J(v * 100) if isinstance(v, (int, float)) else None
-                return {"buyukluk": J(f.get("aum")), "yatirimci": J(f.get("investor_count")),
+                pf = yan.get("portfolio") or {}
+                num = lambda k: float(pf.get(k) or 0)
+                portfoy = ({"kamu_payi": round(num("government_bond") + num("treasury_bill"), 2),
+                            "ozel_payi": round(num("corporate_bond"), 2), "hisse_payi": round(num("stock"), 2),
+                            "nakit_repo_payi": round(num("cash"), 2), "eurobond_payi": round(num("eurobond"), 2),
+                            "altin_payi": round(num("gold"), 2), "fon_payi": round(num("fund"), 2)} if pf else {})
+                return {**portfoy, "buyukluk": J(f.get("aum")), "yatirimci": J(f.get("investor_count")),
                         "alis_valoru": f.get("buy_valor"), "satis_valoru": f.get("sell_valor"), "risk": f.get("risk_score"),
                         "kurucu": f.get("management_company"), "tefas_durum": f.get("trading_status"),
                         "max_dusus_1y": pc(f.get("max_drawdown_1y")), "reel_getiri_1y": pc(f.get("real_return_1y")),
@@ -594,6 +622,11 @@ def kunye_onbellek_guncelle(evren_df, oncelikli):
         try:
             k = _kunye_cek(code)
             k["t"] = bugun.strftime("%Y-%m-%d")
+            # büyüklük geçmişi: sınıf bazında "para nereye akıyor" hesabı için (son 10 kayıt)
+            g = list((cache.get(code) or {}).get("g") or [])
+            if k.get("buyukluk"):
+                g = [x for x in g if x[0] != k["t"]] + [[k["t"], k["buyukluk"]]]
+            k["g"] = g[-10:]
             cache[code] = _kunye_isaretle(k)
             yenilenen += 1
         except Exception:
@@ -617,13 +650,16 @@ def evren_tablosu(df, cache, supheli_kodlar):
                      "buyukluk": k.get("buyukluk"), "yatirimci": k.get("yatirimci"), "kurucu": k.get("kurucu"),
                      "satis_valoru": k.get("satis_valoru"), "risk": k.get("risk"),
                      "tasfiye_kurucu": isinstance(x.get("elenen"), str), "nitelikli_serbest": "SERBEST" in n,
-                     "sepet": "SEPET HESAP" in n, "tefas_kapali": bool(k.get("tefas_kapali")),
+                     "sepet": "SEPET HESAP" in n, "ozel_fon": "OZEL FON" in n, "tefas_kapali": bool(k.get("tefas_kapali")),
+                     "sinif": _sinif(x["name"], x.get("fund_type") or "", k),
+                     "kamu_payi": k.get("kamu_payi"), "ozel_payi": k.get("ozel_payi"), "hisse_payi": k.get("hisse_payi"),
+                     "max_dusus_1y": k.get("max_dusus_1y"),
                      "kucuk": bool(k.get("kucuk")), "supheli": x["fund_code"] in supheli_kodlar,
                      "kunye_tarihi": k.get("t")})
     tab = pd.DataFrame(rows)
     os.makedirs("output", exist_ok=True)
     tab.to_csv(EVREN_CSV, index=False)
-    temiz = tab[~(tab["tasfiye_kurucu"] | tab["nitelikli_serbest"] | tab["sepet"] | tab["tefas_kapali"] | tab["supheli"])]
+    temiz = tab[~(tab["tasfiye_kurucu"] | tab["nitelikli_serbest"] | tab["sepet"] | tab["ozel_fon"] | tab["tefas_kapali"] | tab["supheli"])]
     ozet = {}
     for kat, g in temiz.groupby("kategori"):
         if not kat:
@@ -926,24 +962,36 @@ SINIF_IZLEME_FILE = "output/sinif_izleme.json"
 SINIF_ESIK_1A, SINIF_ESIK_3A = 0.2, 0.5     # PPF'yi bu kadar puan geçmeli (1 ay VE 3 ay)
 SINIF_OLGUNLUK_IS_GUNU = 10                  # ~2 hafta kesintisiz üstünlük
 
-def _sinif(n, kat):
+def _sinif(n, kat, kunye=None):
+    """Önce fonun GERÇEK portföyü (Fonoloji künyesi), yoksa isim/kategori kuralları."""
     n, kat = _tr_up(n), _tr_up(kat)
+    k = kunye or {}
     if "PARA PIYASASI" in kat or "PARA PIYASASI" in n:
         return "Para piyasası"
-    if "ALTIN" in n or "KIYMETLI MADEN" in kat or "GUMUS" in n:
+    hp, kp, op = k.get("hisse_payi"), k.get("kamu_payi"), k.get("ozel_payi")
+    if hp is not None and hp >= 50:
+        return "BIST endeks hisse" if ("ENDEKS" in n and "DISI" not in n) else "Hisse (aktif)"
+    if "ALTIN" in n or "KIYMETLI MADEN" in kat or "GUMUS" in n or (k.get("altin_payi") or 0) >= 50:
         return "Altın / kıymetli maden"
     if "TUFE" in n or "ENFLASYON" in n:
         return "Enflasyona endeksli"
-    if "EUROBOND" in n or "DOVIZ" in n or "DOLAR" in n or "YABANCI BORCLANMA" in n:
+    if "EUROBOND" in n or "DOVIZ" in n or "DOLAR" in n or "YABANCI BORCLANMA" in n or (k.get("eurobond_payi") or 0) >= 50:
         return "Eurobond / döviz"
-    if "HISSE" in n or "HISSE" in kat:
-        if "ENDEKS" in n and "DISI" not in n:
-            return "BIST endeks hisse"
-        return "Hisse (aktif)"
-    if "KIRA SERTIFIKA" in n or ("KATILIM" in kat and "BORCLANMA" not in kat):
+    if "HISSE" in n or "HISSE" in kat or any(w in n for w in ("ENERJI", "TEKNOLOJI", "BANKACILIK", "SANAYI", "SURDURULEBILIRLIK", "TEMETTU")) and "BORCLANMA" not in n:
+        return "BIST endeks hisse" if ("ENDEKS" in n and "DISI" not in n) else "Hisse (aktif)"
+    if "KIRA SERTIFIKA" in n:
         return "Kira sertifikası / katılım"
-    if "BORCLANMA" in kat or "BORCLANMA" in n or "TAHVIL" in n or "BONO" in n:
-        return "Kısa vadeli borçlanma" if "KISA VADE" in n else "Borçlanma / tahvil"
+    borc = "BORCLANMA" in kat or "BORCLANMA" in n or "TAHVIL" in n or "BONO" in n
+    if borc:
+        if "KISA VADE" in n:
+            return "Kısa vadeli borçlanma"
+        if (op is not None and op >= 40) or "OZEL SEKTOR" in n:
+            return "Özel sektör borçlanma"
+        if (kp is not None and kp >= 50) or any(w in n for w in ("KAMU", "DIBS", "DEVLET", "HAZINE")):
+            return "Kamu borçlanma (devlet tahvili)"
+        return "Borçlanma (karma)"
+    if "KATILIM" in kat or "KATILIM" in n:
+        return "Kira sertifikası / katılım"
     if "KARMA" in kat or "DEGISKEN" in kat:
         return "Karma / değişken"
     return None
@@ -961,14 +1009,27 @@ def _getiri_serisi(ser):
 def varlik_siniflari(df, kunye, supheli):
     """Paranın gidebileceği her yer aynı panoda: fon sınıfları + mevduat, dolar, gram altın."""
     d = df[df["elenen"].isna()].copy()
-    d = d[~d["_n"].str.contains("SERBEST|SEPET HESAP", regex=True) & ~d["fund_code"].isin(supheli)]
+    d = d[~d["_n"].str.contains("SERBEST|SEPET HESAP|OZEL FON", regex=True) & ~d["fund_code"].isin(supheli)]
     d = d[~d["fund_code"].map(lambda c: bool((kunye.get(c) or {}).get("tefas_kapali")))]
-    d["sinif"] = [_sinif(n, k) for n, k in zip(d["name"], d.get("fund_type", pd.Series([""] * len(d))).fillna(""))]
+    d["sinif"] = [_sinif(n, kt, kunye.get(c)) for n, kt, c in
+                  zip(d["name"], d.get("fund_type", pd.Series([""] * len(d))).fillna(""), d["fund_code"])]
     d = d[d["sinif"].notna()]
     siniflar = {}
     for snf, g in d.groupby("sinif"):
         buyuk = g[g["fund_code"].map(lambda c: (kunye.get(c) or {}).get("buyukluk") or 0) >= MIN_FON_BUYUKLUGU]
+        # sınıf riski: künyesi bilinenlerin 1 yıllık en derin düşüş ortancası
+        dd = [kunye[c]["max_dusus_1y"] for c in g["fund_code"] if (kunye.get(c) or {}).get("max_dusus_1y") is not None]
+        # sınıf para akışı: ~30 gün önceki büyüklükle karşılaştırılabilen fonların toplamı
+        simdi = once = 0.0; n_akis = 0
+        sinir = (NOW.date() - timedelta(days=25)).strftime("%Y-%m-%d")
+        for c in g["fund_code"]:
+            gg = (kunye.get(c) or {}).get("g") or []
+            eski = [x for x in gg if x[0] <= sinir]
+            if gg and eski:
+                simdi += gg[-1][1]; once += eski[-1][1]; n_akis += 1
         siniflar[snf] = {"fon_sayisi": int(len(g)), "buyuk_fon_sayisi": int(len(buyuk)),
+                         "medyan_max_dusus_1y": J(float(np.median(dd))) if dd else None,
+                         "akis_30g_pct": pct(simdi, once) if once else None, "akis_kapsam": n_akis,
                          "1a": J(g["return_1m"].median()), "3a": J(g["return_3m"].median()), "1y": J(g["return_1y"].median()),
                          "en_iyi_3_buyuk": J(buyuk.sort_values("return_3m", ascending=False)[["fund_code", "name", "return_1m", "return_3m", "return_1y"]].head(3))}
     # fon dışı karşılaştırmalar
@@ -1130,7 +1191,8 @@ ARSIV_FILE = "output/gunluk_arsiv.csv"
 
 def _sinif_arsiv(R):
     """Arşive kısa sütunlar: sınıf ortancaları (1a, 3a) — gidişatı izlemek için."""
-    kis = {"Para piyasası": "ppf", "Borçlanma / tahvil": "tahvil", "Kısa vadeli borçlanma": "kisa_borc",
+    kis = {"Para piyasası": "ppf", "Kamu borçlanma (devlet tahvili)": "kamu_borc", "Özel sektör borçlanma": "ozel_borc",
+           "Borçlanma (karma)": "karma_borc", "Kısa vadeli borçlanma": "kisa_borc",
            "Enflasyona endeksli": "tufe", "Kira sertifikası / katılım": "katilim", "Altın / kıymetli maden": "altin_fon",
            "Eurobond / döviz": "eurobond", "BIST endeks hisse": "bist_endeks"}
     sn = (((R.get("rakip_tarama") or {}).get("varlik_siniflari") or {}).get("siniflar") or {})
@@ -1138,6 +1200,10 @@ def _sinif_arsiv(R):
     for ad, k in kis.items():
         v = sn.get(ad) or {}
         out[f"{k}_1a"], out[f"{k}_3a"] = v.get("1a"), v.get("3a")
+    tz = (R.get("tetikler") or {}).get("tahvil_zamanlama") or {}
+    out["iki_yil_eksi_politika"] = tz.get("iki_yil_eksi_politika")
+    out["egri_egimi"] = tz.get("egri_egimi_10y_2y")
+    out["pka_faiz_beklentisi"] = tz.get("pka_politika_faizi_beklentisi")
     return out
 
 def gunluk_arsiv(R):
@@ -1420,6 +1486,25 @@ def main():
         vs = (rt.get("varlik_siniflari") or {})
         T["varlik_sinifi_ppf_ustu"] = vs.get("para_piyasasi_ustu") or {}
         T["varlik_sinifi_olgun"] = [k for k, v in (vs.get("para_piyasasi_ustu") or {}).items() if v.get("olgun")]
+        # tahvil zamanlaması: piyasa ne bekliyor, kim alıyor, tahvil fonları nerede
+        tz = {}
+        verim = {str(x.get("maturity")): x.get("yield") for x in (R.get("tahvil") or []) if isinstance(x, dict)}
+        pf_ = POLITIKA_FAIZI["oran"]
+        if verim.get("2Y") is not None:
+            tz["iki_yil_verim"] = verim["2Y"]
+            tz["iki_yil_eksi_politika"] = round(verim["2Y"] - pf_, 2)   # >0: piyasa güçlü indirim FİYATLAMIYOR
+        if verim.get("2Y") is not None and verim.get("10Y") is not None:
+            tz["egri_egimi_10y_2y"] = round(verim["10Y"] - verim["2Y"], 2)  # <0: ters eğri
+        pkaf = ((R.get("evds_resmi") or {}).get("pka_faiz_beklentisi") or {}).get("son")
+        tz["pka_politika_faizi_beklentisi"] = pkaf
+        if pkaf is not None:
+            tz["beklenen_indirim_puan"] = round(pf_ - pkaf, 2)
+        tz["yabanci_dibs_net_4hafta"] = T.get("yabanci_dibs_net_4hafta")
+        kb = (vs.get("siniflar") or {}).get("Kamu borçlanma (devlet tahvili)") or {}
+        tz["kamu_borclanma_ppf_farki_1a"] = kb.get("ppf_farki_1a")
+        tz["kamu_borclanma_ppf_farki_3a"] = kb.get("ppf_farki_3a")
+        tz["aofm_30g_yon"] = T.get("aofm_30g_yon")
+        T["tahvil_zamanlama"] = tz
         T["rakip_supheli"] = {g: (rt.get(g) or {}).get("supheli_yuksek") for g in ("para_piyasasi", "bist30_endeks")}
     except Exception as e:
         T["rakip_hata"] = str(e)[:120]
