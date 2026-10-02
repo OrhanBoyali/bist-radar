@@ -17,6 +17,7 @@ concurrency:
 jobs:
   radar:
     runs-on: ubuntu-latest
+    timeout-minutes: 40        # 3 Eki: asılı kalan çalışma kuyruğu tıkamasın (23 Eyl'de 52 dk sürmüştü)
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,7 +25,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install --upgrade borsapy yfinance pandas requests
+      # 3 Eki: borsapy sürümü SABİT. Yeni sürüm testlerden geçirilip bilinçli olarak yükseltilir.
+      - run: pip install "borsapy==0.11.0" yfinance pandas requests
       - run: python bist_radar.py
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
