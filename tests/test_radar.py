@@ -13,8 +13,16 @@ KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MOCK = os.path.join(KOK, "tests", "mock")
 
 EVREN = {}
+def calistir_klasor(tmp, ek_env=None):
+    """Aynı klasörde tekrar çalıştır (önbellek/çökme testleri)."""
+    env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK, **(ek_env or {}))
+    subprocess.run([sys.executable, "bist_radar.py"], cwd=tmp, env=env, capture_output=True, timeout=300)
+    with open(os.path.join(tmp, "output", "radar.json"), encoding="utf-8") as f:
+        return json.load(f)
+
 def calistir(tohum=None):
     tmp = tempfile.mkdtemp()
+    EVREN["son"] = tmp
     if tohum:                                  # önceden birikmiş dosyalarla başlatma (kalıcılık testi)
         os.makedirs(os.path.join(tmp, "output"), exist_ok=True)
         for ad, icerik in tohum.items():
@@ -38,21 +46,35 @@ def birim_tarih_hizalama():
 
 def main():
     hz = birim_tarih_hizalama()
-    from datetime import date as _d, timedelta as _td
+    # 3 Eki: gizli anahtar maskeleme birim testi
+    _gz = subprocess.run([sys.executable, "-c", "import bist_radar as br; print(br._gizle('istek hatasi: anahtar=gizli12345xyz'))"],
+                         env=dict(os.environ, PYTHONPATH=MOCK + os.pathsep + KOK, FONOLOJI_KEY="gizli12345xyz"),
+                         capture_output=True, text=True, timeout=60).stdout.strip()
+    from datetime import datetime as _dt, timezone as _tz, timedelta as _td
+    class _d:   # 3 Eki: testler de Türkiye saatiyle çalışır (betikle aynı gün sınırı)
+        @staticmethod
+        def today(): return _dt.now(_tz(_td(hours=3))).date()
     _gecmis = [(_d.today() - _td(days=i)).strftime("%Y-%m-%d") for i in range(40, 5, -1) if (_d.today() - _td(days=i)).weekday() < 5]
     d_olgun = calistir({"aday_izleme.json": {"YLB": {"ZPX": {"ilk": _gecmis[0], "gunler": _gecmis}}}})
     olgun_ylb = [a["kod"] for a in d_olgun["tetikler"].get("rakip_olgun_adaylar", {}).get("YLB", [])]
     import pandas as _pd
-    _isg = [(_pd.Timestamp(_d.today()) - _pd.offsets.BDay(i)).strftime("%Y-%m-%d") for i in range(12, 0, -1)]
+    _bugun_tr = _pd.Timestamp(_d.today())
+    _isg = [(_bugun_tr - _pd.offsets.BDay(i)).strftime("%Y-%m-%d") for i in range(12, 0, -1)]
     _eski = (_d.today() - _td(days=35)).strftime("%Y-%m-%d")
     d_sinif = calistir({"sinif_izleme.json": {"Kısa vadeli borçlanma": {"gunler": _isg},
                                               "Enflasyona endeksli": {"gunler": _isg[:5]}},
-                        "fon_kunye.json": {f"KB{i}": {"t": _eski, "buyukluk": 1e9, "g": [[_eski, 1e9]]} for i in range(3)}})
+                        "fon_kunye.json": {**{f"KB{i}": {"t": _eski, "buyukluk": 1e9, "g": [[_eski, 1e9]]} for i in range(3)},
+                                           # 3 Eki: bugün çekilmiş ama portföyü olmayan (eski kod) künye → yenilenmeli
+                                           "YLB": {"t": _d.today().strftime("%Y-%m-%d"), "buyukluk": 1e11, "kunye_kaynak": "fonoloji"}}})
+    kunye_sonra = json.load(open(os.path.join(EVREN["son"], "output", "fon_kunye.json"), encoding="utf-8"))
     akis_kamu = (((d_sinif.get("rakip_tarama") or {}).get("varlik_siniflari") or {}).get("siniflar") or {}).get(
         "Kamu borçlanma (devlet tahvili)", {}).get("akis_30g_pct")
     sinif_olgun = d_sinif["tetikler"].get("varlik_sinifi_olgun", [])
     import csv as _csv
-    d = calistir(); T = d["tetikler"]; k = T.get("k3_donus_kapisi", {}); fon = d.get("fonlar_borsapy") or d.get("fonlar", {})   # borsapy filtre testleri ham borsapy verisine bakar
+    d = calistir(); T = d["tetikler"]
+    _ana = EVREN["son"]
+    k = T.get("k3_donus_kapisi", {}); fon = d.get("fonlar_borsapy") or d.get("fonlar", {})   # borsapy filtre testleri ham borsapy verisine bakar
+    d_cokme = calistir_klasor(_ana, {"RADAR_TEST_COKME": "1"})   # aynı klasörde kontrollü çökme
     rt = d.get("rakip_tarama") or {}; pp = rt.get("para_piyasasi") or {}
     vs = rt.get("varlik_siniflari") or {}
     _p = os.path.join(EVREN["klasor"], "output", "fon_evreni.csv")
@@ -76,6 +98,15 @@ def main():
         (d["genislik"].get("hisse_sayisi", 0) >= 100,               "Tüm piyasa genişliği tek taramayla gelir"),
         (T.get("reel_getiri_yontem", "").startswith("NET"),         "Reel getiri NET (stopaj sonrası) hesaplanır"),
         ("TIE" not in T.get("reel_getiri", {}),                     "Reel getiri sadece cephane fonlarına uygulanır"),
+        # --- 3 Eki hypercare kod incelemesi ---
+        ("gizli12345xyz" not in _gz and "***" in _gz,                "Güvenlik: hata mesajlarında gizli anahtar maskelenir"),
+        (bool(d_cokme.get("fonlar")) and "ana_akis" in d_cokme["saglik"]["hatali_moduller"],
+                                                                    "Dayanıklılık: çökmede önceki veriler korunur, sağlık SORUN VAR olur"),
+        ("yahoo_nasdaq_bayat" in d["saglik"]["hatali_moduller"],    "Bayat veri: birkaç gün geride kalan Yahoo verisi uyarı verir"),
+        ((T.get("brent_capraz") or {}).get("fark_pct") is not None and "brent_kaynak_celiskisi" not in d["saglik"]["hatali_moduller"],
+                                                                    "Petrol: iki kaynak karşılaştırılır, yakınsa yanlış alarm yok"),
+        ((d.get("fonoloji_cagri") or {}).get("cagri", 0) > 0,       "Kota: Fonoloji çağrı sayısı raporlanır"),
+        ("kamu_payi" in (kunye_sonra.get("YLB") or {}),             "Künye: portföyü eksik künye süresini beklemeden yenilenir"),
         ("ZBJ" in fon and "ZBJ" in T.get("reel_getiri", {}),        "Portföydeki her fon takipte (30 Eyl: ZBJ eksik kalmıştı)"),
         ((pp.get("bizim") or {}).get("ZBJ", {}).get("gruptaki_sira_1y") is not None, "ZBJ rakip taramasında bizim fon olarak sıralanıyor"),
         # --- Rakip fon taraması (28 Eyl) ---
