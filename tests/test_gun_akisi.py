@@ -68,7 +68,8 @@ def main():
     kontrol(len(satirlar) == 1,                                      "18:52 — arşivde bugün için TEK satır (18:17'nin üzerine yazıldı)")
     kontrol(satirlar and satirlar[0].get("fiyat_YLB") not in ("", None), "18:52 — arşiv satırında fon fiyatları dolu")
     kontrol(satirlar and satirlar[0].get("reel_net_YLB") not in ("", None), "18:52 — arşiv satırında net reel getiri dolu")
-    kontrol(satirlar and satirlar[0].get("sinif_ppf_1a") not in ("", None) and satirlar[0].get("sinif_tahvil_3a") not in ("", None),
+    kontrol(satirlar and satirlar[0].get("sinif_ppf_1a") not in ("", None) and satirlar[0].get("sinif_kamu_borc_3a") not in ("", None)
+            and satirlar[0].get("sinif_iki_yil_eksi_politika") not in ("", None),
             "18:52 — arşivde varlık sınıflarının 1a/3a ortancaları (gidişat için)")
 
     d, p = calistir(tmp, f"{cmt} 11:00")
