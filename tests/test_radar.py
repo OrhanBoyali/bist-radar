@@ -44,8 +44,12 @@ def main():
     olgun_ylb = [a["kod"] for a in d_olgun["tetikler"].get("rakip_olgun_adaylar", {}).get("YLB", [])]
     import pandas as _pd
     _isg = [(_pd.Timestamp(_d.today()) - _pd.offsets.BDay(i)).strftime("%Y-%m-%d") for i in range(12, 0, -1)]
+    _eski = (_d.today() - _td(days=35)).strftime("%Y-%m-%d")
     d_sinif = calistir({"sinif_izleme.json": {"Kısa vadeli borçlanma": {"gunler": _isg},
-                                              "Enflasyona endeksli": {"gunler": _isg[:5]}}})
+                                              "Enflasyona endeksli": {"gunler": _isg[:5]}},
+                        "fon_kunye.json": {f"KB{i}": {"t": _eski, "buyukluk": 1e9, "g": [[_eski, 1e9]]} for i in range(3)}})
+    akis_kamu = (((d_sinif.get("rakip_tarama") or {}).get("varlik_siniflari") or {}).get("siniflar") or {}).get(
+        "Kamu borçlanma (devlet tahvili)", {}).get("akis_30g_pct")
     sinif_olgun = d_sinif["tetikler"].get("varlik_sinifi_olgun", [])
     import csv as _csv
     d = calistir(); T = d["tetikler"]; k = T.get("k3_donus_kapisi", {}); fon = d.get("fonlar_borsapy") or d.get("fonlar", {})   # borsapy filtre testleri ham borsapy verisine bakar
@@ -106,13 +110,25 @@ def main():
         (all(a.get("piyasa_disi_gun", 0) >= 2 for a in (rt.get("bist30_endeks") or {}).get("bizim", {}).get("TIE", {}).get("gecis_adaylari", [])),
                                                                     "Karar: hisse fonu geçişinde piyasa dışı gün (T+2) raporlanır"),
         # --- Varlık sınıfı panosu (1 Eki): paranın gidebileceği her yer ---
-        ({"Para piyasası", "Borçlanma / tahvil", "Kısa vadeli borçlanma", "Enflasyona endeksli", "Eurobond / döviz",
+        ({"Para piyasası", "Kamu borçlanma (devlet tahvili)", "Özel sektör borçlanma", "Borçlanma (karma)",
+          "Kısa vadeli borçlanma", "Enflasyona endeksli", "Eurobond / döviz",
           "Altın / kıymetli maden", "Kira sertifikası / katılım", "BIST endeks hisse"} <= set(vs.get("siniflar", {})),
                                                                     "Pano: bütün varlık sınıfları ayrı ayrı ölçülür"),
         ({"Gram altın (fiziki)", "Dolar (USD/TRY)", "TL mevduat (1 ay, brüt)"} <= set(vs.get("fon_disi", {})),
                                                                     "Pano: mevduat, dolar ve gram altın da karşılaştırılır"),
         ("Kısa vadeli borçlanma" in T.get("varlik_sinifi_ppf_ustu", {}), "Pano: para piyasasını 1a ve 3a'da geçen sınıf yakalanır"),
-        ("Borçlanma / tahvil" not in T.get("varlik_sinifi_ppf_ustu", {}), "Pano: geride kalan sınıf yanlış uyarı üretmez"),
+        ("Borçlanma (karma)" not in T.get("varlik_sinifi_ppf_ustu", {}), "Pano: geride kalan sınıf yanlış uyarı üretmez"),
+        # --- 2 Eki paketi: erişim, gerçek portföyle sınıflama, sınıf akışı, tahvil zamanlaması ---
+        ("OZF" not in str(pp.get("siralama")),                      "Paket: 'ÖZEL FON' rakip havuzuna girmez (erişilemez)"),
+        (ev_bayrak.get("OZF", {}).get("ozel_fon") == "True",        "Paket: 'ÖZEL FON' evren tablosunda işaretli"),
+        (ev_bayrak.get("KNJ", {}).get("sinif") == "Hisse (aktif)",  "Paket: adı 'katılım' olan ama %90 hisse tutan fon hisse sayılır (KNJ)"),
+        (ev_bayrak.get("PB1", {}).get("sinif") == "Kamu borçlanma (devlet tahvili)", "Paket: adı sade, portföyü devlet tahvili olan fon kamu sayılır"),
+        (ev_bayrak.get("OS0", {}).get("sinif") == "Özel sektör borçlanma", "Paket: özel sektör borçlanma ayrı sınıf"),
+        (ev_bayrak.get("KB0", {}).get("kamu_payi") not in ("", None), "Paket: fon portföy dağılımı evren tablosunda"),
+        (akis_kamu is not None and abs(akis_kamu - (-25.0)) < 0.5, "Paket: sınıf bazında 30 günlük para akışı hesaplanır"),
+        (abs((T.get("tahvil_zamanlama") or {}).get("iki_yil_eksi_politika", 0) - 2.7) < 0.01, "Paket: 2Y verim − politika faizi (piyasanın indirim fiyatlaması)"),
+        (abs((T.get("tahvil_zamanlama") or {}).get("egri_egimi_10y_2y", 0) - (-4.6)) < 0.01, "Paket: verim eğrisi eğimi"),
+        ((T.get("tahvil_zamanlama") or {}).get("beklenen_indirim_puan") == 7.0, "Paket: anket faiz beklentisinden beklenen indirim"),
         (T.get("varlik_sinifi_olgun") == [],                         "Pano: ilk gün görülen üstünlük 'olgun' sayılmaz (kalıcılık)"),
         ("Kısa vadeli borçlanma" in sinif_olgun,                    "Pano: 2 hafta kesintisiz üstün kalan sınıf olgunlaşır"),
         ("Enflasyona endeksli" not in sinif_olgun,                  "Pano: bugün üstün olmayan sınıf, geçmişi olsa da olgun sayılmaz"),
