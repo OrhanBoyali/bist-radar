@@ -1,6 +1,15 @@
 """Sahte requests — Fonoloji API'sini taklit eder. Sadece test düzeneğinde kullanılır."""
 import pandas as pd
 
+def _portfoy(code):
+    if code.startswith("KB") or code == "PB1":
+        return {"government_bond": 85, "cash": 15}
+    if code.startswith("OS"):
+        return {"corporate_bond": 70, "government_bond": 10, "cash": 20}
+    if code == "KNJ":
+        return {"stock": 90, "cash": 10}
+    return {"stock": 0, "cash": 100}
+
 class _Resp:
     def __init__(self, data, status=200):
         self._d, self.status_code, self.headers = data, status, {}
@@ -38,4 +47,4 @@ def get(url, params=None, headers=None, timeout=20):
                            "buy_valor": 1 if hisse else 0, "sell_valor": 2 if hisse else 0, "current_price": 5.5, "current_date": str(son),
                            "return_1y": 0.47, "aum": aum, "investor_count": 9970, "trading_status": durum,
                            "management_company": "Test Portföy"},
-                  "portfolio": {"stock": 0, "cash": 100}})
+                  "portfolio": _portfoy(code)})
