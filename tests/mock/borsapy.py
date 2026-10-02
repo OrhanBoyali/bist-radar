@@ -47,7 +47,7 @@ def bonds(): return pd.DataFrame({"maturity": ["2Y", "10Y"], "yield": [39.7, 35.
 class FX:
     def __init__(self, k): self.k = k
     @property
-    def current(self): return {"last": {"USD": 48.83, "EUR": 57.0}.get(self.k, 6800.0)}
+    def current(self): return {"last": {"USD": 48.83, "EUR": 57.0, "BRENT": 108.0}.get(self.k, 6800.0)}
     def history(self, period="1y"): return _ohlc(250, 7500, 6800)
 def economic_calendar(**k): return pd.DataFrame({"Date": ["2026-09-24"], "Event": ["test"]})
 class EconomicCalendar:
