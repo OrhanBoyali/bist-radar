@@ -21,8 +21,8 @@ def son_is_gunu_bugun():
         d -= timedelta(days=1)
     return d
 
-def calistir(klasor, zaman):
-    env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK, RADAR_TEST_NOW=zaman)
+def calistir(klasor, zaman, ek_env=None):
+    env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK, RADAR_TEST_NOW=zaman, **(ek_env or {}))
     p = subprocess.run([sys.executable, "bist_radar.py"], cwd=klasor, env=env, capture_output=True, text=True, timeout=300)
     with open(os.path.join(klasor, "output", "radar.json"), encoding="utf-8") as f:
         return json.load(f), p
@@ -53,6 +53,10 @@ def main():
     kontrol(str(d.get("fonlar_zamani")).count("önbellek") == 1,     "12:17 — önbellek etiketi tekrarlanmıyor")
     kontrol(bool(d.get("rakip_tarama")),                             "12:17 — rakip taraması önbellekten korunuyor")
     kontrol(bool(d.get("fonlar")) and all(v for v in d["fonlar"].values()), "12:17 — beş fonun verisi eksiksiz")
+
+    d, p = calistir(tmp, f"{g} 12:30", {"RADAR_AGIR": "true"})
+    kontrol(d.get("agir_calisma") is True and d.get("agir_zorla") is True, "12:30 — 'ağır çalıştır' seçeneği saate bakmadan ağır çalışır")
+    kontrol("önbellek" not in str(d.get("fonlar_zamani")),          "12:30 — zorla çalıştırmada fonlar taze")
 
     d, p = calistir(tmp, f"{g} 18:17")
     kontrol("ana_akis" not in d["saglik"]["hatali_moduller"],       "18:17 — betik çökmeden tamamlandı")
