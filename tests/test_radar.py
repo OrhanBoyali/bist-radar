@@ -46,6 +46,12 @@ def birim_tarih_hizalama():
 
 def main():
     hz = birim_tarih_hizalama()
+    # 5 Eki: enflasyon günü kuralı birim testi (4 durum)
+    _tk = ("import bist_radar as br\nfrom datetime import datetime as D\n"
+           "print(br.tufe_yenile_gerekli('2026-08-01', D(2026,10,5,11,0)), br.tufe_yenile_gerekli('2026-09-01', D(2026,10,5,11,0)),"
+           " br.tufe_yenile_gerekli('2026-08-01', D(2026,10,5,9,0)), br.tufe_yenile_gerekli('2026-08-01', D(2026,10,15,11,0)))")
+    tufe_k = subprocess.run([sys.executable, "-c", _tk], env=dict(os.environ, PYTHONPATH=MOCK + os.pathsep + KOK),
+                            capture_output=True, text=True, timeout=60).stdout.split()
     # 3 Eki: gizli anahtar maskeleme birim testi
     _gz = subprocess.run([sys.executable, "-c", "import bist_radar as br; print(br._gizle('istek hatasi: anahtar=gizli12345xyz'))"],
                          env=dict(os.environ, PYTHONPATH=MOCK + os.pathsep + KOK, FONOLOJI_KEY="gizli12345xyz"),
@@ -77,6 +83,7 @@ def main():
     d_cokme = calistir_klasor(_ana, {"RADAR_TEST_COKME": "1"})   # aynı klasörde kontrollü çökme
     rt = d.get("rakip_tarama") or {}; pp = rt.get("para_piyasasi") or {}
     vs = rt.get("varlik_siniflari") or {}
+    ta = rt.get("tahvil_adaylari") or {}
     _p = os.path.join(EVREN["klasor"], "output", "fon_evreni.csv")
     _rows = list(_csv.DictReader(open(_p, encoding="utf-8"))) if os.path.exists(_p) else []
     ev_satir = len(_rows); ev_bayrak = {r["kod"]: r for r in _rows}
@@ -98,6 +105,12 @@ def main():
         (d["genislik"].get("hisse_sayisi", 0) >= 100,               "Tüm piyasa genişliği tek taramayla gelir"),
         (T.get("reel_getiri_yontem", "").startswith("NET"),         "Reel getiri NET (stopaj sonrası) hesaplanır"),
         ("TIE" not in T.get("reel_getiri", {}),                     "Reel getiri sadece cephane fonlarına uygulanır"),
+        # --- 5 Eki tahvil paketi ---
+        ({"KB0", "KB1", "KB2", "PB1"} <= {x["kod"] for x in ta.get("adaylar", [])}, "Tahvil: devlet tahvili ağırlıklı fonlar aday listesinde"),
+        (not any(x["kod"].startswith("OS") for x in ta.get("adaylar", [])), "Tahvil: şirket borcu ağırlıklı fonlar aday değil"),
+        (all((x.get("kamu_payi") or 0) >= 50 for x in ta.get("adaylar", [])), "Tahvil: her adayın portföyünün en az yarısı devlet kâğıdı"),
+        (isinstance(ta.get("portfoyu_bilinmeyen_borclanma_fonu"), int), "Tahvil: portföyü bilinmeyen fon sayısı raporlanır"),
+        (tufe_k == ["True", "False", "False", "False"],             "Enflasyon günü: sadece gerektiğinde (10:00 sonrası, ayın ilk günleri, veri eskiyse) tekrar çekilir"),
         # --- 3 Eki hypercare kod incelemesi ---
         ("gizli12345xyz" not in _gz and "***" in _gz,                "Güvenlik: hata mesajlarında gizli anahtar maskelenir"),
         (bool(d_cokme.get("fonlar")) and "ana_akis" in d_cokme["saglik"]["hatali_moduller"],
