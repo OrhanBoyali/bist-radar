@@ -5,6 +5,11 @@ on:
   # GitHub'ın kendi zamanlayıcısı 23 Eyl'de kapatıldı: saatlerce gecikip mesai dışında çalışıyor,
   # cron-job.org'un çalışmalarıyla çakışıyordu.
   workflow_dispatch:
+    inputs:
+      agir:
+        description: "Ağır çalıştır: fonlar, rakip taraması, künyeler ve resmi veriler saate bakmadan taze çekilsin"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -31,6 +36,7 @@ jobs:
         env:
           EVDS_API_KEY: ${{ secrets.EVDS_API_KEY }}
           FONOLOJI_KEY: ${{ secrets.FONOLOJI_KEY }}
+          RADAR_AGIR: ${{ inputs.agir }}
 
       - name: JSON'u depoya yaz
         run: |
