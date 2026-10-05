@@ -565,7 +565,7 @@ RAKIP_GRUPLARI = {
                        "esik": {"1m": 0.0, "3m": 0.5, "1y": 2.0}, "supheli_1m": 3.0, "supheli_1y": 10.0},
 }
 MIN_FON_BUYUKLUGU = 500_000_000   # aday için asgari büyüklük (likidite)
-RAKIP_SURUM = 6                   # yapı değişince artır → ilk çalışmada tarama önbelleği yenilenir
+RAKIP_SURUM = 7                   # yapı değişince artır → ilk çalışmada tarama önbelleği yenilenir
 RAKIP_KUNYE_MAX = 60              # grup başına künyesi çekilecek en fazla fon (kota/limit koruması)
 RAKIP_ADAY_MAX = 20               # listelenecek en fazla aday (eskiden 3'tü — 29 Eyl kullanıcı talebi)
 
@@ -784,6 +784,10 @@ def rakip_tarama():
     df["elenen"] = df["_n"].map(lambda n: next((k for k in TASFIYE_KURUCULAR if k in n), None))
     out = {"evren": int(len(df)), "zaman": NOW.strftime("%Y-%m-%d %H:%M")}
     oncelikli = df.loc[df["_n"].map(lambda n: any(g["filtre"](n) for g in RAKIP_GRUPLARI.values())), "fund_code"].tolist()
+    # 5 Eki: tahvil kararları için borçlanma ailesi de öncelikli (portföy bilgisi = kamu/özel ayrımı)
+    borc_maske = df["_n"].str.contains("BORCLANMA|TAHVIL|BONO|KIRA SERTIFIKA|TUFE|ENFLASYON|EUROBOND", regex=True) & \
+                 ~df["_n"].str.contains("SERBEST|OZEL FON|SEPET HESAP", regex=True)
+    oncelikli += [c for c in df.loc[borc_maske].sort_values("return_3m", ascending=False)["fund_code"] if c not in oncelikli]
     kcache_global, out["kunye_durumu"] = kunye_onbellek_guncelle(df[df["elenen"].isna()], oncelikli)
     supheli_tum = set()
     for grup, g in RAKIP_GRUPLARI.items():
@@ -879,6 +883,10 @@ def rakip_tarama():
         out["sektor_akis"] = sektor_akis(out, kcache_global)
     except Exception as e:
         out["sektor_akis"] = {"hata": str(e)[:120]}
+    try:
+        out["tahvil_adaylari"] = tahvil_adaylari(df, kcache_global, supheli_tum)
+    except Exception as e:
+        out["tahvil_adaylari"] = {"hata": f"{type(e).__name__}: {str(e)[:120]}"}
     try:
         out["varlik_siniflari"] = varlik_siniflari(df, kcache_global, supheli_tum)
     except Exception as e:
@@ -1026,6 +1034,37 @@ def _getiri_serisi(ser):
         x = ser[ser.index <= t - pd.Timedelta(days=gun)]
         return pct(son, x.iloc[-1]) if len(x) else None
     return {"1a": onceki(30), "3a": onceki(91), "1y": onceki(365)}
+
+TAHVIL_KAMU_ESIK = 50.0   # portföyünün en az bu kadarı devlet kâğıdı olan fon "devlet tahvili ağırlıklı"
+
+def tahvil_adaylari(df, kunye, supheli):
+    """Devlet tahvili ağırlıklı, büyük, erişilebilir borçlanma fonları + veri kapsamı."""
+    d = df[df["elenen"].isna() & ~df["fund_code"].isin(supheli)].copy()
+    d = d[~d["_n"].str.contains("SERBEST|SEPET HESAP|OZEL FON|PARA PIYASASI", regex=True)]
+    d = d[d["_n"].str.contains("BORCLANMA|TAHVIL|BONO|KIRA SERTIFIKA|TUFE|ENFLASYON", regex=True)]
+    aday, bilinmeyen = [], 0
+    for _, x in d.iterrows():
+        k = kunye.get(x["fund_code"]) or {}
+        if k.get("tefas_kapali"):
+            continue
+        if "kamu_payi" not in k:
+            bilinmeyen += 1
+            continue
+        if (k.get("kamu_payi") or 0) < TAHVIL_KAMU_ESIK or (k.get("buyukluk") or 0) < MIN_FON_BUYUKLUGU:
+            continue
+        n = x["_n"]
+        vade = "uzun" if "UZUN VADE" in n else ("kısa" if "KISA VADE" in n else "orta/belirsiz")
+        tur = "enflasyona endeksli" if ("TUFE" in n or "ENFLASYON" in n) else ("kira sertifikası" if "KIRA" in n else "sabit/karma")
+        aday.append({"kod": x["fund_code"], "ad": x["name"], "vade_ipucu": vade, "tur": tur,
+                     "kamu_payi": k.get("kamu_payi"), "ozel_payi": k.get("ozel_payi"), "nakit_repo_payi": k.get("nakit_repo_payi"),
+                     "buyukluk": k.get("buyukluk"), "yatirimci": k.get("yatirimci"), "kurucu": k.get("kurucu"),
+                     "satis_valoru": k.get("satis_valoru"), "risk": k.get("risk"), "max_dusus_1y": k.get("max_dusus_1y"),
+                     "1a": J(x.get("return_1m")), "3a": J(x.get("return_3m")), "1y": J(x.get("return_1y"))})
+    aday.sort(key=lambda a: (-(a["kamu_payi"] or 0), -(a["buyukluk"] or 0)))
+    return {"esik_kamu_payi": TAHVIL_KAMU_ESIK, "aday_sayisi": len(aday), "adaylar": aday[:25],
+            "portfoyu_bilinmeyen_borclanma_fonu": bilinmeyen,
+            "not": "Portföyü bilinmeyen fonlar künye yenilendikçe değerlendirmeye girer."}
+
 
 def varlik_siniflari(df, kunye, supheli):
     """Paranın gidebileceği her yer aynı panoda: fon sınıfları + mevduat, dolar, gram altın."""
@@ -1291,6 +1330,15 @@ def find_monthly_cpi(obj):
     return None
 
 # ---- ANA AKIŞ -------------------------------------------------------------
+def tufe_yenile_gerekli(son_tarih, simdi):
+    """TÜİK ayın ilk günlerinde (≤8) 10:00'da açıklar. Elimizdeki son TÜFE geçen aydan eskiyse yenile."""
+    if not son_tarih or simdi.day > 8 or simdi.hour < 10:
+        return False
+    ilk = simdi.replace(day=1)
+    beklenen = (ilk - timedelta(days=1)).replace(day=1).strftime("%Y-%m-%d")   # geçen ayın 1'i
+    return son_tarih < beklenen
+
+
 def agir_slot():
     """Bu çalışma hangi 'ağır iş' penceresinde? Hafta sonu ve gün içi: yok (önbellek)."""
     if NOW.weekday() >= 5:
@@ -1324,7 +1372,11 @@ def main():
     slot = agir_slot()
     gunluk_saat = bool(slot) and prev.get("agir_slot") != slot
     R["agir_slot"] = slot if gunluk_saat else prev.get("agir_slot")
+    zorla = str(os.environ.get("RADAR_AGIR", "")).lower() == "true"   # 5 Eki: Run workflow → "ağır çalıştır" kutusu
+    if zorla:
+        gunluk_saat = True   # slot kaydı değişmez: planlı sabah/akşam ağır çalışmaları etkilenmez
     R["agir_calisma"] = gunluk_saat
+    R["agir_zorla"] = zorla
 
     R["genislik"] = (safe("genislik_tum_piyasa", lambda: breadth_scan("XUTUM", 100)) if bp else None) or {"hata": "alınamadı"}
     g30 = safe("genislik_bist30", lambda: breadth_scan("XU030", 25)) if bp else None
@@ -1375,6 +1427,14 @@ def main():
             else:
                 R["evds_resmi"] = prev["evds_resmi"]
                 R["evds_resmi_zamani"] = str(prev.get("evds_resmi_zamani", "")).split(" (önbellek")[0] + " (önbellek)"
+                # 5 Eki: enflasyon günü — sabah çalışması 10:00'daki veriyi kaçırdıysa sadece TÜFE'yi tazele
+                tu = (R["evds_resmi"] or {}).get("tufe_endeks") or {}
+                if tufe_yenile_gerekli(tu.get("tarih"), NOW):
+                    ser = safe("evds_tufe_ek_cekim", lambda: _evds_frame("TP.TUKFIY2025.GENEL", freq="monthly"))
+                    if ser is not None and len(ser) >= 13:
+                        R["evds_resmi"] = {**R["evds_resmi"], "tufe_endeks": {"kod": "TP.TUKFIY2025.GENEL", **_ozet(ser),
+                                           "aylik_pct": pct(ser.iloc[-1], ser.iloc[-2]), "yillik_pct": pct(ser.iloc[-1], ser.iloc[-13])}}
+                        R["tufe_ek_cekim"] = NOW.strftime("%Y-%m-%d %H:%M")
         R["enflasyon"] = safe("enflasyon", lambda: J(bp.Inflation().latest()))
         R["tahvil"] = safe("tahvil", lambda: J(bp.bonds()))
         R["doviz_altin"] = {k: safe(f"fx_{k}", lambda k=k: J(bp.FX(k).current)) for k in FX_LIST}
