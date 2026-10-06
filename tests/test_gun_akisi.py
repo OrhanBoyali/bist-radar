@@ -30,6 +30,8 @@ def calistir(klasor, zaman, ek_env=None):
 def main():
     tmp = tempfile.mkdtemp()
     shutil.copy(os.path.join(KOK, "bist_radar.py"), tmp)
+    if os.path.exists(os.path.join(KOK, "ayarlar.json")):     # 6 Eki: depodaki GERÇEK ayar dosyası da doğrulanır
+        shutil.copy(os.path.join(KOK, "ayarlar.json"), tmp)
     g = son_is_gunu_bugun().strftime("%Y-%m-%d")
     cmt = (son_is_gunu_bugun() + timedelta(days=(5 - son_is_gunu_bugun().weekday()) % 7 or 7)).strftime("%Y-%m-%d")
     sonuc = []
@@ -37,6 +39,9 @@ def main():
 
     d, p = calistir(tmp, f"{g} 08:17")
     kontrol("ana_akis" not in d["saglik"]["hatali_moduller"],       "08:17 — betik çökmeden tamamlandı")
+    if os.path.exists(os.path.join(KOK, "ayarlar.json")):
+        kontrol(d.get("ayarlar", {}).get("kaynak") == "ayarlar.json" and d["saglik"]["tum_moduller"].get("ayarlar") == "OK",
+                "08:17 — depodaki ayarlar.json geçerli ve okunuyor")
     kontrol("önbellek" not in str(d.get("fonlar_zamani")),          "08:17 — fonlar taze çekildi")
     kontrol(bool(d.get("rakip_tarama")) and "hata" not in str(d.get("rakip_tarama"))[:40], "08:17 — rakip taraması çalıştı")
     kontrol(bool(d.get("evds_resmi")),                               "08:17 — resmi (EVDS) veriler çekildi")
