@@ -28,6 +28,9 @@ def scan(index, cond, limit=800):
 class Fund:
     def __init__(self, c): self.c = c
     def history(self, period="3mo"):
+        import os
+        if self.c in (os.environ.get("RADAR_MOCK_FON_HATA") or "").split(","):   # 6 Eki: TEFAS fon geçmişi boş
+            raise ValueError("fon geçmişi boş")
         idx = pd.bdate_range(end=_son_is_gunu(), periods=70)
         p = np.linspace(5.0, 5.5, len(idx))
         if self.c == "DLY": p[-1] = 0.0                      # TEST 1: TEFAS sıfır fiyat hatası
@@ -70,6 +73,9 @@ def evds_search(t): return pd.DataFrame()
 
 def screen_funds(fund_type="YAT", limit=50, **k):
     """Sahte fon evreni — bilinçli senaryolar içerir."""
+    import os
+    if os.environ.get("RADAR_MOCK_SCREEN_HATA"):           # 6 Eki: TEFAS taraması takıldı senaryosu
+        raise TimeoutError("API Error: Failed to screen funds: timed out")
     rows = [
         # para piyasası: bizimkiler
         ("YLB", "YAPI KREDİ PORTFÖY PARA PİYASASI FONU", 3.06, 9.8, 46.5),
