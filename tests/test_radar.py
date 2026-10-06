@@ -83,7 +83,7 @@ def main():
     _ana = EVREN["son"]
     k = T.get("k3_donus_kapisi", {}); fon = d.get("fonlar_borsapy") or d.get("fonlar", {})   # borsapy filtre testleri ham borsapy verisine bakar
     d_cokme = calistir_klasor(_ana, {"RADAR_TEST_COKME": "1"})   # aynı klasörde kontrollü çökme
-    d_yedek = calistir(ek_env={"RADAR_MOCK_FON_HATA": "YLB,IJV"})  # 6 Eki: TEFAS fon geçmişi boş, Fonoloji çalışıyor
+    d_yedek = calistir(ek_env={"RADAR_MOCK_FON_HATA": "YLB,IJV", "RADAR_MOCK_HISTORY_HATA": "1"})  # 6 Eki: TEFAS boş + rakip geçmişleri hata
     rt = d.get("rakip_tarama") or {}; pp = rt.get("para_piyasasi") or {}
     vs = rt.get("varlik_siniflari") or {}
     ta = rt.get("tahvil_adaylari") or {}
@@ -115,6 +115,7 @@ def main():
                                                                     "Yedek: yedek kaynak hatası telefona bildirim (Issue) üretmez"),
         (bool(d_yedek.get("fonlar", {}).get("YLB")),                "Yedek: TEFAS çalışmasa da fon fiyatı Fonoloji'den gelir"),
         ("kamu_payi" in (kunye_sonra.get("PB1") or {}),             "Künye: TEFAS'tan gelmiş portföysüz künye Fonoloji'den yeniden denenir"),
+        ("sektor_akis_para_piyasasi" in d_yedek["saglik"]["hatali_moduller"], "Sektör referansı hesaplanamazsa sebebiyle uyarı verir (hata yutulmaz)"),
         # --- 5 Eki tahvil paketi ---
         ({"KB0", "KB1", "KB2", "PB1"} <= {x["kod"] for x in ta.get("adaylar", [])}, "Tahvil: devlet tahvili ağırlıklı fonlar aday listesinde"),
         (not any(x["kod"].startswith("OS") for x in ta.get("adaylar", [])), "Tahvil: şirket borcu ağırlıklı fonlar aday değil"),
