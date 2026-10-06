@@ -975,7 +975,7 @@ MUTLAK_ACIL_ESIK = -50.0        # sektörden bağımsız: büyüklük %50+ erirs
 
 def _akis30(code):
     """Fonoloji geçmişinden 30 günlük büyüklük ve yatırımcı değişimi (1 kayıt)."""
-    h = fonoloji_get(f"/funds/{code}/history", {"period": "3m"})
+    h = fonoloji_get(f"/funds/{code}/history", {"period": "1y"})   # 6 Eki: "3m" çalışmıyordu; kendi fonlarımızda çalışan periyot
     pts = h.get("points") or []
     aum = pd.Series({pd.Timestamp(p["date"]): p.get("total_value") for p in pts}).dropna().sort_index()
     inv = pd.Series({pd.Timestamp(p["date"]): p.get("investor_count") for p in pts}).dropna().sort_index()
@@ -996,15 +996,18 @@ def sektor_akis(rt, kunye):
         bizim = set((g.get("bizim") or {}).keys())
         adaylar = [r for r in g.get("siralama") or [] if r["kod"] not in bizim and (kunye.get(r["kod"]) or {}).get("buyukluk")]
         adaylar = sorted(adaylar, key=lambda r: -(kunye[r["kod"]]["buyukluk"]))[:SEKTOR_REFERANS_N]
-        degerler = []
+        degerler, hatalar = [], []
         for r in adaylar:
             try:
                 degerler.append(_akis30(r["kod"]))
-            except Exception:
-                pass
+            except Exception as e:
+                hatalar.append(f"{r['kod']}: {type(e).__name__}: {str(e)[:80]}")
+        if adaylar and not degerler:
+            # 6 Eki: hatayı yutma — referans yoksa alarmlar mutlak moda düşer, bunu bilmek gerekir
+            HEALTH[f"sektor_akis_{grup}"] = _gizle(f"UYARI: sektör referansı hesaplanamadı ({len(hatalar)} fon), ilk hata: {hatalar[0] if hatalar else '?'}")
         b = [v["buyukluk_30g"] for v in degerler if v["buyukluk_30g"] is not None]
         y = [v["yatirimci_30g"] for v in degerler if v["yatirimci_30g"] is not None]
-        out[grup] = {"referans_fon_sayisi": len(degerler),
+        out[grup] = {"referans_fon_sayisi": len(degerler), "hata_sayisi": len(hatalar),
                      "medyan_buyukluk_30g": J(float(np.median(b))) if b else None,
                      "medyan_yatirimci_30g": J(float(np.median(y))) if y else None}
     return out
