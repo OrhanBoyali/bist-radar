@@ -625,9 +625,15 @@ def kunye_onbellek_guncelle(evren_df, oncelikli):
         # 3 Eki: eski kodla çekilmiş, portföy bilgisi olmayan künyeler süresini beklemeden yenilenir
         if fono and e.get("kunye_kaynak") == "fonoloji" and "kamu_payi" not in e and not e.get("portfoy_yok"):
             return True
+        # 6 Eki: TEFAS'tan gelmiş (portföysüz) künye → Fonoloji yeniden denenir; kapsamadığı fonlar için 3 günde bir
+        if fono and e.get("kunye_kaynak") == "borsapy":
+            dn = e.get("fonoloji_denendi")
+            if not dn or (bugun - datetime.strptime(dn, "%Y-%m-%d").date()).days >= 3:
+                return True
         t = e.get("t")
         return (not t) or (bugun - datetime.strptime(t, "%Y-%m-%d").date()).days >= KUNYE_TTL_GUN
-    sirali = list(dict.fromkeys(list(oncelikli) +
+    eksik = [c for c in oncelikli if eski(c) and "kamu_payi" not in (cache.get(c) or {})]
+    sirali = list(dict.fromkeys(eksik + list(oncelikli) +
                                 list(evren_df.sort_values("return_1y", ascending=False)["fund_code"])))
     limit = KUNYE_GUNLUK_LIMIT if os.environ.get("FONOLOJI_KEY") else KUNYE_GUNLUK_LIMIT_BORSAPY
     yenilenen, hata = 0, 0
@@ -639,6 +645,8 @@ def kunye_onbellek_guncelle(evren_df, oncelikli):
         try:
             k = _kunye_cek(code)
             k["t"] = bugun.strftime("%Y-%m-%d")
+            if fono and k.get("kunye_kaynak") == "borsapy":
+                k["fonoloji_denendi"] = k["t"]      # Fonoloji bu fonu vermedi → 3 gün sonra tekrar
             # büyüklük geçmişi: sınıf bazında "para nereye akıyor" hesabı için (son 10 kayıt)
             g = list((cache.get(code) or {}).get("g") or [])
             if k.get("buyukluk"):
@@ -774,20 +782,35 @@ def _kunye(code, cache):
     cache[code] = out
     return out
 
+def _fon_evreni_cek():
+    """TEFAS fon taraması — sabahları takılabiliyor (6 Eki): 3 deneme, aralarda artan bekleme."""
+    import time
+    bekle = 0 if (os.environ.get("RADAR_TEST_NOW") or os.environ.get("RADAR_TEST_HIZLI")) else 15
+    son_hata = None
+    for deneme in range(3):
+        try:
+            return bp.screen_funds(fund_type="YAT", limit=5000)
+        except Exception as e:
+            son_hata = e
+            time.sleep(bekle * (deneme + 1))
+    raise son_hata
+
 def rakip_tarama():
     """TEFAS'taki tüm yatırım fonlarını çekip her fonumuzu kendi grubuyla karşılaştırır."""
-    df = bp.screen_funds(fund_type="YAT", limit=5000)
+    df = _fon_evreni_cek()
     if df is None or len(df) < 50:
         raise ValueError(f"fon evreni eksik: {0 if df is None else len(df)}")
     df = df.copy()
     df["_n"] = df["name"].map(_tr_up)
     df["elenen"] = df["_n"].map(lambda n: next((k for k in TASFIYE_KURUCULAR if k in n), None))
     out = {"evren": int(len(df)), "zaman": NOW.strftime("%Y-%m-%d %H:%M")}
-    oncelikli = df.loc[df["_n"].map(lambda n: any(g["filtre"](n) for g in RAKIP_GRUPLARI.values())), "fund_code"].tolist()
+    grup_fonlari = df.loc[df["_n"].map(lambda n: any(g["filtre"](n) for g in RAKIP_GRUPLARI.values())), "fund_code"].tolist()
+    oncelikli = []
     # 5 Eki: tahvil kararları için borçlanma ailesi de öncelikli (portföy bilgisi = kamu/özel ayrımı)
     borc_maske = df["_n"].str.contains("BORCLANMA|TAHVIL|BONO|KIRA SERTIFIKA|TUFE|ENFLASYON|EUROBOND", regex=True) & \
                  ~df["_n"].str.contains("SERBEST|OZEL FON|SEPET HESAP", regex=True)
-    oncelikli += [c for c in df.loc[borc_maske].sort_values("return_3m", ascending=False)["fund_code"] if c not in oncelikli]
+    oncelikli = [c for c in df.loc[borc_maske].sort_values("return_3m", ascending=False)["fund_code"]]
+    oncelikli += [c for c in grup_fonlari if c not in oncelikli]   # 6 Eki: tahvil kararı için borçlanma ailesi en önde
     kcache_global, out["kunye_durumu"] = kunye_onbellek_guncelle(df[df["elenen"].isna()], oncelikli)
     supheli_tum = set()
     for grup, g in RAKIP_GRUPLARI.items():
@@ -1377,6 +1400,7 @@ def main():
         gunluk_saat = True   # slot kaydı değişmez: planlı sabah/akşam ağır çalışmaları etkilenmez
     R["agir_calisma"] = gunluk_saat
     R["agir_zorla"] = zorla
+    agir_basarisiz = []
 
     R["genislik"] = (safe("genislik_tum_piyasa", lambda: breadth_scan("XUTUM", 100)) if bp else None) or {"hata": "alınamadı"}
     g30 = safe("genislik_bist30", lambda: breadth_scan("XU030", 25)) if bp else None
@@ -1401,6 +1425,11 @@ def main():
         R["fonlar"] = {c: (fono.get(c) or bors.get(c)) for c in FUNDS}          # birincil: fonoloji
         R["fonlar_kaynak"] = {c: ("fonoloji" if fono.get(c) else ("borsapy" if bors.get(c) else "yok")) for c in FUNDS}
         R["fon_capraz"] = fon_capraz(fono, bors)
+        for c in FUNDS:   # 6 Eki: birincil (Fonoloji) çalıştıysa yedek TEFAS hatası bildirim üretmez
+            if fono.get(c) and str(HEALTH.get(f"fon_{c}", "")).startswith("HATA"):
+                HEALTH[f"yedek_borsapy_fon_{c}"] = HEALTH.pop(f"fon_{c}") + " (birincil Fonoloji çalıştı)"
+        if not any(R["fonlar"].values()):
+            agir_basarisiz.append("fonlar")
         R["fonlar_zamani"] = NOW.strftime("%Y-%m-%d %H:%M")
         R["fon_akis"] = safe("fon_akis", lambda: fon_akis_trend(R["fonlar"]))
         R["fon_tutarlilik"] = safe("fon_tutarlilik", lambda: fon_tutarlilik(R))
@@ -1415,7 +1444,16 @@ def main():
     _prt = prev.get("rakip_tarama") or {}
     _prt_surum = ((_prt.get("para_piyasasi") or {}).get("surum")) if isinstance(_prt, dict) else None
     if bp and (gunluk_saat or not _prt or _prt_surum != RAKIP_SURUM):
-        R["rakip_tarama"] = safe("rakip_tarama", rakip_tarama)
+        yeni = safe("rakip_tarama", rakip_tarama)
+        if yeni is None and _prt:
+            # 6 Eki: tarama başarısızsa bir önceki sonuç (tahvil adayları dahil) korunur
+            R["rakip_tarama"] = _prt
+            R["rakip_tarama_onbellek"] = str(_prt.get("zaman", "önceki"))
+            HEALTH["rakip_tarama"] = HEALTH.get("rakip_tarama", "HATA") + " → önceki tarama korundu"
+        else:
+            R["rakip_tarama"] = yeni
+        if yeni is None and gunluk_saat:
+            agir_basarisiz.append("rakip_tarama")
     else:
         R["rakip_tarama"] = prev.get("rakip_tarama")
     if bp:
@@ -1680,11 +1718,15 @@ def main():
 
     # ---- SAĞLIK ----
     R["fonoloji_cagri"] = dict(FONOLOJI_SAYAC)
+    # 6 Eki: ağır çalışmanın kritik parçası başarısızsa pencere "kullanılmış" sayılmaz → sonraki çalışma yeniden dener
+    if agir_basarisiz and not zorla:
+        R["agir_slot"] = prev.get("agir_slot")
+        R["agir_tekrar_denenecek"] = agir_basarisiz
     for _k in list(HEALTH):
         HEALTH[_k] = _gizle(HEALTH[_k])
     bad = {k: v for k, v in HEALTH.items() if v != "OK"}
-    bp_bad = {k: v for k, v in bad.items() if not k.startswith("yahoo_yedek")}
-    R["saglik"] = {"ozet": "TAMAM" if not bp_bad else "SORUN VAR",
+    bp_bad = {k: v for k, v in bad.items() if not k.startswith(("yahoo_yedek", "yedek_"))}
+    R["saglik"] = {"ozet": "TAMAM" if not bp_bad else "SORUN VAR", "issue_tetikleyen": sorted(bp_bad),
                    "hatali_moduller": bad, "tum_moduller": HEALTH,
                    "aciklama": "SORUN VAR ise bir veya daha fazla modül kırıldı; yedekler devrede olabilir. GitHub Issue açılır."}
 
