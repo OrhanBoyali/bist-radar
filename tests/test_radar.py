@@ -15,14 +15,16 @@ MOCK = os.path.join(KOK, "tests", "mock")
 EVREN = {}
 def calistir_klasor(tmp, ek_env=None):
     """Aynı klasörde tekrar çalıştır (önbellek/çökme testleri)."""
-    env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK, **(ek_env or {}))
+    env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK, RADAR_TEST_HIZLI="1", **(ek_env or {}))
     subprocess.run([sys.executable, "bist_radar.py"], cwd=tmp, env=env, capture_output=True, timeout=300)
     with open(os.path.join(tmp, "output", "radar.json"), encoding="utf-8") as f:
         return json.load(f)
 
-def calistir(tohum=None, ek_env=None):
+def calistir(tohum=None, ek_env=None, kok=None):
     tmp = tempfile.mkdtemp()
     EVREN["son"] = tmp
+    for ad, icerik in (kok or {}).items():          # 6 Eki: ana klasöre dosya (ör. ayarlar.json)
+        open(os.path.join(tmp, ad), "w", encoding="utf-8").write(icerik)
     if tohum:                                  # önceden birikmiş dosyalarla başlatma (kalıcılık testi)
         os.makedirs(os.path.join(tmp, "output"), exist_ok=True)
         for ad, icerik in tohum.items():
@@ -30,7 +32,7 @@ def calistir(tohum=None, ek_env=None):
     else:
         EVREN["klasor"] = tmp
     shutil.copy(os.path.join(KOK, "bist_radar.py"), tmp)
-    env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK, **(ek_env or {}))
+    env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK, RADAR_TEST_HIZLI="1", **(ek_env or {}))
     subprocess.run([sys.executable, "bist_radar.py"], cwd=tmp, env=env, capture_output=True, timeout=300)
     with open(os.path.join(tmp, "output", "radar.json"), encoding="utf-8") as f:
         return json.load(f)
@@ -70,6 +72,9 @@ def main():
     d_sinif = calistir({"sinif_izleme.json": {"Kısa vadeli borçlanma": {"gunler": _isg},
                                               "Enflasyona endeksli": {"gunler": _isg[:5]}},
                         "fon_kunye.json": {**{f"KB{i}": {"t": _eski, "buyukluk": 1e9, "g": [[_eski, 1e9]]} for i in range(3)},
+                                           # 6 Eki: eski çalışmanın yanlış işaretlediği künye (tek seferlik onarımla temizlenmeli)
+                                           "OS0": {"t": _d.today().strftime("%Y-%m-%d"), "buyukluk": 7.5e8, "kunye_kaynak": "borsapy",
+                                                   "fonoloji_denendi": _d.today().strftime("%Y-%m-%d")},
                                            # 3 Eki: bugün çekilmiş ama portföyü olmayan (eski kod) künye → yenilenmeli
                                            "YLB": {"t": _d.today().strftime("%Y-%m-%d"), "buyukluk": 1e11, "kunye_kaynak": "fonoloji"},
                                            # 6 Eki: bugün TEFAS'tan (borsapy) gelmiş portföysüz künye → Fonoloji yeniden denenmeli
@@ -83,6 +88,14 @@ def main():
     _ana = EVREN["son"]
     k = T.get("k3_donus_kapisi", {}); fon = d.get("fonlar_borsapy") or d.get("fonlar", {})   # borsapy filtre testleri ham borsapy verisine bakar
     d_cokme = calistir_klasor(_ana, {"RADAR_TEST_COKME": "1"})   # aynı klasörde kontrollü çökme
+    _aj = lambda x: json.dumps(x, ensure_ascii=False)
+    d_ayar_ozel = calistir(kok={"ayarlar.json": _aj({"fonlar": {"YLB": "cephane", "XYZ": "cephane", "TIE": "borsa"},
+        "politika_faizi": {"oran": 35.0, "karar_tarihi": "2026-10-22", "sonraki_ppk": "2026-12-11"}})})
+    d_ayar_bozuk = calistir(kok={"ayarlar.json": "{ bozuk json"})
+    d_ayar_gecersiz = calistir(kok={"ayarlar.json": _aj({"fonlar": {"YLB": "yanlis_rol"}, "stopaj_ppf": 5})})
+    d_429 = calistir(ek_env={"RADAR_MOCK_429": "3"})
+    d_429k = calistir(ek_env={"RADAR_MOCK_429_KUNYE": "1"})
+    _k429 = json.load(open(os.path.join(EVREN["son"], "output", "fon_kunye.json"), encoding="utf-8"))
     d_yedek = calistir(ek_env={"RADAR_MOCK_FON_HATA": "YLB,IJV", "RADAR_MOCK_HISTORY_HATA": "1"})  # 6 Eki: TEFAS boş + rakip geçmişleri hata
     rt = d.get("rakip_tarama") or {}; pp = rt.get("para_piyasasi") or {}
     vs = rt.get("varlik_siniflari") or {}
@@ -95,7 +108,7 @@ def main():
     testler = [
         # (koşul, açıklama, eklendiği tarih/sebep)
         (fon["DLY"]["fiyat"] > 0,                                   "Sıfır fon fiyatı elenir (24 Eyl TEFAS DLY=0)"),
-        (T["reel_getiri"]["DLY"]["durum"] != "ACIL",                "Sıfır fiyat yanlış ACİL alarmı üretmez"),
+        (all(v.get("durum") != "ACIL" for v in T["reel_getiri"].values()), "Sıfır fiyat yanlış ACİL alarmı üretmez"),
         (fon["YLB"]["fiyat"] < 6,                                   "Tek günde %15+ sıçrayan fiyat elenir"),
         ("fon_YLB_veri" in d["saglik"]["hatali_moduller"],          "Şüpheli fiyat sağlık raporuna düşer"),
         (k.get("yabanci_net_alici") is True,                        "Dönüş kapısı yabancıyı EVDS'den sonra okur (24 Eyl sıra hatası)"),
@@ -108,6 +121,24 @@ def main():
         (d["genislik"].get("hisse_sayisi", 0) >= 100,               "Tüm piyasa genişliği tek taramayla gelir"),
         (T.get("reel_getiri_yontem", "").startswith("NET"),         "Reel getiri NET (stopaj sonrası) hesaplanır"),
         ("TIE" not in T.get("reel_getiri", {}),                     "Reel getiri sadece cephane fonlarına uygulanır"),
+        # --- 6 Eki Fonoloji hız sınırı ---
+        ((d_429.get("fonoloji_cagri") or {}).get("limit_429", 0) >= 3 and bool(d_429.get("fonlar", {}).get("YLB")),
+                                                                    "Hız sınırı: 429'da bekleyip yeniden dener, veri eksiksiz gelir"),
+        (not any(v.get("fonoloji_denendi") for v in _k429.values()), "Hız sınırı: engellenen fonlar 'Fonoloji vermiyor' diye işaretlenmez"),
+        ("kunye_hiz_siniri" in d_429k["saglik"]["tum_moduller"],    "Hız sınırı: künye turu durdurulup sebebi raporlanır"),
+        ("kunye_hiz_siniri" not in d_429k["saglik"].get("issue_tetikleyen", []), "Hız sınırı: kendi kendini onaran durum bildirim üretmez"),
+        ("kamu_payi" in (kunye_sonra.get("OS0") or {}),             "Onarım: yanlışlıkla 'Fonoloji vermiyor' işaretlenen künye yeniden denenir"),
+        # --- 6 Eki ayar dosyası (parametrik yapı) ---
+        (str(d.get("ayarlar", {}).get("kaynak", "")).startswith("varsayılan"), "Ayarlar: dosya yoksa varsayılanlarla çalışır"),
+        ("BGP" in T["reel_getiri"] and "DLY" not in T["reel_getiri"], "Ayarlar: BGP portföyde (cephane), DLY sadece izlemede"),
+        (set(d_ayar_ozel["tetikler"].get("reel_getiri", {})) == {"YLB", "XYZ"}, "Ayarlar: fon listesi koddan değil dosyadan gelir"),
+        (d_ayar_ozel["tetikler"].get("politika_faizi") == 35.0 and d_ayar_ozel["saglik"]["tum_moduller"].get("ayarlar") == "OK",
+                                                                    "Ayarlar: politika faizi dosyadan güncellenir"),
+        ("UYARI" in str(d_ayar_bozuk["saglik"]["hatali_moduller"].get("ayarlar")) and "BGP" in d_ayar_bozuk["tetikler"].get("reel_getiri", {}),
+                                                                    "Ayarlar: bozuk dosyada çökmez, uyarır, varsayılana döner"),
+        ("fonlar" in str(d_ayar_gecersiz["saglik"]["hatali_moduller"].get("ayarlar")) and "stopaj" in str(d_ayar_gecersiz["saglik"]["hatali_moduller"].get("ayarlar"))
+         and "BGP" in d_ayar_gecersiz["tetikler"].get("reel_getiri", {}),
+                                                                    "Ayarlar: geçersiz alanlar tek tek reddedilir, varsayılan kullanılır"),
         # --- 6 Eki sertleştirme ---
         ("yedek_borsapy_fon_YLB" in d_yedek["saglik"]["hatali_moduller"] and "fon_YLB" not in d_yedek["saglik"]["hatali_moduller"],
                                                                     "Yedek: birincil çalışınca TEFAS hatası 'yedek' olarak sınıflanır"),
@@ -211,7 +242,7 @@ def main():
         ("fon_YLB_kaynak_celiskisi" not in d["saglik"]["hatali_moduller"], "Fonoloji: kaynaklar uyumluysa uyarı yok"),
         # --- Göreli kitlesel çıkış (1 Eki): sektör geneli değil, fona özgü çıkış alarm verir ---
         (not T.get("fon_kitlesel_cikis_alarm", {}).get("YLB"),     "Göreli akış: sektörle aynı oranda küçülen fon alarm vermez"),
-        ("fona özgü" in str(T.get("fon_kitlesel_cikis_alarm", {}).get("DLY", {}).get("tur", "")),
+        ("fona özgü" in str(T.get("fon_kitlesel_cikis_alarm", {}).get("BGP", {}).get("tur", "")),
                                                                     "Göreli akış: sektörden belirgin fazla para kaybeden fon alarm verir"),
         ((T.get("fon_akis_sektor") or {}).get("para_piyasasi", {}).get("referans_fon_sayisi", 0) > 0,
                                                                     "Göreli akış: sektör referansı en büyük rakiplerden hesaplanır"),
