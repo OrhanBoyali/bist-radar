@@ -11,8 +11,8 @@ def _portfoy(code):
     return {"stock": 0, "cash": 100}
 
 class _Resp:
-    def __init__(self, data, status=200):
-        self._d, self.status_code, self.headers = data, status, {}
+    def __init__(self, data, status=200, headers=None):
+        self._d, self.status_code, self.headers = data, status, (headers or {})
     def json(self): return self._d
     def raise_for_status(self):
         if self.status_code >= 400: raise RuntimeError(f"HTTP {self.status_code}")
@@ -20,14 +20,23 @@ class _Resp:
 def _son_is_gunu():
     return (pd.Timestamp.today().normalize() - pd.offsets.BDay(1)).date()
 
+_SAYAC = [0]
+_BIZIM = ("YLB", "IJV", "ZBJ", "BGP", "TIE", "AKU")
+
 def get(url, params=None, headers=None, timeout=20):
+    import os
     code = url.rstrip("/").split("/funds/")[-1].split("/")[0]
+    _SAYAC[0] += 1
+    if _SAYAC[0] <= int(os.environ.get("RADAR_MOCK_429") or 0):            # 6 Eki: ilk N istek hız sınırı
+        return _Resp({}, 429, {"retry-after": "0"})
+    if os.environ.get("RADAR_MOCK_429_KUNYE") and not url.endswith("/history") and code not in _BIZIM:
+        return _Resp({}, 429, {"retry-after": "0"})                         # künye istekleri sürekli engelli
     son = _son_is_gunu()
     if url.endswith("/history"):
         import os
         if (params or {}).get("period") not in (None, "1y"):      # 6 Eki: gerçekte sadece "1y" çalıştığı varsayımı
             raise ValueError(f"400 Bad Request: geçersiz periyot {(params or {}).get('period')}")
-        if os.environ.get("RADAR_MOCK_HISTORY_HATA") and code not in ("YLB", "IJV", "DLY", "ZBJ", "TIE", "AKU"):
+        if os.environ.get("RADAR_MOCK_HISTORY_HATA") and code not in ("YLB", "IJV", "ZBJ", "BGP", "TIE", "AKU"):   # portföy fonları (DLY artık izlemede)
             raise ValueError("500 Server Error: history")
         idx = pd.bdate_range(end=son, periods=250)
         if code == "TIE":                      # TEST: 3 iş günü bayat fiyat
@@ -40,8 +49,8 @@ def get(url, params=None, headers=None, timeout=20):
             if code == "AKU" and i == n - 1:
                 price *= 1.05                                      # TEST: son gün +%5 → endeksten kopma
             pts.append({"date": d.strftime("%Y-%m-%d"), "price": round(price, 6),
-                        # TEST: sektörün tamamı son 2 haftada %25 küçülüyor; DLY %55 (fona özgü çıkış senaryosu)
-                        "total_value": 1e9 * ((0.45 if code == "DLY" else 0.75) if i > n - 12 else 1.0),
+                        # TEST: sektörün tamamı son 2 haftada %25 küçülüyor; BGP %55 (fona özgü çıkış senaryosu)
+                        "total_value": 1e9 * ((0.45 if code == "BGP" else 0.75) if i > n - 12 else 1.0),
                         "investor_count": 10000 - (2000 if i > n - 12 else 0)})
         return _Resp({"code": code, "period": "1y", "points": pts})
     aum = 1e8 if code == "KCK" else 7.5e8                        # KCK: küçük fon senaryosu
