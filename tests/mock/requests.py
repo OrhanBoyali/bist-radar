@@ -24,6 +24,11 @@ def get(url, params=None, headers=None, timeout=20):
     code = url.rstrip("/").split("/funds/")[-1].split("/")[0]
     son = _son_is_gunu()
     if url.endswith("/history"):
+        import os
+        if (params or {}).get("period") not in (None, "1y"):      # 6 Eki: gerçekte sadece "1y" çalıştığı varsayımı
+            raise ValueError(f"400 Bad Request: geçersiz periyot {(params or {}).get('period')}")
+        if os.environ.get("RADAR_MOCK_HISTORY_HATA") and code not in ("YLB", "IJV", "DLY", "ZBJ", "TIE", "AKU"):
+            raise ValueError("500 Server Error: history")
         idx = pd.bdate_range(end=son, periods=250)
         if code == "TIE":                      # TEST: 3 iş günü bayat fiyat
             idx = idx[:-3]
