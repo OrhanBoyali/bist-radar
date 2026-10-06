@@ -63,6 +63,11 @@ def main():
     kontrol("gün kayıtlı" in str(d.get("arsiv")),                   "18:17 — arşive yazıldı")
 
     kontrol(d.get("agir_calisma") is False,                         "18:17 — hafif çalışma (kesin kapanış fiyatları 18:40 sonrası)")
+    d, p = calistir(tmp, f"{g} 18:45", {"RADAR_MOCK_SCREEN_HATA": "1"})
+    kontrol(bool(d.get("rakip_tarama")) and bool(d.get("rakip_tarama_onbellek")), "18:45 — TEFAS takıldı: önceki tarama (tahvil adayları dahil) korundu")
+    kontrol("rakip_tarama" in (d.get("agir_tekrar_denenecek") or []) and not str(d.get("agir_slot")).endswith("aksam"),
+            "18:45 — başarısız ağır çalışma pencereyi tüketmedi (sonraki çalışma yeniden dener)")
+
     d, p = calistir(tmp, f"{g} 18:52")
     kontrol(d.get("agir_calisma") is True,                          "18:52 — akşamın tek ağır çalışması")
     kontrol("ana_akis" not in d["saglik"]["hatali_moduller"],       "18:52 — KAPANIŞ çalışması çökmeden tamamlandı")
