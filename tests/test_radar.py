@@ -20,7 +20,7 @@ def calistir_klasor(tmp, ek_env=None):
     with open(os.path.join(tmp, "output", "radar.json"), encoding="utf-8") as f:
         return json.load(f)
 
-def calistir(tohum=None):
+def calistir(tohum=None, ek_env=None):
     tmp = tempfile.mkdtemp()
     EVREN["son"] = tmp
     if tohum:                                  # önceden birikmiş dosyalarla başlatma (kalıcılık testi)
@@ -30,7 +30,7 @@ def calistir(tohum=None):
     else:
         EVREN["klasor"] = tmp
     shutil.copy(os.path.join(KOK, "bist_radar.py"), tmp)
-    env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK)
+    env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK, **(ek_env or {}))
     subprocess.run([sys.executable, "bist_radar.py"], cwd=tmp, env=env, capture_output=True, timeout=300)
     with open(os.path.join(tmp, "output", "radar.json"), encoding="utf-8") as f:
         return json.load(f)
@@ -71,7 +71,9 @@ def main():
                                               "Enflasyona endeksli": {"gunler": _isg[:5]}},
                         "fon_kunye.json": {**{f"KB{i}": {"t": _eski, "buyukluk": 1e9, "g": [[_eski, 1e9]]} for i in range(3)},
                                            # 3 Eki: bugün çekilmiş ama portföyü olmayan (eski kod) künye → yenilenmeli
-                                           "YLB": {"t": _d.today().strftime("%Y-%m-%d"), "buyukluk": 1e11, "kunye_kaynak": "fonoloji"}}})
+                                           "YLB": {"t": _d.today().strftime("%Y-%m-%d"), "buyukluk": 1e11, "kunye_kaynak": "fonoloji"},
+                                           # 6 Eki: bugün TEFAS'tan (borsapy) gelmiş portföysüz künye → Fonoloji yeniden denenmeli
+                                           "PB1": {"t": _d.today().strftime("%Y-%m-%d"), "buyukluk": 7.5e8, "kunye_kaynak": "borsapy"}}})
     kunye_sonra = json.load(open(os.path.join(EVREN["son"], "output", "fon_kunye.json"), encoding="utf-8"))
     akis_kamu = (((d_sinif.get("rakip_tarama") or {}).get("varlik_siniflari") or {}).get("siniflar") or {}).get(
         "Kamu borçlanma (devlet tahvili)", {}).get("akis_30g_pct")
@@ -81,6 +83,7 @@ def main():
     _ana = EVREN["son"]
     k = T.get("k3_donus_kapisi", {}); fon = d.get("fonlar_borsapy") or d.get("fonlar", {})   # borsapy filtre testleri ham borsapy verisine bakar
     d_cokme = calistir_klasor(_ana, {"RADAR_TEST_COKME": "1"})   # aynı klasörde kontrollü çökme
+    d_yedek = calistir(ek_env={"RADAR_MOCK_FON_HATA": "YLB,IJV"})  # 6 Eki: TEFAS fon geçmişi boş, Fonoloji çalışıyor
     rt = d.get("rakip_tarama") or {}; pp = rt.get("para_piyasasi") or {}
     vs = rt.get("varlik_siniflari") or {}
     ta = rt.get("tahvil_adaylari") or {}
@@ -105,6 +108,13 @@ def main():
         (d["genislik"].get("hisse_sayisi", 0) >= 100,               "Tüm piyasa genişliği tek taramayla gelir"),
         (T.get("reel_getiri_yontem", "").startswith("NET"),         "Reel getiri NET (stopaj sonrası) hesaplanır"),
         ("TIE" not in T.get("reel_getiri", {}),                     "Reel getiri sadece cephane fonlarına uygulanır"),
+        # --- 6 Eki sertleştirme ---
+        ("yedek_borsapy_fon_YLB" in d_yedek["saglik"]["hatali_moduller"] and "fon_YLB" not in d_yedek["saglik"]["hatali_moduller"],
+                                                                    "Yedek: birincil çalışınca TEFAS hatası 'yedek' olarak sınıflanır"),
+        (not any(k.startswith("yedek_") for k in d_yedek["saglik"].get("issue_tetikleyen", [])),
+                                                                    "Yedek: yedek kaynak hatası telefona bildirim (Issue) üretmez"),
+        (bool(d_yedek.get("fonlar", {}).get("YLB")),                "Yedek: TEFAS çalışmasa da fon fiyatı Fonoloji'den gelir"),
+        ("kamu_payi" in (kunye_sonra.get("PB1") or {}),             "Künye: TEFAS'tan gelmiş portföysüz künye Fonoloji'den yeniden denenir"),
         # --- 5 Eki tahvil paketi ---
         ({"KB0", "KB1", "KB2", "PB1"} <= {x["kod"] for x in ta.get("adaylar", [])}, "Tahvil: devlet tahvili ağırlıklı fonlar aday listesinde"),
         (not any(x["kod"].startswith("OS") for x in ta.get("adaylar", [])), "Tahvil: şirket borcu ağırlıklı fonlar aday değil"),
