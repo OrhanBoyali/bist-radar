@@ -21,8 +21,12 @@ TICKERS_FILE = "tickers.txt"
 
 # ---- SİSTEM AYARLARI (ana kayıttan; değişince güncelle) -------------------
 LEVELS = {"korunan_taban": 13000, "tez_cizgisi_haftalik": 12600}
-FUNDS = ["YLB", "IJV", "DLY", "ZBJ", "TIE", "AKU"]   # portföydeki fonlar (30 Eyl: ZBJ eklendi)
-CEPHANE = ["YLB", "IJV", "DLY", "ZBJ"]               # reel getiri kuralı SADECE bunlara
+# 6 Eki: portföy fonları ve ayarlar artık ayarlar.json'dan okunur; aşağıdakiler sadece VARSAYILAN (dosya yoksa/bozuksa)
+VARSAYILAN_FONLAR = {"YLB": "cephane", "IJV": "cephane", "ZBJ": "cephane", "BGP": "cephane",
+                     "TIE": "borsa", "AKU": "borsa", "DLY": "izleme"}
+FUNDS = list(VARSAYILAN_FONLAR)
+CEPHANE = [k for k, v in VARSAYILAN_FONLAR.items() if v == "cephane"]   # reel getiri kuralı SADECE bunlara
+BORSA = [k for k, v in VARSAYILAN_FONLAR.items() if v == "borsa"]
 STOPAJ_PP = 0.175          # para piyasası fonu stopajı (kârdan). Değişirse güncelle.
 REEL_ALARM, REEL_ACIL = 0.5, 0.0   # NET reel getiri eşikleri (aylık %)
 TUFE_AYLIK_MANUEL = 1.84   # otomatik alınamazsa kullanılır (Ağustos 2026)
@@ -56,6 +60,54 @@ def safe(name, fn):
     except Exception as e:
         HEALTH[name] = _gizle(f"HATA: {type(e).__name__}: {str(e)[:200]}")
         return None
+
+# ---- AYAR DOSYASI (6 Eki) --------------------------------------------------
+AYAR_DOSYASI = os.environ.get("RADAR_AYARLAR", "ayarlar.json")
+
+def ayarlari_yukle():
+    """ayarlar.json'u okur ve doğrular. Geçersiz alan varsayılana döner, betik asla bu yüzden çökmez."""
+    if not os.path.exists(AYAR_DOSYASI):
+        return {}, "varsayılan (ayarlar.json yok)"
+    try:
+        a = json.load(open(AYAR_DOSYASI, encoding="utf-8"))
+        if not isinstance(a, dict):
+            raise ValueError("kök JSON nesne değil")
+    except Exception as e:
+        HEALTH["ayarlar"] = f"UYARI: ayarlar.json okunamadı ({type(e).__name__}: {str(e)[:80]}) — varsayılanlar kullanıldı"
+        return {}, "varsayılan (dosya okunamadı)"
+    sorun = []
+    def num(x, lo, hi):
+        return isinstance(x, (int, float)) and not isinstance(x, bool) and lo <= x <= hi
+    kontroller = {
+        "fonlar": lambda v: isinstance(v, dict) and v and all(isinstance(k, str) and k.isalnum() and r in ("cephane", "borsa", "izleme") for k, r in v.items()),
+        "seviyeler": lambda v: isinstance(v, dict) and all(num(v.get(k), 1000, 100000) for k in ("korunan_taban", "tez_cizgisi_haftalik")),
+        "politika_faizi": lambda v: isinstance(v, dict) and num(v.get("oran"), 0, 100) and isinstance(v.get("sonraki_ppk"), str)
+                                    and isinstance(v.get("karar_tarihi"), str),
+        "stopaj_ppf": lambda v: num(v, 0, 1),
+        "reel_alarm": lambda v: num(v, -5, 5), "reel_acil": lambda v: num(v, -5, 5),
+        "tufe_aylik_manuel": lambda v: num(v, -5, 20),
+        "min_fon_buyuklugu": lambda v: num(v, 0, 1e12),
+        "tasfiye_kurucular": lambda v: isinstance(v, list) and all(isinstance(x, str) and x for x in v),
+    }
+    for alan, ok in kontroller.items():
+        if alan in a and not ok(a[alan]):
+            sorun.append(alan)
+            a.pop(alan)
+    HEALTH["ayarlar"] = ("OK" if not sorun else
+                         f"UYARI: ayarlar.json geçersiz alan(lar): {', '.join(sorun)} — bu alanlar için varsayılan kullanıldı")
+    return a, "ayarlar.json"
+
+AYAR, AYAR_KAYNAK = ayarlari_yukle()
+_FONLAR = AYAR.get("fonlar") or VARSAYILAN_FONLAR
+FUNDS = list(_FONLAR)
+CEPHANE = [k for k, v in _FONLAR.items() if v == "cephane"]
+BORSA = [k for k, v in _FONLAR.items() if v == "borsa"]
+LEVELS = {**LEVELS, **(AYAR.get("seviyeler") or {})}
+POLITIKA_FAIZI = AYAR.get("politika_faizi") or POLITIKA_FAIZI
+STOPAJ_PP = AYAR.get("stopaj_ppf", STOPAJ_PP)
+REEL_ALARM = AYAR.get("reel_alarm", REEL_ALARM)
+REEL_ACIL = AYAR.get("reel_acil", REEL_ACIL)
+TUFE_AYLIK_MANUEL = AYAR.get("tufe_aylik_manuel", TUFE_AYLIK_MANUEL)
 
 try:
     import borsapy as bp
@@ -192,15 +244,17 @@ def index_block(sym, with_ma=True):
 def fund_block(code):
     f = bp.Fund(code)
     h = None
+    son_hata = None
     for per in ("3mo", "1mo"):
         try:
             h = f.history(period=per)
             if h is not None and len(h):
                 break
-        except Exception:
+        except Exception as e:
+            son_hata = f"{type(e).__name__}: {str(e)[:60]}"
             continue
     if h is None or len(h) == 0:
-        raise ValueError("fon geçmişi boş")
+        raise ValueError("fon geçmişi boş" + (f" ({son_hata})" if son_hata else ""))
     h = to_dt_index(h.copy())
     pc = next((c for c in h.columns if str(c).lower() in ("price", "fiyat", "close")), None)
     if pc is None:
@@ -247,6 +301,7 @@ def breadth_and_foreign():
         raise ValueError("BIST 30 bileşenleri boş")
     up = down = ld = lu = 0
     detail, foreign, fails = {}, {}, 0
+    yab_hata = 0
     for s in comps:
         try:
             t = bp.Ticker(s)
@@ -259,7 +314,7 @@ def breadth_and_foreign():
                 if fr is not None:
                     foreign[s] = float(fr)
             except Exception:
-                pass
+                yab_hata += 1                       # 6 Eki: sayılır
         except Exception:
             fails += 1
     if fails > len(comps) / 2:
@@ -306,12 +361,13 @@ def breadth_yahoo():
         ts = [t.strip() for t in f if t.strip() and not t.startswith("#")]
     df = yf.download(ts, period="10d", interval="1d", auto_adjust=False, progress=False, group_by="ticker")
     up = down = ld = 0; det = {}
+    alinamayan = 0
     for t in ts:
         try:
             c = df[t]["Close"].dropna(); ch = pct(c.iloc[-1], c.iloc[-2])
             det[t] = ch; up += ch > 0; down += ch < 0; ld += ch <= -9.5
         except Exception:
-            pass
+            alinamayan += 1
     n = len(det)
     return {"kaynak": "yahoo (yedek)", "hisse_sayisi": n, "yukselen": int(up), "dusen": int(down),
             "tabana_kilitli": int(ld), "yukselen_orani_pct": round(up / n * 100, 1) if n else None}
@@ -352,9 +408,9 @@ def tcmb_block():
         out["ppk_kalan_gun"] = days
         if days < 0:
             HEALTH["politika_faizi_guncelle"] = (f"UYARI: {POLITIKA_FAIZI['sonraki_ppk']} PPK geçti; "
-                                                  "betikteki POLITIKA_FAIZI güncellenmeli.")
-    except Exception:
-        pass
+                                                  "ayarlar.json → politika_faizi güncellenmeli.")
+    except Exception as e:
+        HEALTH["politika_faizi_tarih"] = f"UYARI: sonraki_ppk tarihi okunamadı ({str(e)[:60]}) — format YYYY-AA-GG olmalı"
     if not os.environ.get("EVDS_API_KEY"):
         out["aofm"] = {"not": "EVDS_API_KEY tanımlı değil — fiili fonlama maliyeti alınmıyor"}
         return out
@@ -488,7 +544,8 @@ def pka_faiz_beklentisi():
     for grp in ("bie_pkauo", "bie_urbek"):
         try:
             df = e.series_in_group(grp)
-        except Exception:
+        except Exception as ex:
+            adaylar.append(f"[{grp} alınamadı: {type(ex).__name__}]")
             continue
         nc = next(c for c in df.columns if str(c).upper() == "SERIE_NAME")
         cc = next(c for c in df.columns if str(c).upper() == "SERIE_CODE")
@@ -508,7 +565,8 @@ def pka_kur_beklentisi():
     for grp in ("bie_pkauo", "bie_urbek"):
         try:
             df = e.series_in_group(grp)
-        except Exception:
+        except Exception as ex:
+            adaylar_tum.append(f"[{grp} alınamadı: {type(ex).__name__}]")
             continue
         nc = next(c for c in df.columns if str(c).upper() == "SERIE_NAME")
         cc = next(c for c in df.columns if str(c).upper() == "SERIE_CODE")
@@ -546,25 +604,25 @@ def evds_resmi():
 
 
 # ---- RAKİP FON TARAMASI (28 Eyl) -------------------------------------------
-TASFIYE_KURUCULAR = ["TERA", "PUSULA", "HEDEF", "ATLAS", "A1 CAPITAL", "A1 PORTFOY", "PARDUS", "BULLS"]
+TASFIYE_KURUCULAR = AYAR.get("tasfiye_kurucular") or ["TERA", "PUSULA", "HEDEF", "ATLAS", "A1 CAPITAL", "A1 PORTFOY", "PARDUS", "BULLS"]
 def _tr_up(x):
     x = str(x).upper()
     for a, b in (("İ", "I"), ("Ş", "S"), ("Ğ", "G"), ("Ü", "U"), ("Ö", "O"), ("Ç", "C")):
         x = x.replace(a, b)
     return x
 RAKIP_GRUPLARI = {
-    "para_piyasasi": {"bizim": ["YLB", "IJV", "DLY", "ZBJ"],
+    "para_piyasasi": {"bizim": list(CEPHANE),
                       # "SEPET HESAP": bankaya özel, TEFAS'ta işleme kapalı fonlar (29 Eyl ZA2 dersi)
                       "filtre": lambda n: "PARA PIYASASI" in n and "SERBEST" not in n and "SEPET HESAP" not in n and "OZEL FON" not in n,
                       "esik": {"1m": 0.15, "3m": 0.40, "1y": 1.5}, "supheli_1m": 0.6, "supheli_1y": 8.0},
-    "bist30_endeks": {"bizim": ["TIE", "AKU"],
+    "bist30_endeks": {"bizim": list(BORSA),
                       "filtre": lambda n: "BIST 30" in n and "ENDEKS" in n and "OZEL FON" not in n,
                       "esik": {"1m": 0.0, "3m": 0.5, "1y": 2.0}, "supheli_1m": 3.0, "supheli_1y": 10.0},
     "bist100_endeks": {"bizim": [],
                        "filtre": lambda n: ("BIST 100 ENDEKS" in n or "BIST100 ENDEKS" in n) and "DISI" not in n,
                        "esik": {"1m": 0.0, "3m": 0.5, "1y": 2.0}, "supheli_1m": 3.0, "supheli_1y": 10.0},
 }
-MIN_FON_BUYUKLUGU = 500_000_000   # aday için asgari büyüklük (likidite)
+MIN_FON_BUYUKLUGU = AYAR.get("min_fon_buyuklugu", 500_000_000)   # aday için asgari büyüklük (likidite)
 RAKIP_SURUM = 7                   # yapı değişince artır → ilk çalışmada tarama önbelleği yenilenir
 RAKIP_KUNYE_MAX = 60              # grup başına künyesi çekilecek en fazla fon (kota/limit koruması)
 RAKIP_ADAY_MAX = 20               # listelenecek en fazla aday (eskiden 3'tü — 29 Eyl kullanıcı talebi)
@@ -595,8 +653,10 @@ def _kunye_cek(code):
                         "kurucu": f.get("management_company"), "tefas_durum": f.get("trading_status"),
                         "max_dusus_1y": pc(f.get("max_drawdown_1y")), "reel_getiri_1y": pc(f.get("real_return_1y")),
                         "yonetim_ucreti": f.get("management_fee"), "kunye_kaynak": "fonoloji"}
+        except FonolojiLimit:
+            raise                                   # 6 Eki: geçici — çağıran bu turu durdurur, fon işaretlenmez
         except Exception:
-            pass
+            FONOLOJI_SAYAC["hata"] += 1             # 6 Eki: yutulmaz, sayılır (çıktıda fonoloji_cagri.hata)
     import time
     bi = bp.Fund(code).info or {}
     time.sleep(0.3)
@@ -620,6 +680,13 @@ def kunye_onbellek_guncelle(evren_df, oncelikli):
             cache = {}
     bugun = NOW.date()
     fono = bool(os.environ.get("FONOLOJI_KEY"))
+    # 6 Eki tek seferlik onarım: hız sınırı (429) yüzünden yanlışlıkla 'Fonoloji vermiyor' işaretlenen künyeler temizlenir
+    meta = cache.get("_meta") or {}
+    if meta.get("kunye_surum", 1) < 2:
+        for v in cache.values():
+            if isinstance(v, dict):
+                v.pop("fonoloji_denendi", None)
+        cache["_meta"] = {**meta, "kunye_surum": 2}
     def eski(code):
         e = cache.get(code) or {}
         # 3 Eki: eski kodla çekilmiş, portföy bilgisi olmayan künyeler süresini beklemeden yenilenir
@@ -637,13 +704,18 @@ def kunye_onbellek_guncelle(evren_df, oncelikli):
                                 list(evren_df.sort_values("return_1y", ascending=False)["fund_code"])))
     limit = KUNYE_GUNLUK_LIMIT if os.environ.get("FONOLOJI_KEY") else KUNYE_GUNLUK_LIMIT_BORSAPY
     yenilenen, hata = 0, 0
+    limit_durdu = False
     for code in sirali:
         if yenilenen >= limit:
             break
         if not eski(code):
             continue
         try:
-            k = _kunye_cek(code)
+            try:
+                k = _kunye_cek(code)
+            except FonolojiLimit:
+                limit_durdu = True                  # hız sınırı: bu tur bitti, fonlar sonraki ağır çalışmada
+                break
             k["t"] = bugun.strftime("%Y-%m-%d")
             if fono and k.get("kunye_kaynak") == "borsapy":
                 k["fonoloji_denendi"] = k["t"]      # Fonoloji bu fonu vermedi → 3 gün sonra tekrar
@@ -661,7 +733,10 @@ def kunye_onbellek_guncelle(evren_df, oncelikli):
     os.makedirs("output", exist_ok=True)
     json.dump(cache, open(KUNYE_FILE, "w", encoding="utf-8"), ensure_ascii=False)
     kapsam = sum(1 for c in evren_df["fund_code"] if c in cache)
-    return cache, {"yenilenen": yenilenen, "hata": hata, "kapsam": kapsam, "evren": int(len(evren_df))}
+    if limit_durdu:
+        HEALTH["kunye_hiz_siniri"] = f"NOT: Fonoloji hız sınırı — künye yenileme {yenilenen}. fonda durdu, kalanlar sonraki ağır çalışmada"
+    return cache, {"yenilenen": yenilenen, "hata": hata, "kapsam": kapsam, "evren": int(len(evren_df)),
+                   "hiz_siniri_durdurdu": limit_durdu}
 
 def evren_tablosu(df, cache, supheli_kodlar):
     """Bütün fonlar tek tabloda + kategori özetleri."""
@@ -920,20 +995,41 @@ def rakip_tarama():
 # ---- FONOLOJİ (28 Eyl): fonlar için BİRİNCİL kaynak; borsapy çapraz kontrol/yedek --------
 FONOLOJI_BASE = "https://fonoloji.com/v1"
 
-FONOLOJI_SAYAC = {"cagri": 0, "limit_429": 0}
+FONOLOJI_SAYAC = {"cagri": 0, "limit_429": 0, "bekleme_sn": 0.0, "hata": 0}
+_TEST_HIZLI = bool(os.environ.get("RADAR_TEST_NOW") or os.environ.get("RADAR_TEST_HIZLI"))
+FONOLOJI_ARALIK_SN = 0.0 if _TEST_HIZLI else 0.4    # 6 Eki: istekler arası asgari süre (dakikada ~150)
+FONOLOJI_429_BUTCE_SN = 240                          # bir çalışmada 429 için en fazla bekleme
+_FONOLOJI_SON = [0.0]
+
+class FonolojiLimit(Exception):
+    """Fonoloji hız sınırı (429) — geçici; fonu 'Fonoloji vermiyor' diye İŞARETLEMEMEK için ayrı tür."""
 
 def fonoloji_get(path, params=None, timeout=20):
-    import requests
+    import requests, time
     key = os.environ.get("FONOLOJI_KEY")
-    FONOLOJI_SAYAC["cagri"] += 1
     if not key:
         raise ValueError("FONOLOJI_KEY tanımlı değil")
-    r = requests.get(FONOLOJI_BASE + path, params=params or {}, headers={"X-API-Key": key}, timeout=timeout)
-    if r.status_code == 429:
-        FONOLOJI_SAYAC["limit_429"] += 1
-        raise ValueError(f"Fonoloji kota/limit (429), retry-after={r.headers.get('retry-after')}")
-    r.raise_for_status()
-    return r.json()
+    for deneme in range(3):
+        bekle = FONOLOJI_ARALIK_SN - (time.time() - _FONOLOJI_SON[0])
+        if bekle > 0:
+            time.sleep(bekle)
+        _FONOLOJI_SON[0] = time.time()
+        FONOLOJI_SAYAC["cagri"] += 1
+        r = requests.get(FONOLOJI_BASE + path, params=params or {}, headers={"X-API-Key": key}, timeout=timeout)
+        if r.status_code == 429:
+            FONOLOJI_SAYAC["limit_429"] += 1
+            try:
+                ra = float(r.headers.get("retry-after") or 30)
+            except (TypeError, ValueError):
+                ra = 30.0
+            if deneme < 2 and FONOLOJI_SAYAC["bekleme_sn"] + ra <= FONOLOJI_429_BUTCE_SN:
+                FONOLOJI_SAYAC["bekleme_sn"] += ra
+                time.sleep(0 if _TEST_HIZLI else min(ra, 60))
+                continue
+            raise FonolojiLimit(f"Fonoloji hız sınırı (429), retry-after={ra}, bütçe {FONOLOJI_SAYAC['bekleme_sn']:.0f} sn")
+        r.raise_for_status()
+        return r.json()
+    raise FonolojiLimit("Fonoloji hız sınırı (429): denemeler tükendi")
 
 def fonoloji_fund(code):
     """Tek fon: künye + son 1 yıllık fiyat/büyüklük/yatırımcı geçmişi. Kota: 2 kayıt."""
@@ -1231,8 +1327,8 @@ def fon_tutarlilik(R):
         if c in CEPHANE and g is not None and abs(g) > 0.35:
             HEALTH[f"fon_{c}_gunluk_sapma"] = f"UYARI: para piyasası fonu {c} günde %{g} hareket etti (normal ±0,15) — veri şüpheli"
             r["sapma"] = "para piyasası için anormal günlük hareket"
-        endeks_gun = onceki_islem_gunu_getirisi(kap, fb["fiyat_tarihi"]) if c in ("TIE", "AKU") else None
-        if c in ("TIE", "AKU") and g is not None and endeks_gun is not None:
+        endeks_gun = onceki_islem_gunu_getirisi(kap, fb["fiyat_tarihi"]) if c in BORSA else None
+        if c in BORSA and g is not None and endeks_gun is not None:
             fark = round(g - endeks_gun, 2)
             r["endeks_gun"] = endeks_gun; r["fon_eksi_endeks"] = fark
             if abs(fark) > 1.5:
@@ -1379,7 +1475,8 @@ def agir_slot():
 def main():
     if os.environ.get("RADAR_TEST_COKME"):
         raise RuntimeError("test amaçlı kontrollü çökme")
-    R = {"surum": "v3", "uretim_zamani_tr": NOW.strftime("%Y-%m-%d %H:%M:%S"),
+    R = {"ayarlar": {"kaynak": AYAR_KAYNAK, "fonlar": _FONLAR, "seviyeler": LEVELS, "politika_faizi": POLITIKA_FAIZI},
+         "surum": "v3", "uretim_zamani_tr": NOW.strftime("%Y-%m-%d %H:%M:%S"),
          "not": "Kişisel veri yok. BIST verisi ~15 dk gecikmeli. Günlük göstergeler tamamlanmış barlarla."}
 
     R["bist100"] = index_block("XU100")
@@ -1590,6 +1687,8 @@ def main():
     T["fon_akis_sektor"] = sa
     akis_detay = {}
     for c in FUNDS:
+        if c not in CEPHANE and c not in BORSA:
+            continue   # 6 Eki: 'izleme' fonları (elimizde olmayan) alarm üretmez
         a = fa.get(c) or {}
         fk = ((R.get("fonlar") or {}).get(c) or {}).get("akis") or {}
         b_ = fk["buyukluk_30g_degisim_pct"] if fk.get("buyukluk_30g_degisim_pct") is not None else a.get("buyukluk_degisim_pct")
@@ -1728,7 +1827,9 @@ def main():
     for _k in list(HEALTH):
         HEALTH[_k] = _gizle(HEALTH[_k])
     bad = {k: v for k, v in HEALTH.items() if v != "OK"}
-    bp_bad = {k: v for k, v in bad.items() if not k.startswith(("yahoo_yedek", "yedek_"))}
+    # 6 Eki: kendi kendini onaran durumlar ("NOT:") ve yedek kaynak hataları bildirim (Issue) üretmez
+    bp_bad = {k: v for k, v in bad.items()
+              if not k.startswith(("yahoo_yedek", "yedek_")) and not str(v).startswith("NOT:")}
     R["saglik"] = {"ozet": "TAMAM" if not bp_bad else "SORUN VAR", "issue_tetikleyen": sorted(bp_bad),
                    "hatali_moduller": bad, "tum_moduller": HEALTH,
                    "aciklama": "SORUN VAR ise bir veya daha fazla modül kırıldı; yedekler devrede olabilir. GitHub Issue açılır."}
