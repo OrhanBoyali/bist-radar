@@ -21,7 +21,7 @@
   }
  },
  "surum": "v3",
- "uretim_zamani_tr": "2026-10-07 08:17:44",
+ "uretim_zamani_tr": "2026-10-07 09:17:39",
  "not": "Kişisel veri yok. BIST verisi ~15 dk gecikmeli. Günlük göstergeler tamamlanmış barlarla.",
  "bist100": {
   "kaynak": "borsapy",
@@ -243,9 +243,9 @@
   "medyan_degisim_pct": -0.63
  },
  "yabanci": {
-  "bugun_ort_yabanci_orani": 32.5923,
+  "bugun_ort_yabanci_orani": 33.6828,
   "gecmis_gun_sayisi": 12,
-  "1hafta_degisim_puan": 0.7197,
+  "1hafta_degisim_puan": 1.8101,
   "en_cok_artan": {
    "TTKOM": 1.56,
    "MGROS": 0.85,
@@ -262,60 +262,8 @@
   }
  },
  "fonlar_borsapy": {
-  "YLB": {
-   "fiyat": 1.9049,
-   "fiyat_tarihi": "2026-10-07",
-   "akis": {
-    "buyukluk_not": "veri boş",
-    "yatirimci_not": "veri boş"
-   },
-   "gunluk_getiri_pct": 0.1,
-   "getiri_30g_pct": 2.96,
-   "bilgi": {
-    "name": "YAPI KREDİ PORTFÖY PARA PİYASASI FONU",
-    "fund_size": 99597031871.84,
-    "investor_count": 362053,
-    "category": "Para Piyasası Fonu",
-    "risk_value": 1,
-    "daily_return": 0.0984,
-    "category_rank": 54,
-    "buy_valor": null,
-    "sell_valor": null
-   },
-   "yonetim_ucreti": {
-    "applied_fee": 1.48,
-    "prospectus_fee": 1.48,
-    "max_expense_ratio": 3.65,
-    "annual_return": 45.51
-   }
-  },
-  "IJV": {
-   "fiyat": 5.909,
-   "fiyat_tarihi": "2026-10-07",
-   "akis": {
-    "buyukluk_not": "veri boş",
-    "yatirimci_not": "veri boş"
-   },
-   "gunluk_getiri_pct": 0.1,
-   "getiri_30g_pct": 2.99,
-   "bilgi": {
-    "name": "İSTANBUL PORTFÖY BİRİNCİ PARA PİYASASI (TL) FONU",
-    "fund_size": 2411659956.56,
-    "investor_count": 2339,
-    "category": "Para Piyasası Fonu",
-    "risk_value": 1,
-    "daily_return": 0.0963,
-    "category_rank": 18,
-    "buy_valor": 0,
-    "sell_valor": 0
-   },
-   "yonetim_ucreti": {
-    "applied_fee": 1.05,
-    "prospectus_fee": 0.0,
-    "max_expense_ratio": 1.65,
-    "annual_return": 46.82
-   }
-  },
+  "YLB": null,
+  "IJV": null,
   "ZBJ": null,
   "BGP": null,
   "TIE": null,
@@ -867,23 +815,8 @@
   "AKU": "fonoloji",
   "DLY": "fonoloji"
  },
- "fon_capraz": {
-  "YLB": {
-   "fonoloji_fiyat": 1.9049,
-   "borsapy_fiyat": 1.9049,
-   "fonoloji_tarih": "2026-10-07",
-   "borsapy_tarih": "2026-10-07",
-   "fark_pct": 0.0
-  },
-  "IJV": {
-   "fonoloji_fiyat": 5.909,
-   "borsapy_fiyat": 5.909,
-   "fonoloji_tarih": "2026-10-07",
-   "borsapy_tarih": "2026-10-07",
-   "fark_pct": 0.0
-  }
- },
- "fonlar_zamani": "2026-10-07 08:17",
+ "fon_capraz": {},
+ "fonlar_zamani": "2026-10-07 09:17",
  "fon_akis": {
   "referans_tarih": "2026-09-24",
   "gun": 13,
@@ -7024,7 +6957,7 @@
    ]
   }
  },
- "evds_resmi_zamani": "2026-10-07 08:17",
+ "evds_resmi_zamani": "2026-10-07 09:17",
  "enflasyon": {
   "date": "2026-09-01",
   "year_month": "09-2026",
@@ -7166,15 +7099,15 @@
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-10-07",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 101.58,
-   "gunluk_degisim_pct": 0.99,
-   "rsi14_tamamlanmis": 52.4306,
+   "son_fiyat": 101.53,
+   "gunluk_degisim_pct": 0.94,
+   "rsi14_tamamlanmis": 52.3351,
    "rsi14_anlik": null,
    "atr14": 4.3202,
    "52h_zirve_kapanis": 118.35,
-   "zirveden_pct": -14.17,
-   "haftalik_degisim_pct": -1.88,
-   "aylik_degisim_pct": 3.74,
+   "zirveden_pct": -14.21,
+   "haftalik_degisim_pct": -1.93,
+   "aylik_degisim_pct": 3.69,
    "gun_ici_dusuk": 100.95,
    "gun_ici_yuksek": 101.86
   },
@@ -7230,17 +7163,17 @@
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-10-07",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 102.084,
-   "gunluk_degisim_pct": 0.25,
-   "rsi14_tamamlanmis": 69.0503,
+   "son_fiyat": 102.117,
+   "gunluk_degisim_pct": 0.28,
+   "rsi14_tamamlanmis": 69.3327,
    "rsi14_anlik": null,
-   "atr14": 0.4674,
+   "atr14": 0.4695,
    "52h_zirve_kapanis": 102.17,
-   "zirveden_pct": -0.08,
-   "haftalik_degisim_pct": 0.62,
-   "aylik_degisim_pct": 3.28,
+   "zirveden_pct": -0.05,
+   "haftalik_degisim_pct": 0.66,
+   "aylik_degisim_pct": 3.32,
    "gun_ici_dusuk": 101.903,
-   "gun_ici_yuksek": 102.093
+   "gun_ici_yuksek": 102.123
   },
   "abd_10y": {
    "kaynak": "yahoo",
@@ -7262,16 +7195,16 @@
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-10-07",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 4158.3999,
-   "gunluk_degisim_pct": -0.69,
-   "rsi14_tamamlanmis": 35.5218,
+   "son_fiyat": 4157.0,
+   "gunluk_degisim_pct": -0.72,
+   "rsi14_tamamlanmis": 35.4252,
    "rsi14_anlik": null,
-   "atr14": 88.6775,
+   "atr14": 88.9989,
    "52h_zirve_kapanis": 5318.3999,
-   "zirveden_pct": -21.81,
-   "haftalik_degisim_pct": -0.68,
-   "aylik_degisim_pct": -6.32,
-   "gun_ici_dusuk": 4157.7002,
+   "zirveden_pct": -21.84,
+   "haftalik_degisim_pct": -0.71,
+   "aylik_degisim_pct": -6.35,
+   "gun_ici_dusuk": 4153.2002,
    "gun_ici_yuksek": 4197.7998
   }
  },
@@ -7293,18 +7226,18 @@
   "generaller_eksi_ordu_puan": -3.6,
   "yapay_taban_sinyali": false,
   "yapay_taban_gerekce": "tabanda çok hisse var ama genel piyasa zayıf değil — muhtemelen tasfiye hisseleri",
-  "yabanci_1hafta_puan": 0.7197,
+  "yabanci_1hafta_puan": 1.8101,
   "nasdaq_zirveden_pct": 0.0,
   "nasdaq_duzeltme_tetik": false,
-  "altin_zirveden_pct": -21.81,
+  "altin_zirveden_pct": -21.84,
   "altin_duzeltme_tetik": true,
   "vix": 15.01,
   "brent": 101.16,
   "brent_kaynak": "borsapy",
   "brent_capraz": {
    "borsapy": 101.16,
-   "yahoo": 101.58,
-   "fark_pct": -0.41
+   "yahoo": 101.53,
+   "fark_pct": -0.36
   },
   "gram_altin_zirveden_pct": -12.8,
   "politika_faizi": 37.0,
@@ -7515,7 +7448,9 @@
    "rakip_tarama"
   ],
   "hatali_moduller": {
-   "yedek_borsapy_fon_ZBJ": "HATA: ValueError: fon geçmişi boş (ConnectTimeout: timed out) (birincil Fonoloji çalıştı)",
+   "yedek_borsapy_fon_YLB": "HATA: ValueError: fon geçmişi boş (RemoteProtocolError: Server disconnected without sending a response.) (birincil Fonoloji çalıştı)",
+   "yedek_borsapy_fon_IJV": "HATA: ValueError: fon geçmişi boş (RemoteProtocolError: Server disconnected without sending a response.) (birincil Fonoloji çalıştı)",
+   "yedek_borsapy_fon_ZBJ": "HATA: ValueError: fon geçmişi boş (RemoteProtocolError: Server disconnected without sending a response.) (birincil Fonoloji çalıştı)",
    "yedek_borsapy_fon_BGP": "HATA: ValueError: fon geçmişi boş (ConnectTimeout: timed out) (birincil Fonoloji çalıştı)",
    "yedek_borsapy_fon_TIE": "HATA: ValueError: fon geçmişi boş (ConnectTimeout: timed out) (birincil Fonoloji çalıştı)",
    "yedek_borsapy_fon_AKU": "HATA: ValueError: fon geçmişi boş (ConnectTimeout: timed out) (birincil Fonoloji çalıştı)",
@@ -7544,13 +7479,9 @@
    "fonoloji_TIE": "OK",
    "fonoloji_AKU": "OK",
    "fonoloji_DLY": "OK",
-   "fon_bilgi_YLB": "OK",
-   "fon_ucret_YLB": "OK",
-   "fon_YLB": "OK",
-   "fon_bilgi_IJV": "OK",
-   "fon_ucret_IJV": "OK",
-   "fon_IJV": "OK",
-   "yedek_borsapy_fon_ZBJ": "HATA: ValueError: fon geçmişi boş (ConnectTimeout: timed out) (birincil Fonoloji çalıştı)",
+   "yedek_borsapy_fon_YLB": "HATA: ValueError: fon geçmişi boş (RemoteProtocolError: Server disconnected without sending a response.) (birincil Fonoloji çalıştı)",
+   "yedek_borsapy_fon_IJV": "HATA: ValueError: fon geçmişi boş (RemoteProtocolError: Server disconnected without sending a response.) (birincil Fonoloji çalıştı)",
+   "yedek_borsapy_fon_ZBJ": "HATA: ValueError: fon geçmişi boş (RemoteProtocolError: Server disconnected without sending a response.) (birincil Fonoloji çalıştı)",
    "yedek_borsapy_fon_BGP": "HATA: ValueError: fon geçmişi boş (ConnectTimeout: timed out) (birincil Fonoloji çalıştı)",
    "yedek_borsapy_fon_TIE": "HATA: ValueError: fon geçmişi boş (ConnectTimeout: timed out) (birincil Fonoloji çalıştı)",
    "yedek_borsapy_fon_AKU": "HATA: ValueError: fon geçmişi boş (ConnectTimeout: timed out) (birincil Fonoloji çalıştı)",
