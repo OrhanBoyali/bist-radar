@@ -1,37 +1,54 @@
 {
   "_not": "BIST RADAR ayarları. Portföy değişince sadece bu dosya güncellenir; kod ve testler değişmez. Bozuk/eksik alan olursa sistem çökmez, o alan için varsayılanı kullanır ve sağlık raporunda uyarı verir.",
-
-  "_fonlar_not": "Takip edilen fonlar ve rolleri. cephane = güvenli para (reel getiri ve rakip taraması), borsa = hisse fonu (endeks tutarlılık kontrolü), izleme = elimizde yok ama takipte (alarm üretmez). Fon alınca ekle, satınca sil ya da 'izleme' yap.",
+  "_fonlar_not": "Takip edilen fonlar ve rolleri. cephane = güvenli para / para piyasası (reel getiri alarmı ve rakip taraması), borsa = hisse fonu (endeks tutarlılık kontrolü), tahvil = tahvil fonu (pozisyon kurallarıyla izlenir), izleme = elimizde yok ama takipte (alarm üretmez). Fon alınca ekle, satınca sil ya da 'izleme' yap.",
   "fonlar": {
     "YLB": "cephane",
     "IJV": "cephane",
     "ZBJ": "cephane",
     "BGP": "cephane",
+    "YOT": "tahvil",
     "TIE": "borsa",
     "AKU": "borsa",
     "DLY": "izleme"
   },
-
   "_seviyeler_not": "Borsa planı seviyeleri (BIST 100 puan). Plan değişirse güncellenir.",
   "seviyeler": {
     "korunan_taban": 13000,
     "tez_cizgisi_haftalik": 12600
   },
-
   "_politika_faizi_not": "Her PPK kararından sonra güncellenir. sonraki_ppk geçerse sistem uyarı verir.",
   "politika_faizi": {
     "oran": 37.0,
     "karar_tarihi": "2026-09-10",
     "sonraki_ppk": "2026-10-22"
   },
-
   "_diger_not": "stopaj_ppf: para piyasası fonu stopajı (0,175 = %17,5). reel_alarm/reel_acil: aylık net reel getiri eşikleri. tufe_aylik_manuel: resmi veri alınamazsa kullanılan aylık enflasyon. min_fon_buyuklugu: aday fonlar için asgari büyüklük (TL).",
   "stopaj_ppf": 0.175,
   "reel_alarm": 0.5,
   "reel_acil": 0.0,
   "tufe_aylik_manuel": 1.84,
   "min_fon_buyuklugu": 500000000,
-
+  "_pozisyon_kurallari_not": "Her pozisyon için alırken yazılan kurallar. Sistem her ağır çalışmada kontrol eder; bir kural tetiklenirse bildirim gelir. giris_tarihi: alım günü; kiyas: karşılaştırılan fon; kar_sarti_puan: kar_tarihi'ne kadar kıyasın en az bu kadar puan üstünde olmalı; zaman_duragi_tarihi: bu tarihe kadar faiz indirimi başlamaz VE kıyasın gerisindeyse çıkış değerlendirilir; zarar_siniri_pct: alıştan bu yana bu kadar düşüşte çık/değerlendir; baslangic_politika_faizi: indirim başladı mı kontrolü için. giris_fiyati: bankadaki tutar/adet ile kesin alış fiyatı (yazılınca tahmin yerine bu kullanılır).",
+  "pozisyon_kurallari": {
+    "YOT": {
+      "giris_tarihi": "2026-10-08",
+      "kiyas": "YLB",
+      "kar_sarti_puan": 2,
+      "kar_tarihi": "2027-01-31",
+      "zaman_duragi_tarihi": "2026-12-11",
+      "zarar_siniri_pct": -4,
+      "baslangic_politika_faizi": 37.0
+    }
+  },
   "_tasfiye_not": "Tasfiye edilen / güvenilmez kurucular: fonları her yerden elenir.",
-  "tasfiye_kurucular": ["TERA", "PUSULA", "HEDEF", "ATLAS", "A1 CAPITAL", "A1 PORTFOY", "PARDUS", "BULLS"]
+  "tasfiye_kurucular": [
+    "TERA",
+    "PUSULA",
+    "HEDEF",
+    "ATLAS",
+    "A1 CAPITAL",
+    "A1 PORTFOY",
+    "PARDUS",
+    "BULLS"
+  ]
 }
