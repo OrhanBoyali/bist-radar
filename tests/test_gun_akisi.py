@@ -55,6 +55,8 @@ def main():
     d, p = calistir(tmp, f"{g} 12:17")
     kontrol("ana_akis" not in d["saglik"]["hatali_moduller"],       "12:17 — betik çökmeden tamamlandı (önbellek yolu)")
     kontrol("önbellek" in str(d.get("fonlar_zamani")),              "12:17 — fonlar önbellekten geldi")
+    kontrol((d.get("verim_arsivi") or {}).get("son") == g,          "12:17 — tahvil faizi arşivi hafif çalışmada da güncellenir")
+    kontrol(bool(d.get("tahvil_analiz")),                            "12:17 — tahvil analizi önbellekten korunur")
     kontrol(str(d.get("fonlar_zamani")).count("önbellek") == 1,     "12:17 — önbellek etiketi tekrarlanmıyor")
     kontrol(bool(d.get("rakip_tarama")),                             "12:17 — rakip taraması önbellekten korunuyor")
     kontrol(bool(d.get("fonlar")) and all(v for v in d["fonlar"].values()), "12:17 — beş fonun verisi eksiksiz")
