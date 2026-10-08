@@ -79,7 +79,7 @@ def ayarlari_yukle():
     def num(x, lo, hi):
         return isinstance(x, (int, float)) and not isinstance(x, bool) and lo <= x <= hi
     kontroller = {
-        "fonlar": lambda v: isinstance(v, dict) and v and all(isinstance(k, str) and k.isalnum() and r in ("cephane", "borsa", "izleme") for k, r in v.items()),
+        "fonlar": lambda v: isinstance(v, dict) and v and all(isinstance(k, str) and k.isalnum() and r in ("cephane", "borsa", "tahvil", "izleme") for k, r in v.items()),
         "seviyeler": lambda v: isinstance(v, dict) and all(num(v.get(k), 1000, 100000) for k in ("korunan_taban", "tez_cizgisi_haftalik")),
         "politika_faizi": lambda v: isinstance(v, dict) and num(v.get("oran"), 0, 100) and isinstance(v.get("sonraki_ppk"), str)
                                     and isinstance(v.get("karar_tarihi"), str),
@@ -88,6 +88,15 @@ def ayarlari_yukle():
         "tufe_aylik_manuel": lambda v: num(v, -5, 20),
         "min_fon_buyuklugu": lambda v: num(v, 0, 1e12),
         "tasfiye_kurucular": lambda v: isinstance(v, list) and all(isinstance(x, str) and x for x in v),
+        # 7 Eki: pozisyon kuralları — {"YOT": {"giris_tarihi": "YYYY-AA-GG", "kiyas": "YLB", "kar_sarti_puan": 2,
+        #        "kar_tarihi": "...", "zaman_duragi_tarihi": "...", "zarar_siniri_pct": -4}}
+        "pozisyon_kurallari": lambda v: isinstance(v, dict) and all(
+            isinstance(k, str) and isinstance(x, dict) and isinstance(x.get("giris_tarihi"), str) and len(x["giris_tarihi"]) == 10
+            and isinstance(x.get("kiyas"), str) and all(num(x.get(n), -100, 100) for n in ("kar_sarti_puan", "zarar_siniri_pct"))
+            and all(isinstance(x.get(n), str) and len(x[n]) == 10 for n in ("kar_tarihi", "zaman_duragi_tarihi"))
+            and (x.get("baslangic_politika_faizi") is None or num(x.get("baslangic_politika_faizi"), 0, 100))
+            and (x.get("giris_fiyati") is None or num(x.get("giris_fiyati"), 1e-9, 1e9))      # 7 Eki: bankadan teyitli
+            for k, x in v.items()),
     }
     for alan, ok in kontroller.items():
         if alan in a and not ok(a[alan]):
@@ -102,6 +111,8 @@ _FONLAR = AYAR.get("fonlar") or VARSAYILAN_FONLAR
 FUNDS = list(_FONLAR)
 CEPHANE = [k for k, v in _FONLAR.items() if v == "cephane"]
 BORSA = [k for k, v in _FONLAR.items() if v == "borsa"]
+TAHVIL = [k for k, v in _FONLAR.items() if v == "tahvil"]          # 7 Eki: tahvil fonları (YOT)
+POZISYON_KURALLARI = AYAR.get("pozisyon_kurallari") or {}
 LEVELS = {**LEVELS, **(AYAR.get("seviyeler") or {})}
 POLITIKA_FAIZI = AYAR.get("politika_faizi") or POLITIKA_FAIZI
 STOPAJ_PP = AYAR.get("stopaj_ppf", STOPAJ_PP)
@@ -1384,6 +1395,11 @@ def _sinif_arsiv(R):
         out[f"{k}_1a"], out[f"{k}_3a"] = v.get("1a"), v.get("3a")
     tz = (R.get("tetikler") or {}).get("tahvil_zamanlama") or {}
     out["iki_yil_eksi_politika"] = tz.get("iki_yil_eksi_politika")
+    verim = {str(x.get("maturity")): x.get("yield") for x in (R.get("tahvil") or []) if isinstance(x, dict)}
+    out["tahvil_2y"], out["tahvil_5y"], out["tahvil_10y"] = verim.get("2Y"), verim.get("5Y"), verim.get("10Y")
+    for kod, v in ((R.get("pozisyon_takip") or {}).items()):
+        if isinstance(v, dict):
+            out[f"poz_{kod}_getiri"], out[f"poz_{kod}_fark"] = v.get("getiri_pct"), v.get("fark_puan")
     out["egri_egimi"] = tz.get("egri_egimi_10y_2y")
     out["pka_faiz_beklentisi"] = tz.get("pka_politika_faizi_beklentisi")
     return out
@@ -1461,6 +1477,232 @@ def tufe_yenile_gerekli(son_tarih, simdi):
     return son_tarih < beklenen
 
 
+_FIYAT_ONBELLEK = {}
+
+def _fiyat_serisi(code):
+    """Fonun fiyat serisi (çalışma içi önbellekli): önce Fonoloji (1 yıl), yoksa borsapy (3 ay)."""
+    if code not in _FIYAT_ONBELLEK:
+        _FIYAT_ONBELLEK[code] = _fiyat_serisi_cek(code)
+    return _FIYAT_ONBELLEK[code]
+
+def _fiyat_serisi_cek(code):
+    if os.environ.get("FONOLOJI_KEY"):
+        try:
+            h = fonoloji_get(f"/funds/{code}/history", {"period": "1y"})
+            pts = [p for p in (h.get("points") or []) if p.get("price")]
+            if pts:
+                return pd.Series({pd.Timestamp(p["date"]): float(p["price"]) for p in pts}).sort_index()
+        except FonolojiLimit:
+            raise
+        except Exception:
+            FONOLOJI_SAYAC["hata"] += 1
+    h = to_dt_index(bp.Fund(code).history(period="3mo").copy())
+    pc = next(c for c in h.columns if str(c).lower() in ("price", "fiyat", "close"))
+    return pd.to_numeric(h[pc], errors="coerce").dropna().sort_index()
+
+VERIM_ARSIV = "output/verim_gecmisi.json"
+VERIM_EVDS = "output/verim_evds.json"
+
+def verim_arsivi_guncelle(tahvil_listesi):
+    """bp.bonds() anlık verimlerini günlük arşive yazar (her çalışma; aynı gün üzerine yazar)."""
+    arsiv = {}
+    if os.path.exists(VERIM_ARSIV):
+        try:
+            arsiv = json.load(open(VERIM_ARSIV, encoding="utf-8"))
+        except Exception as e:
+            HEALTH["verim_arsivi"] = f"UYARI: verim arşivi okunamadı, yeniden başlatıldı ({type(e).__name__})"
+            arsiv = {}
+    gun = {str(x.get("maturity")): x.get("yield") for x in (tahvil_listesi or []) if isinstance(x, dict) and x.get("yield") is not None}
+    if gun:
+        arsiv[NOW.strftime("%Y-%m-%d")] = gun
+        arsiv = dict(sorted(arsiv.items())[-900:])
+        os.makedirs("output", exist_ok=True)
+        json.dump(arsiv, open(VERIM_ARSIV, "w", encoding="utf-8"), ensure_ascii=False)
+    return {"gun_sayisi": len(arsiv), "ilk": min(arsiv) if arsiv else None, "son": max(arsiv) if arsiv else None}
+
+def verim_gecmisi_evds():
+    """EVDS'de 2 yıllık gösterge tahvil faizi serisini adla arar; bulursa 1,5 yıllık geçmişi kaydeder.
+    Seçilen seri ve adaylar çıktıya yazılır (Claude doğrular)."""
+    adaylar, secilen = [], None
+    for terim in ("gösterge faiz", "gösterge tahvil", "DİBS gösterge", "benchmark"):
+        try:
+            df = bp.evds_search(terim)
+        except Exception as e:
+            adaylar.append(f"[{terim}: {type(e).__name__}]")
+            continue
+        if df is None or not len(df):
+            continue
+        nc = next((c for c in df.columns if str(c).upper() in ("SERIE_NAME", "NAME", "SERIE_NAME_TR")), None)
+        cc = next((c for c in df.columns if str(c).upper() in ("SERIE_CODE", "CODE")), None)
+        if not nc or not cc:
+            continue
+        for _, r in df.head(30).iterrows():
+            ad = str(r[nc]); adaylar.append(f"{r[cc]} | {ad}")
+            n = _tr_up(ad)
+            if secilen is None and ("2 YIL" in n or "2YIL" in n or "IKI YIL" in n) and ("GOSTERGE" in n or "BENCHMARK" in n):
+                secilen = (r[cc], ad)
+        if secilen:
+            break
+    if not secilen:
+        raise ValueError("2 yıllık gösterge faiz serisi bulunamadı; adaylar: " + "; ".join(adaylar[:8]))
+    start = (NOW - timedelta(days=550)).strftime("%Y-%m-%d")
+    df = bp.evds_series(secilen[0], start=start, frequency="daily")
+    df = df.to_frame() if isinstance(df, pd.Series) else df
+    df = to_dt_index(df.copy())
+    num = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
+    ser = df[num[0]].dropna()
+    out = {"kod": secilen[0], "ad": secilen[1], "seri": {d.strftime("%Y-%m-%d"): J(v) for d, v in ser.items()},
+           "adaylar": adaylar[:15], "zaman": NOW.strftime("%Y-%m-%d %H:%M"), "dogrulandi": False}
+    json.dump(out, open(VERIM_EVDS, "w", encoding="utf-8"), ensure_ascii=False)
+    return out
+
+def _verim_serisi():
+    """2 yıllık verim serisi: EVDS geçmişi + kendi arşivimiz (çakışan günlerde arşiv)."""
+    s = {}
+    if os.path.exists(VERIM_EVDS):
+        try:
+            s.update(json.load(open(VERIM_EVDS, encoding="utf-8")).get("seri") or {})
+        except Exception as e:
+            HEALTH["verim_evds_okuma"] = f"UYARI: EVDS verim dosyası okunamadı ({type(e).__name__})"
+    kaynak = "EVDS" if s else "arşiv"
+    if os.path.exists(VERIM_ARSIV):
+        for d, v in json.load(open(VERIM_ARSIV, encoding="utf-8")).items():
+            if v.get("2Y") is not None:
+                s[d] = v["2Y"]
+    if s and os.path.exists(VERIM_EVDS) and os.path.exists(VERIM_ARSIV):
+        kaynak = "EVDS + arşiv"
+    ser = pd.Series({pd.Timestamp(d): float(v) for d, v in s.items() if v is not None}).sort_index()
+    return ser, kaynak
+
+# --- faize duyarlılık (etkin süre) ve senaryo matematiği ---
+SURE_KABA = {"kısa": (0.3, 0.7), "orta/belirsiz": (1.0, 2.5), "uzun": (3.0, 5.0)}   # yıl, kategori kaba aralığı
+SENARYO_DY = [-3, -2, -1, 0, 1, 2]       # puan; 3 aylık ufukta 2 yıllık faiz değişimi
+TAHVIL_UCRET, PPF_UCRET = 1.5, 1.0       # yıllık yönetim ücreti varsayımı (%)
+
+def etkin_sure(fiyat, verim):
+    """Haftalık fon getirisi ~ a − D·Δverim regresyonu. D (yıl) = faiz 1 puan değişince fiyatın % değişimi."""
+    f = fiyat.resample("W-FRI").last().dropna()
+    y = verim.resample("W-FRI").last().dropna()
+    df = pd.concat({"r": f.pct_change(), "dy": y.diff() / 100.0}, axis=1).dropna()
+    df = df[-52:]
+    if len(df) < 20 or df["dy"].std() == 0:
+        return {"sure_yil": None, "gozlem": int(len(df)), "not": f"veri yetersiz ({len(df)} hafta; en az 20 gerekli)"}
+    x, r = df["dy"].values, df["r"].values
+    b = float(np.cov(x, r, ddof=0)[0, 1] / np.var(x))
+    a = float(r.mean() - b * x.mean())
+    tahmin = a + b * x
+    r2 = float(1 - ((r - tahmin) ** 2).sum() / ((r - r.mean()) ** 2).sum()) if ((r - r.mean()) ** 2).sum() else 0.0
+    D = -b
+    guven = "iyi" if r2 >= 0.5 else ("orta" if r2 >= 0.2 else "zayıf")
+    if D < 0 or D > 15:
+        guven = "güvenilmez"
+    return {"sure_yil": round(D, 2), "r2": round(r2, 2), "gozlem": int(len(df)), "guven": guven}
+
+def tahvil_senaryo(sure, verim_2y, aofm):
+    """3 aylık ufuk: tahvil fonu = taşıma (verim − ücret) − süre × Δverim; para piyasası = (fiili faiz − ücret + Δ/2).
+    Varsayımlar sabit ve çıktıya yazılır; amaç büyüklük sırasını görmek, kesin tahmin değil."""
+    tasima = (verim_2y - TAHVIL_UCRET) * 0.25
+    ppf0 = (aofm - PPF_UCRET) * 0.25
+    tablo = []
+    for dy in SENARYO_DY:
+        fon = round(tasima - sure * dy, 2)
+        ppf = round(ppf0 + (dy / 2) * 0.25, 2)
+        tablo.append({"verim_degisimi_puan": dy, "tahvil_fonu_3a_pct": fon, "para_piyasasi_3a_pct": ppf, "fark_puan": round(fon - ppf, 2)})
+    payda = sure + 0.125
+    basabas = round((tasima - ppf0) / payda, 2) if payda else None
+    return {"ufuk": "3 ay", "senaryolar": tablo,
+            "basabas_verim_degisimi_puan": basabas,
+            "basabas_okuma": (f"2 yıllık faiz 3 ayda {basabas:+} puandan daha fazla düşerse tahvil fonu para piyasasını geçer"
+                              if basabas is not None and basabas < 0 else
+                              f"2 yıllık faiz 3 ayda {basabas:+} puandan daha az yükselirse tahvil fonu para piyasasını geçer"),
+            "varsayimlar": {"tasima": f"2Y verim %{verim_2y} − yıllık ücret %{TAHVIL_UCRET}",
+                            "para_piyasasi": f"fiili faiz %{aofm} − ücret %{PPF_UCRET}; faiz değişiminin ortalama yarısı yansır",
+                            "fiyat_etkisi": "anlık ve doğrusal (süre × Δverim); vergi her ikisinde aynı (%17,5) olduğu için brüt kıyas"}}
+
+TAHVIL_ANALIZ_N = 8      # aday listesinden analiz edilecek en fazla fon (Fonoloji: fon başına 1 kayıt)
+
+def tahvil_analiz(R):
+    """Portföydeki tahvil fonları + en iyi adaylar için etkin süre ve senaryo tablosu."""
+    verim, kaynak = _verim_serisi()
+    tz = (R.get("tetikler") or {}).get("tahvil_zamanlama") or {}
+    v2 = tz.get("iki_yil_verim")
+    if v2 is None:
+        v2 = next((x.get("yield") for x in (R.get("tahvil") or []) if isinstance(x, dict) and str(x.get("maturity")) == "2Y"), None)
+    aofm = ((R.get("tcmb") or {}).get("aofm") or {}).get("oran") or POLITIKA_FAIZI["oran"]
+    adaylar = (((R.get("rakip_tarama") or {}).get("tahvil_adaylari") or {}).get("adaylar") or [])
+    vade_map = {a["kod"]: a.get("vade_ipucu", "orta/belirsiz") for a in adaylar}
+    kodlar = list(dict.fromkeys(list(TAHVIL) + [a["kod"] for a in adaylar if a.get("vade_ipucu") != "kısa"][:TAHVIL_ANALIZ_N]))
+    out = {"verim_kaynagi": kaynak, "verim_gozlem_gun": int(len(verim)), "iki_yil_verim": v2, "fiili_faiz": aofm, "fonlar": {}}
+    for kod in kodlar:
+        try:
+            fiyat = _fiyat_serisi(kod)
+            es = etkin_sure(fiyat, verim) if len(verim) else {"sure_yil": None, "not": "verim geçmişi yok"}
+            vade = vade_map.get(kod, "orta/belirsiz")
+            if es.get("sure_yil") is not None and es.get("guven") in ("iyi", "orta"):
+                sure, sure_kaynak = es["sure_yil"], f"tahmin (regresyon, R²={es.get('r2')}, {es.get('gozlem')} hafta)"
+            else:
+                lo, hi = SURE_KABA.get(vade, SURE_KABA["orta/belirsiz"])
+                sure, sure_kaynak = round((lo + hi) / 2, 2), f"KABA TAHMİN ({vade} vade kategorisi: {lo}-{hi} yıl) — {es.get('not') or es.get('guven')}"
+            out["fonlar"][kod] = {"portfoyde": kod in TAHVIL, "etkin_sure": es, "kullanilan_sure_yil": sure,
+                                  "sure_kaynagi": sure_kaynak,
+                                  "senaryo": tahvil_senaryo(sure, v2, aofm) if v2 is not None else {"not": "2Y verim yok"}}
+        except FonolojiLimit:
+            out["fonlar"][kod] = {"not": "Fonoloji hız sınırı — sonraki ağır çalışmada"}
+        except Exception as e:
+            out["fonlar"][kod] = {"hata": f"{type(e).__name__}: {str(e)[:80]}"}
+            HEALTH[f"tahvil_analiz_{kod}"] = f"UYARI: {kod} tahvil analizi yapılamadı ({type(e).__name__})"
+    return out
+
+
+def pozisyon_takip():
+    """ayarlar.json → pozisyon_kurallari: alıştan bu yana getiri, kıyas fonla fark ve kuralların durumu.
+    Bir kural tetiklenirse sağlık raporuna UYARI yazar → bildirim gelir."""
+    out = {}
+    bugun = NOW.strftime("%Y-%m-%d")
+    for kod, k in POZISYON_KURALLARI.items():
+        try:
+            s1, s2 = _fiyat_serisi(kod), _fiyat_serisi(k["kiyas"])
+            g = pd.Timestamp(k["giris_tarihi"])
+            a1, a2 = s1[s1.index >= g], s2[s2.index >= g]
+            if a1.empty or a2.empty:
+                out[kod] = {"durum": "BEKLİYOR", "not": "giriş tarihinden sonraki fiyat henüz yok"}
+                continue
+            # 7 Eki (kontrol D2): banka teyitli giriş fiyatı varsa o esas; yoksa alım tarihinden sonraki ilk fiyat (tahmini)
+            giris = float(k["giris_fiyati"]) if k.get("giris_fiyati") else float(a1.iloc[0])
+            get1, get2 = pct(a1.iloc[-1], giris), pct(a2.iloc[-1], a2.iloc[0])
+            fark = round(get1 - get2, 2)
+            bas_pf = k.get("baslangic_politika_faizi")
+            indirim = bool(bas_pf is not None and POLITIKA_FAIZI["oran"] < bas_pf)
+            durum, mesaj = "İZLEMEDE", None
+            if get1 <= k["zarar_siniri_pct"]:
+                durum = "ZARAR SINIRI"
+                mesaj = f"{kod} alıştan bu yana %{get1} — zarar sınırı (%{k['zarar_siniri_pct']}) aşıldı: çık ve değerlendir"
+            elif bugun >= k["kar_tarihi"]:
+                durum = "BAŞARILI" if fark >= k["kar_sarti_puan"] else "KÂR ŞARTI SAĞLANMADI"
+                mesaj = f"{kod} kâr tarihi geldi: {k['kiyas']}'e göre {fark:+} puan (şart +{k['kar_sarti_puan']}) → {durum}"
+            elif bugun >= k["zaman_duragi_tarihi"] and fark < 0 and not indirim:
+                durum = "ZAMAN DURAĞI"
+                mesaj = (f"{kod} zaman durağı: {k['zaman_duragi_tarihi']} geçti, faiz indirimi başlamadı ve "
+                         f"{k['kiyas']}'in {fark} puan gerisinde → {k['kiyas']}'e dönüş değerlendir")
+            if durum == "İZLEMEDE" and get1 <= 0.75 * k["zarar_siniri_pct"]:
+                HEALTH[f"pozisyon_{kod}_yakin"] = (f"NOT: {kod} zarar sınırına yaklaşıyor: alıştan bu yana %{get1} "
+                                                    f"(sınır %{k['zarar_siniri_pct']})")
+            out[kod] = {"giris_tarihi": k["giris_tarihi"], "giris_fiyati": J(giris),
+                        "giris_fiyati_kaynak": "banka (ayarlar.json)" if k.get("giris_fiyati") else "tahmini (alım sonrası ilk fiyat)",
+                        "son_fiyat": J(a1.iloc[-1]),
+                        "son_fiyat_tarihi": a1.index[-1].strftime("%Y-%m-%d"), "getiri_pct": get1,
+                        "kiyas": k["kiyas"], "kiyas_getiri_pct": get2, "fark_puan": fark,
+                        "zarar_sinirina_mesafe_puan": round(get1 - k["zarar_siniri_pct"], 2),
+                        "faiz_indirimi_basladi": indirim, "durum": durum, "kurallar": k}
+            if mesaj:
+                HEALTH[f"pozisyon_{kod}"] = "UYARI: POZİSYON KURALI — " + mesaj
+        except FonolojiLimit:
+            HEALTH[f"pozisyon_{kod}"] = "NOT: Fonoloji hız sınırı — pozisyon takibi sonraki ağır çalışmada"
+        except Exception as e:
+            HEALTH[f"pozisyon_{kod}"] = f"UYARI: pozisyon takibi hesaplanamadı ({type(e).__name__}: {str(e)[:60]})"
+    return out
+
+
 def agir_slot():
     """Bu çalışma hangi 'ağır iş' penceresinde? Hafta sonu ve gün içi: yok (önbellek)."""
     if NOW.weekday() >= 5:
@@ -1525,6 +1767,8 @@ def main():
         R["fonlar"] = {c: (fono.get(c) or bors.get(c)) for c in FUNDS}          # birincil: fonoloji
         R["fonlar_kaynak"] = {c: ("fonoloji" if fono.get(c) else ("borsapy" if bors.get(c) else "yok")) for c in FUNDS}
         R["fon_capraz"] = fon_capraz(fono, bors)
+        if POZISYON_KURALLARI and bp:
+            R["pozisyon_takip"] = pozisyon_takip()
         for c in FUNDS:   # 6 Eki: birincil (Fonoloji) çalıştıysa yedek TEFAS hatası bildirim üretmez
             if fono.get(c) and str(HEALTH.get(f"fon_{c}", "")).startswith("HATA"):
                 HEALTH[f"yedek_borsapy_fon_{c}"] = HEALTH.pop(f"fon_{c}") + " (birincil Fonoloji çalıştı)"
@@ -1539,6 +1783,7 @@ def main():
         onceki = str(prev.get("fonlar_zamani", "önceki çalışma")).split(" (önbellek")[0]
         R["fonlar_zamani"] = onceki + " (önbellek — TEFAS günde 1 fiyat)"
         R["fon_akis"] = prev.get("fon_akis", {})
+        R["pozisyon_takip"] = prev.get("pozisyon_takip") or (pozisyon_takip() if (POZISYON_KURALLARI and bp) else {})
         for k in ("fonlar_borsapy", "fonlar_fonoloji", "fonlar_kaynak", "fon_capraz"):
             R[k] = prev.get(k)
     _prt = prev.get("rakip_tarama") or {}
@@ -1575,6 +1820,10 @@ def main():
                         R["tufe_ek_cekim"] = NOW.strftime("%Y-%m-%d %H:%M")
         R["enflasyon"] = safe("enflasyon", lambda: J(bp.Inflation().latest()))
         R["tahvil"] = safe("tahvil", lambda: J(bp.bonds()))
+        R["verim_arsivi"] = safe("verim_arsivi", lambda: verim_arsivi_guncelle(R.get("tahvil")))
+        if gunluk_saat or not os.path.exists(VERIM_EVDS):
+            if os.environ.get("EVDS_API_KEY"):
+                R["verim_evds"] = safe("verim_evds", lambda: {k: v for k, v in verim_gecmisi_evds().items() if k != "seri"})
         R["doviz_altin"] = {k: safe(f"fx_{k}", lambda k=k: J(bp.FX(k).current)) for k in FX_LIST}
         R["takvim_tr"] = safe("takvim_tr", lambda: J(bp.economic_calendar(period="1w", country="TR").head(25)))
         R["takvim_abd_onemli"] = safe("takvim_abd", lambda: J(
@@ -1814,8 +2063,21 @@ def main():
                        "reel_net_pct": r_net, "reel_brut_pct": round(brut - T["tufe_aylik"], 2),
                        "durum": "ACIL" if r_net <= REEL_ACIL else ("ALARM" if r_net < REEL_ALARM else "OK")}
     T["reel_getiri"] = reel
+    reel_t = {}
+    for c, fb in (R.get("fonlar") or {}).items():
+        if c in TAHVIL and fb and fb.get("getiri_30g_pct") is not None:
+            brut = fb["getiri_30g_pct"]; net_g = brut * (1 - STOPAJ_PP)
+            reel_t[c] = {"brut_30g_pct": brut, "net_30g_pct": round(net_g, 2),
+                         "reel_net_pct": round(net_g - T["tufe_aylik"], 2), "durum": "BİLGİ (tahvil: kurallar pozisyon takibinde)"}
+    T["reel_getiri_tahvil"] = reel_t
+    T["pozisyon_takip"] = R.get("pozisyon_takip") or {}
     T["reel_getiri_yontem"] = f"NET: getiri×(1-{STOPAJ_PP}) − aylık TÜFE; ALARM <{REEL_ALARM}, ACİL ≤{REEL_ACIL}"
     R["tetikler"] = T
+    # 7 Eki: tahvil analizi (etkin süre + senaryo) — ağır çalışmada; diğerlerinde önceki sonuç
+    if bp and (gunluk_saat or not prev.get("tahvil_analiz")):
+        R["tahvil_analiz"] = safe("tahvil_analiz", lambda: tahvil_analiz(R))
+    else:
+        R["tahvil_analiz"] = prev.get("tahvil_analiz")
     R["arsiv"] = safe("gunluk_arsiv", lambda: gunluk_arsiv(R))
 
     # ---- SAĞLIK ----
