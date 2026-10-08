@@ -20,6 +20,14 @@ class _Resp:
 def _son_is_gunu():
     return (pd.Timestamp.today().normalize() - pd.offsets.BDay(1)).date()
 
+
+def _sahte_verim(gun):
+    """7 Eki: sahte 2 yıllık gösterge faizi (puan) — EVDS ve Fonoloji sahteleri AYNI yolu kullanır."""
+    import math
+    return 40.0 + 2.0 * math.sin(gun.toordinal() / 20.0)
+
+_SURE = {"YOT": 1.5, "KB0": 4.0}      # 7 Eki: bilinen faiz duyarlılığı (yıl) → etkin süre testi
+
 _SAYAC = [0]
 _BIZIM = ("YLB", "IJV", "ZBJ", "BGP", "TIE", "AKU")
 
@@ -44,8 +52,14 @@ def get(url, params=None, headers=None, timeout=20):
         n = len(idx)
         katsayi = 1.003 if code == "IJV" else 1.0   # TEST: IJV iki kaynakta farklı → çapraz uyarı
         pts = []
+        p_tahvil = 5.0
         for i, d in enumerate(idx):
             price = 5.0 * (1.03 ** (i / 22)) * katsayi            # ayda ~%3 (para piyasası benzeri)
+            if code in _SURE:                                      # tahvil: taşıma − süre × Δverim
+                if i:
+                    dy = (_sahte_verim(d.date()) - _sahte_verim(idx[i - 1].date())) / 100.0
+                    p_tahvil *= (1 + 0.38 / 252 - _SURE[code] * dy)
+                price = p_tahvil
             if code == "AKU" and i == n - 1:
                 price *= 1.05                                      # TEST: son gün +%5 → endeksten kopma
             pts.append({"date": d.strftime("%Y-%m-%d"), "price": round(price, 6),
