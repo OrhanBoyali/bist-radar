@@ -15,7 +15,7 @@ MOCK = os.path.join(KOK, "tests", "mock")
 EVREN = {}
 def calistir_klasor(tmp, ek_env=None):
     """Aynı klasörde tekrar çalıştır (önbellek/çökme testleri)."""
-    env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK, RADAR_TEST_HIZLI="1", **(ek_env or {}))
+    env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK, RADAR_TEST_HIZLI="1"); env.update(ek_env or {})
     subprocess.run([sys.executable, "bist_radar.py"], cwd=tmp, env=env, capture_output=True, timeout=300)
     with open(os.path.join(tmp, "output", "radar.json"), encoding="utf-8") as f:
         return json.load(f)
@@ -32,7 +32,7 @@ def calistir(tohum=None, ek_env=None, kok=None):
     else:
         EVREN["klasor"] = tmp
     shutil.copy(os.path.join(KOK, "bist_radar.py"), tmp)
-    env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK, RADAR_TEST_HIZLI="1", **(ek_env or {}))
+    env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK, RADAR_TEST_HIZLI="1"); env.update(ek_env or {})
     subprocess.run([sys.executable, "bist_radar.py"], cwd=tmp, env=env, capture_output=True, timeout=300)
     with open(os.path.join(tmp, "output", "radar.json"), encoding="utf-8") as f:
         return json.load(f)
@@ -96,9 +96,30 @@ def main():
     d_429 = calistir(ek_env={"RADAR_MOCK_429": "3"})
     d_429k = calistir(ek_env={"RADAR_MOCK_429_KUNYE": "1"})
     _k429 = json.load(open(os.path.join(EVREN["son"], "output", "fon_kunye.json"), encoding="utf-8"))
+    _giris = (_pd.Timestamp(_d.today()) - _pd.offsets.BDay(20)).strftime("%Y-%m-%d")
+    _gelecek = (_pd.Timestamp(_d.today()) + _pd.Timedelta(days=30)).strftime("%Y-%m-%d")
+    def _poz(**deg):
+        kural = {"giris_tarihi": _giris, "kiyas": "YLB", "kar_sarti_puan": 2, "kar_tarihi": "2099-01-31",
+                 "zaman_duragi_tarihi": "2099-12-11", "zarar_siniri_pct": -4, "baslangic_politika_faizi": 37.0}
+        kural.update(deg)
+        return _aj({"fonlar": {"YLB": "cephane", "BGP": "cephane", "YOT": "tahvil", "TIE": "borsa"},
+                    "pozisyon_kurallari": {"YOT": kural}})
+    d_poz = calistir(kok={"ayarlar.json": _poz()})
+    d_poz_zarar = calistir(kok={"ayarlar.json": _poz(zarar_siniri_pct=50)})
+    d_poz_bekl = calistir(kok={"ayarlar.json": _poz(giris_tarihi=_gelecek)})
+    d_poz_gecersiz = calistir(kok={"ayarlar.json": _aj({"pozisyon_kurallari": {"YOT": {"giris_tarihi": _giris}}})})
+    # 7 Eki tahvil altyapısı: banka teyitli giriş fiyatı ile zarar sınırına yakın senaryo (getiri ≈ −%3,5)
+    sys.path.insert(0, MOCK); import requests as _mreq; sys.path.pop(0)
+    _p_son = _mreq.get("https://x/v1/funds/YOT/history", {"period": "1y"}).json()["points"][-1]["price"]
+    d_poz_yakin = calistir(kok={"ayarlar.json": _poz(giris_fiyati=round(_p_son / 0.965, 6))})
+    d_kaba = calistir(kok={"ayarlar.json": _poz()}, ek_env={"EVDS_API_KEY": ""})   # verim geçmişi yok → kaba tahmin
     d_yedek = calistir(ek_env={"RADAR_MOCK_FON_HATA": "YLB,IJV", "RADAR_MOCK_HISTORY_HATA": "1"})  # 6 Eki: TEFAS boş + rakip geçmişleri hata
     rt = d.get("rakip_tarama") or {}; pp = rt.get("para_piyasasi") or {}
     vs = rt.get("varlik_siniflari") or {}
+    _taf = ((d_poz.get("tahvil_analiz") or {}).get("fonlar") or {})
+    ta_yot, ta_kb0 = _taf.get("YOT") or {}, _taf.get("KB0") or {}
+    def _sen(t, dy):
+        return next((x["fark_puan"] for x in ((t.get("senaryo") or {}).get("senaryolar") or []) if x["verim_degisimi_puan"] == dy), 0)
     ta = rt.get("tahvil_adaylari") or {}
     _p = os.path.join(EVREN["klasor"], "output", "fon_evreni.csv")
     _rows = list(_csv.DictReader(open(_p, encoding="utf-8"))) if os.path.exists(_p) else []
@@ -121,6 +142,33 @@ def main():
         (d["genislik"].get("hisse_sayisi", 0) >= 100,               "Tüm piyasa genişliği tek taramayla gelir"),
         (T.get("reel_getiri_yontem", "").startswith("NET"),         "Reel getiri NET (stopaj sonrası) hesaplanır"),
         ("TIE" not in T.get("reel_getiri", {}),                     "Reel getiri sadece cephane fonlarına uygulanır"),
+        # --- 7 Eki tahvil altyapısı: faiz duyarlılığı, senaryo, verim geçmişi ---
+        (1.3 <= ((ta_yot.get("etkin_sure") or {}).get("sure_yil") or 0) <= 1.7 and ((ta_yot.get("etkin_sure") or {}).get("r2") or 0) >= 0.5,
+                                                                    "Tahvil: YOT'un faiz duyarlılığı (~1,5 yıl) veriden doğru hesaplanır"),
+        (3.6 <= ((ta_kb0.get("etkin_sure") or {}).get("sure_yil") or 0) <= 4.4, "Tahvil: uzun vadeli fonun (~4 yıl) daha yüksek duyarlılığı ayırt edilir"),
+        (_sen(ta_yot, -2) > 0 and _sen(ta_yot, 2) < 0,             "Senaryo: faiz düşerse tahvil fonu para piyasasını geçer, yükselirse geride kalır"),
+        (isinstance((ta_yot.get("senaryo") or {}).get("basabas_verim_degisimi_puan"), (int, float)), "Senaryo: başabaş faiz değişimi hesaplanır"),
+        ((d_poz.get("verim_evds") or {}).get("kod") == "TP.DIBS.G2Y", "Verim: EVDS'de 2 yıllık gösterge serisi adla bulunur (5 yıllık seçilmez)"),
+        ((d_poz.get("verim_arsivi") or {}).get("gun_sayisi", 0) >= 1, "Verim: günlük tahvil faizi arşivi tutulur"),
+        ("KABA TAHMİN" in str((((d_kaba.get("tahvil_analiz") or {}).get("fonlar") or {}).get("YOT") or {}).get("sure_kaynagi")),
+                                                                    "Tahvil: geçmiş veri yoksa duyarlılık 'KABA TAHMİN' diye açıkça etiketlenir"),
+        (str(((d_poz_yakin.get("pozisyon_takip") or {}).get("YOT") or {}).get("giris_fiyati_kaynak", "")).startswith("banka"),
+                                                                    "Pozisyon: bankadan teyitli giriş fiyatı esas alınır"),
+        ("pozisyon_YOT_yakin" in d_poz_yakin["saglik"]["tum_moduller"] and "pozisyon_YOT_yakin" not in d_poz_yakin["saglik"].get("issue_tetikleyen", []),
+                                                                    "Pozisyon: zarar sınırına yaklaşınca bildirimsiz erken not düşer"),
+        # --- 7 Eki tahvil rolü ve pozisyon kuralları ---
+        ((d_poz.get("pozisyon_takip") or {}).get("YOT", {}).get("durum") == "İZLEMEDE"
+         and isinstance((d_poz.get("pozisyon_takip") or {}).get("YOT", {}).get("fark_puan"), (int, float)),
+                                                                    "Pozisyon: YOT alıştan bu yana getiri ve kıyas fona fark izlenir"),
+        ("YOT" in d_poz["tetikler"].get("reel_getiri_tahvil", {}) and "YOT" not in d_poz["tetikler"].get("reel_getiri", {}),
+                                                                    "Tahvil rolü: para piyasası alarmlarına karışmaz, bilgi olarak izlenir"),
+        ((d_poz_zarar.get("pozisyon_takip") or {}).get("YOT", {}).get("durum") == "ZARAR SINIRI"
+         and "pozisyon_YOT" in d_poz_zarar["saglik"].get("issue_tetikleyen", []),
+                                                                    "Pozisyon: zarar sınırı aşılınca bildirim gelir"),
+        ((d_poz_bekl.get("pozisyon_takip") or {}).get("YOT", {}).get("durum") == "BEKLİYOR",
+                                                                    "Pozisyon: alım henüz fiyatlanmadıysa 'bekliyor' der, hata vermez"),
+        ("pozisyon_kurallari" in str(d_poz_gecersiz["saglik"]["hatali_moduller"].get("ayarlar")),
+                                                                    "Pozisyon: eksik yazılmış kural reddedilir ve uyarılır"),
         # --- 6 Eki Fonoloji hız sınırı ---
         ((d_429.get("fonoloji_cagri") or {}).get("limit_429", 0) >= 3 and bool(d_429.get("fonlar", {}).get("YLB")),
                                                                     "Hız sınırı: 429'da bekleyip yeniden dener, veri eksiksiz gelir"),
