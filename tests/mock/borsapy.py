@@ -56,6 +56,9 @@ def economic_calendar(**k): return pd.DataFrame({"Date": ["2026-09-24"], "Event"
 class EconomicCalendar:
     def events(self, **k): return pd.DataFrame({"Date": ["2026-09-24"], "Event": ["test"]})
 def evds_series(code, start=None, frequency=None, period=None):
+    if code == "TP.DIBS.G2Y":                                    # 7 Eki: gösterge faiz geçmişi
+        idx = pd.bdate_range(start=start or "2025-01-01", end=datetime.now().date())
+        return pd.DataFrame({code: [_sahte_verim(d.date()) for d in idx]}, index=idx)
     freq = {"weekly": "W-FRI", "daily": "B"}.get(frequency, "MS")
     idx = pd.date_range(end=datetime.now(), periods=60, freq=freq); n = len(idx)
     val = {"TP.APIFON4": 37.0, "TP.MKNETHAR.M7": 277.67, "TP.TUKFIY2025.GENEL": None,
@@ -69,7 +72,17 @@ class EVDS:
         return pd.DataFrame({"SERIE_CODE": ["TP.PKAUO.S05.C.U", "TP.PKAUO.PF12"],
                              "SERIE_NAME": ["12 ay sonrası ABD Doları kuru beklentisi", "12 ay sonrası politika faizi beklentisi"]})
     def datagroups(self): return pd.DataFrame()
-def evds_search(t): return pd.DataFrame()
+
+def _sahte_verim(gun):
+    """7 Eki: sahte 2 yıllık gösterge faizi (puan) — EVDS ve Fonoloji sahteleri AYNI yolu kullanır."""
+    import math
+    return 40.0 + 2.0 * math.sin(gun.toordinal() / 20.0)
+
+def evds_search(t):
+    if "gösterge" in str(t).lower():
+        return pd.DataFrame({"SERIE_CODE": ["TP.DIBS.G5Y", "TP.DIBS.G2Y"],
+                             "SERIE_NAME": ["5 Yıl Vadeli Gösterge Tahvil Faizi", "2 Yıl Vadeli Gösterge Tahvil Faizi"]})
+    return pd.DataFrame()
 
 def screen_funds(fund_type="YAT", limit=50, **k):
     """Sahte fon evreni — bilinçli senaryolar içerir."""
