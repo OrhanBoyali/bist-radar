@@ -78,10 +78,23 @@ def _sahte_verim(gun):
     import math
     return 40.0 + 2.0 * math.sin(gun.toordinal() / 20.0)
 
-def evds_search(t):
-    if "gösterge" in str(t).lower():
-        return pd.DataFrame({"SERIE_CODE": ["TP.DIBS.G5Y", "TP.DIBS.G2Y"],
-                             "SERIE_NAME": ["5 Yıl Vadeli Gösterge Tahvil Faizi", "2 Yıl Vadeli Gösterge Tahvil Faizi"]})
+def evds_search(term, lang="tr", scope="all"):
+    """9 Eki: GERÇEK borsapy 0.11.0 ile aynı imza ve sütunlar (hit_type, CODE, NAME_TR, NAME_EN, DATAGROUP_*, FREQUENCY_STR).
+    Eski sahte SERIE_CODE/SERIE_NAME döndürüyordu → canlıda kod hiçbir sonucu okuyamadı ama test geçti (hata #22).
+    RADAR_MOCK_EVDS_VERIM_YOK: EVDS'de gösterge seri yok senaryosu (sadece ilgisiz DİBS serileri döner)."""
+    import os
+    t = str(term).lower()
+    def _df(satirlar):
+        return pd.DataFrame([{"hit_type": "series", "CODE": c, "NAME_TR": a, "NAME_EN": e, "DATAGROUP_CODE": "bie_test",
+                              "DATAGROUP_TR": g, "FREQUENCY_STR": f} for c, a, e, g, f in satirlar])
+    if os.environ.get("RADAR_MOCK_EVDS_VERIM_YOK"):
+        if "dibs" in t:
+            return _df([("TP.MKNETHAR.M2", "1.1.2. DİBS (Kesin Alım)", "1.1.2. GDDS (Outright Purchase)",
+                         "Merkez Bankası Net Hareketleri", "HAFTALIK(CUMA)")])
+        return pd.DataFrame()
+    if "gösterge" in t:
+        return _df([("TP.DIBS.G5Y", "5 Yıl Vadeli Gösterge Tahvil Faizi", "5 Year Benchmark Bond Yield", "Gösterge Faizler", "İŞ GÜNÜ"),
+                    ("TP.DIBS.G2Y", "2 Yıl Vadeli Gösterge Tahvil Faizi", "2 Year Benchmark Bond Yield", "Gösterge Faizler", "İŞ GÜNÜ")])
     return pd.DataFrame()
 
 def screen_funds(fund_type="YAT", limit=50, **k):
