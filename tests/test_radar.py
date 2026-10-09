@@ -46,6 +46,41 @@ def birim_tarih_hizalama():
     out = subprocess.run([sys.executable, "-c", kod], env=env, capture_output=True, text=True, timeout=60).stdout.split()
     return [float(x) for x in out] if len(out) == 2 else [None, None]
 
+def sozlesme_kontrol():
+    """9 Eki (hata #22): Sahte kütüphane gerçeğinden farklıysa testler geçer ama canlı kırılır.
+    (1) Betiğin bp.<fonksiyon>(...) çağrılarında kullandığı anahtar kelimeler GERÇEK borsapy imzasında var mı?
+    (2) Sahte evds_search'ün döndürdüğü sütunlar gerçek borsapy kaynağında üretiliyor mu?"""
+    import ast, inspect, importlib.util
+    try:
+        import borsapy as gercek
+    except Exception:
+        return {"ok": True, "gercek": False, "sorun": []}
+    sorun = []
+    agac = ast.parse(open(os.path.join(KOK, "bist_radar.py"), encoding="utf-8").read())
+    for n in ast.walk(agac):
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and isinstance(n.func.value, ast.Name) and n.func.value.id == "bp":
+            ad = n.func.attr
+            f = getattr(gercek, ad, None)
+            if f is None:
+                sorun.append(f"bp.{ad} gerçek borsapy'de yok"); continue
+            try:
+                imza = inspect.signature(f)
+            except (TypeError, ValueError):
+                continue
+            serbest = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in imza.parameters.values())
+            for kw in n.keywords:
+                if kw.arg and not serbest and kw.arg not in imza.parameters:
+                    sorun.append(f"bp.{ad}(…{kw.arg}=…) gerçek imzada yok")
+    spec = importlib.util.spec_from_file_location("sahte_bp", os.path.join(MOCK, "borsapy.py"))
+    sahte = importlib.util.module_from_spec(spec); spec.loader.exec_module(sahte)
+    kaynak = inspect.getsource(gercek.EVDS.search)
+    for sutun in sahte.evds_search("gösterge").columns:
+        if f'"{sutun}"' not in kaynak:
+            sorun.append(f"sahte evds_search sütunu '{sutun}' gerçekte üretilmiyor")
+    if sorun:
+        print("SÖZLEŞME SORUNLARI:", *sorun, sep="\n  ")
+    return {"ok": not sorun, "gercek": True, "sorun": sorun}
+
 def main():
     hz = birim_tarih_hizalama()
     # 5 Eki: enflasyon günü kuralı birim testi (4 durum)
@@ -113,6 +148,13 @@ def main():
     _p_son = _mreq.get("https://x/v1/funds/YOT/history", {"period": "1y"}).json()["points"][-1]["price"]
     d_poz_yakin = calistir(kok={"ayarlar.json": _poz(giris_fiyati=round(_p_son / 0.965, 6))})
     d_kaba = calistir(kok={"ayarlar.json": _poz()}, ek_env={"EVDS_API_KEY": ""})   # verim geçmişi yok → kaba tahmin
+    # 9 Eki: EVDS'de gösterge seri yok (canlıdaki gerçek durum) → bilgi notu, Issue yok, aday listesi dosyada, haftada bir yeniden arama
+    d_vyok = calistir(kok={"ayarlar.json": _poz()}, ek_env={"RADAR_MOCK_EVDS_VERIM_YOK": "1"})
+    _vyok_dosya = json.load(open(os.path.join(EVREN["son"], "output", "verim_evds.json"), encoding="utf-8"))
+    d_vyok2 = calistir_klasor(EVREN["son"], {"RADAR_MOCK_EVDS_VERIM_YOK": "1", "RADAR_AGIR": "true"})
+    d_vkod = calistir(kok={"ayarlar.json": _aj({**json.loads(_poz()), "verim_evds_kodu": "TP.DIBS.G2Y"})},
+                      ek_env={"RADAR_MOCK_EVDS_VERIM_YOK": "1"})
+    sozlesme = sozlesme_kontrol()
     d_yedek = calistir(ek_env={"RADAR_MOCK_FON_HATA": "YLB,IJV", "RADAR_MOCK_HISTORY_HATA": "1"})  # 6 Eki: TEFAS boş + rakip geçmişleri hata
     rt = d.get("rakip_tarama") or {}; pp = rt.get("para_piyasasi") or {}
     vs = rt.get("varlik_siniflari") or {}
@@ -150,6 +192,21 @@ def main():
         (isinstance((ta_yot.get("senaryo") or {}).get("basabas_verim_degisimi_puan"), (int, float)), "Senaryo: başabaş faiz değişimi hesaplanır"),
         ((d_poz.get("verim_evds") or {}).get("kod") == "TP.DIBS.G2Y", "Verim: EVDS'de 2 yıllık gösterge serisi adla bulunur (5 yıllık seçilmez)"),
         ((d_poz.get("verim_arsivi") or {}).get("gun_sayisi", 0) >= 1, "Verim: günlük tahvil faizi arşivi tutulur"),
+        # --- 9 Eki: EVDS gösterge serisi bulunamazsa (canlı durum) ---
+        (str(d_vyok["saglik"]["tum_moduller"].get("verim_evds", "")).startswith("NOT:")
+         and "verim_evds" not in d_vyok["saglik"].get("issue_tetikleyen", []),
+                                                                    "Verim: EVDS'de seri yoksa bilgi notu düşer, Issue (bildirim) açılmaz"),
+        (any("TP.MKNETHAR.M2" in str(x) for x in _vyok_dosya.get("adaylar", [])) and _vyok_dosya.get("kod") is None,
+                                                                    "Verim: incelenen EVDS adayları dosyaya yazılır (gerçek sütun adlarıyla okunur)"),
+        ("yeniden aranacak" in str((d_vyok2.get("verim_evds") or {}).get("durum", "")),
+                                                                    "Verim: bulunamayan seri her çalışmada değil haftada bir yeniden aranır"),
+        ("KABA TAHMİN" in str((((d_vyok.get("tahvil_analiz") or {}).get("fonlar") or {}).get("YOT") or {}).get("sure_kaynagi"))
+         and d_vyok["saglik"]["tum_moduller"].get("tahvil_analiz") == "OK",
+                                                                    "Verim: seri yokken tahvil analizi çalışmaya devam eder (kaba tahmin etiketiyle)"),
+        ((d_vkod.get("verim_evds") or {}).get("kod") == "TP.DIBS.G2Y" and "elle" in str((d_vkod.get("verim_evds") or {}).get("ad")),
+                                                                    "Verim: ayarlar.json'daki 'verim_evds_kodu' ile seri elle verilebilir"),
+        (sozlesme["ok"],                                            "Sözleşme: sahte borsapy, gerçek borsapy ile aynı arama sütunlarını ve betiğin kullandığı parametreleri taşır"
+                                                                    + ("" if sozlesme["gercek"] else " (gerçek borsapy yüklü değil — ATLANDI)")),
         ("KABA TAHMİN" in str((((d_kaba.get("tahvil_analiz") or {}).get("fonlar") or {}).get("YOT") or {}).get("sure_kaynagi")),
                                                                     "Tahvil: geçmiş veri yoksa duyarlılık 'KABA TAHMİN' diye açıkça etiketlenir"),
         (str(((d_poz_yakin.get("pozisyon_takip") or {}).get("YOT") or {}).get("giris_fiyati_kaynak", "")).startswith("banka"),
