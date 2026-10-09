@@ -5,7 +5,7 @@ Piyasa verisi üretir → output/radar.json. KİŞİSEL VERİ (pay adedi, tutar)
 Her modül ayrı denenir; kırılan modül "saglik" bölümüne yazılır,
 iş akışı bunu GitHub Issue olarak açar (e-posta bildirimi).
 """
-import json, math, os, socket
+import json, math, os, re, socket
 from datetime import datetime, timezone, timedelta
 socket.setdefaulttimeout(60)   # 3 Eki: cevap vermeyen kaynak betiği sonsuza kadar bekletmesin
 import numpy as np
@@ -53,9 +53,13 @@ def _gizle(metin):
     return metin
 
 def safe(name, fn):
+    once = HEALTH.get(name)
     try:
         r = fn()
-        HEALTH[name] = "OK"
+        simdi = HEALTH.get(name)
+        # 9 Eki: fonksiyon kendi adına NOT/UYARI yazdıysa "OK" ile ezilmez
+        if not (simdi != once and str(simdi).startswith(("NOT:", "UYARI:"))):
+            HEALTH[name] = "OK"
         return r
     except Exception as e:
         HEALTH[name] = _gizle(f"HATA: {type(e).__name__}: {str(e)[:200]}")
@@ -88,6 +92,7 @@ def ayarlari_yukle():
         "tufe_aylik_manuel": lambda v: num(v, -5, 20),
         "min_fon_buyuklugu": lambda v: num(v, 0, 1e12),
         "tasfiye_kurucular": lambda v: isinstance(v, list) and all(isinstance(x, str) and x for x in v),
+        "verim_evds_kodu": lambda v: isinstance(v, str) and v.startswith("TP.") and len(v) < 60,   # 9 Eki: EVDS seri kodu elle
         # 7 Eki: pozisyon kuralları — {"YOT": {"giris_tarihi": "YYYY-AA-GG", "kiyas": "YLB", "kar_sarti_puan": 2,
         #        "kar_tarihi": "...", "zaman_duragi_tarihi": "...", "zarar_siniri_pct": -4}}
         "pozisyon_kurallari": lambda v: isinstance(v, dict) and all(
@@ -1520,58 +1525,104 @@ def verim_arsivi_guncelle(tahvil_listesi):
         json.dump(arsiv, open(VERIM_ARSIV, "w", encoding="utf-8"), ensure_ascii=False)
     return {"gun_sayisi": len(arsiv), "ilk": min(arsiv) if arsiv else None, "son": max(arsiv) if arsiv else None}
 
+def _evds_sutun(df, *adlar):
+    """9 Eki: borsapy evds_search sütunları gerçekte CODE / NAME_TR / NAME_EN / FREQUENCY_STR / hit_type.
+    Eski varsayım (SERIE_CODE / SERIE_NAME) sessizce hiçbir sonucu okumuyordu → ikisini de kabul et."""
+    up = {str(c).upper(): c for c in df.columns}
+    return next((up[a] for a in adlar if a in up), None)
+
+_IKI_YIL = re.compile(r"(^|[^0-9])(2\s*(YIL|YEAR|Y\b|-YEAR)|24\s*AY|IKI\s*YIL)")
+VERIM_ARAMA_TERIMLERI = ("gösterge", "benchmark", "devlet iç borçlanma", "dibs", "tahvil", "bono")
+VERIM_TEKRAR_GUN = 7          # bulunamazsa haftada bir yeniden aranır (her saat EVDS kataloğu taranmaz)
+
 def verim_gecmisi_evds():
-    """EVDS'de 2 yıllık gösterge tahvil faizi serisini adla arar; bulursa 1,5 yıllık geçmişi kaydeder.
-    Seçilen seri ve adaylar çıktıya yazılır (Claude doğrular)."""
-    adaylar, secilen = [], None
-    for terim in ("gösterge faiz", "gösterge tahvil", "DİBS gösterge", "benchmark"):
+    """EVDS'de 2 yıllık gösterge tahvil faizi serisini arar; bulursa 1,5 yıllık geçmişi kaydeder.
+    9 Eki: (1) sütun adları gerçek API'ye göre düzeltildi; (2) ayarlar.json 'verim_evds_kodu' ile seri elle verilebilir;
+    (3) bulunamazsa hata DEĞİL bilgi notu: adaylar dosyaya yazılır (Claude inceler), haftada bir yeniden denenir.
+    Etkin süre bu durumda kendi günlük verim arşivimizle birikir (20 hafta)."""
+    onceki = {}
+    if os.path.exists(VERIM_EVDS):
         try:
-            df = bp.evds_search(terim)
+            onceki = json.load(open(VERIM_EVDS, encoding="utf-8"))
         except Exception as e:
-            adaylar.append(f"[{terim}: {type(e).__name__}]")
-            continue
-        if df is None or not len(df):
-            continue
-        nc = next((c for c in df.columns if str(c).upper() in ("SERIE_NAME", "NAME", "SERIE_NAME_TR")), None)
-        cc = next((c for c in df.columns if str(c).upper() in ("SERIE_CODE", "CODE")), None)
-        if not nc or not cc:
-            continue
-        for _, r in df.head(30).iterrows():
-            ad = str(r[nc]); adaylar.append(f"{r[cc]} | {ad}")
-            n = _tr_up(ad)
-            if secilen is None and ("2 YIL" in n or "2YIL" in n or "IKI YIL" in n) and ("GOSTERGE" in n or "BENCHMARK" in n):
-                secilen = (r[cc], ad)
-        if secilen:
-            break
+            HEALTH["verim_evds_okuma"] = f"UYARI: EVDS verim dosyası okunamadı ({type(e).__name__})"
+    kod_ayar = AYAR.get("verim_evds_kodu")
+    if not kod_ayar and not onceki.get("seri") and onceki.get("son_deneme"):
+        try:
+            gecen = (NOW.date() - datetime.strptime(onceki["son_deneme"][:10], "%Y-%m-%d").date()).days
+        except Exception:
+            gecen = VERIM_TEKRAR_GUN
+        if gecen < VERIM_TEKRAR_GUN:
+            return {k: v for k, v in onceki.items() if k != "seri"} | {"durum": f"bulunamadı; {VERIM_TEKRAR_GUN - gecen} gün sonra yeniden aranacak"}
+    adaylar, gruplar, secilen = [], [], None
+    if kod_ayar:
+        secilen = (str(kod_ayar), "ayarlar.json (elle verildi)")
+    else:
+        for terim in VERIM_ARAMA_TERIMLERI:
+            try:
+                df = bp.evds_search(terim, scope="series")
+            except Exception as e:
+                adaylar.append(f"[{terim}: {type(e).__name__}: {str(e)[:60]}]")
+                continue
+            if df is None or not len(df):
+                continue
+            cc = _evds_sutun(df, "CODE", "SERIE_CODE")
+            nc = _evds_sutun(df, "NAME_TR", "SERIE_NAME", "NAME")
+            ec = _evds_sutun(df, "NAME_EN", "SERIE_NAME_ENG")
+            fc = _evds_sutun(df, "FREQUENCY_STR")
+            gc = _evds_sutun(df, "DATAGROUP_TR")
+            if not cc or not nc:
+                adaylar.append(f"[{terim}: beklenmeyen sütunlar {list(df.columns)[:6]}]")
+                continue
+            for _, r in df.head(40).iterrows():
+                ad, ad_en = str(r[nc]), (str(r[ec]) if ec else "")
+                frek = str(r[fc]) if fc else ""
+                adaylar.append(f"{r[cc]} | {ad} | {frek}")
+                if gc and str(r[gc]) not in gruplar:
+                    gruplar.append(str(r[gc]))
+                n = _tr_up(ad + " " + ad_en)
+                if secilen is None and _IKI_YIL.search(n) and ("GOSTERGE" in n or "BENCHMARK" in n):
+                    secilen = (r[cc], ad)
+            if secilen:
+                break
     if not secilen:
-        raise ValueError("2 yıllık gösterge faiz serisi bulunamadı; adaylar: " + "; ".join(adaylar[:8]))
+        out = {"kod": None, "seri": {}, "adaylar": adaylar[:80], "veri_gruplari": gruplar[:30],
+               "son_deneme": NOW.strftime("%Y-%m-%d %H:%M"), "dogrulandi": False}
+        os.makedirs("output", exist_ok=True)
+        json.dump(out, open(VERIM_EVDS, "w", encoding="utf-8"), ensure_ascii=False)
+        HEALTH["verim_evds"] = (f"NOT: EVDS'de 2 yıllık gösterge faiz serisi bulunamadı ({len(adaylar)} aday incelendi; "
+                                f"liste output/verim_evds.json). Faize duyarlılık kendi günlük verim arşivimizle birikiyor; "
+                                f"o zamana kadar kaba tahmin kullanılır")
+        return {k: v for k, v in out.items() if k != "seri"}
     start = (NOW - timedelta(days=550)).strftime("%Y-%m-%d")
     df = bp.evds_series(secilen[0], start=start, frequency="daily")
     df = df.to_frame() if isinstance(df, pd.Series) else df
     df = to_dt_index(df.copy())
     num = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
     ser = df[num[0]].dropna()
+    if len(ser) < 60 or not (5 <= float(ser.iloc[-1]) <= 80):     # makullük: TL 2Y verim puan cinsinden
+        raise ValueError(f"seçilen seri ({secilen[0]}) makul değil: {len(ser)} gözlem, son değer {float(ser.iloc[-1]) if len(ser) else None}")
     out = {"kod": secilen[0], "ad": secilen[1], "seri": {d.strftime("%Y-%m-%d"): J(v) for d, v in ser.items()},
-           "adaylar": adaylar[:15], "zaman": NOW.strftime("%Y-%m-%d %H:%M"), "dogrulandi": False}
+           "adaylar": adaylar[:15], "son_deneme": NOW.strftime("%Y-%m-%d %H:%M"),
+           "zaman": NOW.strftime("%Y-%m-%d %H:%M"), "dogrulandi": False}
     json.dump(out, open(VERIM_EVDS, "w", encoding="utf-8"), ensure_ascii=False)
     return out
 
 def _verim_serisi():
     """2 yıllık verim serisi: EVDS geçmişi + kendi arşivimiz (çakışan günlerde arşiv)."""
-    s = {}
+    s, evds_var, arsiv_var = {}, False, False
     if os.path.exists(VERIM_EVDS):
         try:
-            s.update(json.load(open(VERIM_EVDS, encoding="utf-8")).get("seri") or {})
+            e = json.load(open(VERIM_EVDS, encoding="utf-8")).get("seri") or {}
+            s.update(e); evds_var = bool(e)
         except Exception as e:
             HEALTH["verim_evds_okuma"] = f"UYARI: EVDS verim dosyası okunamadı ({type(e).__name__})"
-    kaynak = "EVDS" if s else "arşiv"
     if os.path.exists(VERIM_ARSIV):
         for d, v in json.load(open(VERIM_ARSIV, encoding="utf-8")).items():
             if v.get("2Y") is not None:
-                s[d] = v["2Y"]
-    if s and os.path.exists(VERIM_EVDS) and os.path.exists(VERIM_ARSIV):
-        kaynak = "EVDS + arşiv"
-    ser = pd.Series({pd.Timestamp(d): float(v) for d, v in s.items() if v is not None}).sort_index()
+                s[d] = v["2Y"]; arsiv_var = True
+    kaynak = "EVDS + arşiv" if evds_var and arsiv_var else ("EVDS" if evds_var else "arşiv")
+    ser = pd.Series({pd.Timestamp(d): float(v) for d, v in s.items() if v is not None}, dtype=float).sort_index()
     return ser, kaynak
 
 # --- faize duyarlılık (etkin süre) ve senaryo matematiği ---
@@ -1821,7 +1872,7 @@ def main():
         R["enflasyon"] = safe("enflasyon", lambda: J(bp.Inflation().latest()))
         R["tahvil"] = safe("tahvil", lambda: J(bp.bonds()))
         R["verim_arsivi"] = safe("verim_arsivi", lambda: verim_arsivi_guncelle(R.get("tahvil")))
-        if gunluk_saat or not os.path.exists(VERIM_EVDS):
+        if gunluk_saat:                       # 9 Eki: dosya yoksa her saat aramıyordu → sadece ağır çalışmada
             if os.environ.get("EVDS_API_KEY"):
                 R["verim_evds"] = safe("verim_evds", lambda: {k: v for k, v in verim_gecmisi_evds().items() if k != "seri"})
         R["doviz_altin"] = {k: safe(f"fx_{k}", lambda k=k: J(bp.FX(k).current)) for k in FX_LIST}
