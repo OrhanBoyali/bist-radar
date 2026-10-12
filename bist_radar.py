@@ -74,6 +74,86 @@ def butce_doldu():
 def en_yavaslar(n=10):
     return dict(sorted(SURELER.items(), key=lambda x: -x[1])[:n])
 
+# ---- KAYNAK KARNESİ (12 Eki, kullanıcı ilkesi) --------------------------------
+# "Bir kaynaktan düzenli veri alamıyorsak ya yeni kaynak bulalım ya erişimi düzeltelim."
+# Her çalışmada her veri kaynağının kaç çağrısının başarılı olduğu kaydedilir; son 20 denemede başarı düşükse,
+# art arda başarısızsa ya da 24 saattir hiç başarı yoksa UYARI (bildirim). Başarısız saatler de raporlanır.
+KARNE_FILE = "output/kaynak_karnesi.json"
+KAYNAK_ESLEME = (("fonoloji", ("fonoloji_",)), ("tefas", ("fon_", "rakip_tarama")), ("evds", ("evds_", "verim_evds")),
+                 ("yahoo", ("yahoo_",)), ("borsapy_endeks", ("borsapy_endeks_", "genislik_")),
+                 ("yabanci_payi", ("yabanci_orani",)), ("doviz_altin", ("fx_", "gram_altin_gecmis")),
+                 ("tahvil_faizi", ("tahvil",)), ("takvim", ("takvim_",)))
+KAYNAK_HARIC = ("fon_akis", "fon_tutarlilik")          # hesaplama modülleri, veri kaynağı değil
+KARNE_SAYAC = {}
+KARNE_ESIK_PCT, KARNE_ARDISIK, KARNE_MIN_DENEME = 70, 4, 8
+
+def _kaynak_bul(name):
+    if name in KAYNAK_HARIC:
+        return None
+    for kaynak, onekler in KAYNAK_ESLEME:
+        for o in onekler:
+            if (o.endswith("_") and name.startswith(o)) or name == o:
+                return kaynak
+    return None
+
+def _karne_say(name):
+    kaynak = _kaynak_bul(name)
+    durum = str(HEALTH.get(name, ""))
+    if not kaynak or "bu turda atlandı" in durum:       # devre kesiciyle hiç denenmeyen çağrı sayılmaz
+        return
+    d = KARNE_SAYAC.setdefault(kaynak, [0, 0])
+    d[0] += 1
+    d[1] += 0 if durum.startswith("HATA") else 1
+
+def kaynak_karnesi():
+    """Bu çalışmanın sayımlarını dosyaya ekler, her kaynak için son 20 denemenin özetini döndürür."""
+    gecmis = []
+    if os.path.exists(KARNE_FILE):
+        try:
+            gecmis = json.load(open(KARNE_FILE, encoding="utf-8")).get("calismalar") or []
+        except Exception as e:
+            HEALTH["karne_okuma"] = f"UYARI: kaynak karnesi okunamadı, yeniden başlatıldı ({type(e).__name__})"
+            gecmis = []
+    if KARNE_SAYAC:
+        gecmis.append({"t": NOW.strftime("%Y-%m-%d %H:%M"), "k": {k: list(v) for k, v in KARNE_SAYAC.items()}})
+    gecmis = gecmis[-200:]
+    os.makedirs("output", exist_ok=True)
+    json.dump({"calismalar": gecmis}, open(KARNE_FILE, "w", encoding="utf-8"), ensure_ascii=False)
+    ozet = {}
+    for kaynak, _ in KAYNAK_ESLEME:
+        den = [(c["t"], c["k"][kaynak]) for c in gecmis if kaynak in c.get("k", {}) and c["k"][kaynak][0] > 0]
+        if not den:
+            continue
+        son = den[-20:]
+        basari = [(t, b / d >= 0.5) for t, (d, b) in son]
+        pct_ = round(100 * sum(ok for _, ok in basari) / len(basari))
+        ardisik = 0
+        for _, ok in reversed(basari):
+            if ok:
+                break
+            ardisik += 1
+        saatler = {}
+        for t, ok in basari:
+            if not ok:
+                saatler[t[11:13]] = saatler.get(t[11:13], 0) + 1
+        son_basari = next((t for t, ok in reversed(basari) if ok), None)
+        gun_basarisiz = False
+        if son_basari is None or (NOW.replace(tzinfo=None) - datetime.strptime(son_basari, "%Y-%m-%d %H:%M")).total_seconds() > 86400:
+            gun_basarisiz = len(den) >= 3
+        if len(son) < KARNE_MIN_DENEME and not gun_basarisiz and ardisik < KARNE_ARDISIK:
+            durum = "VERİ BİRİKİYOR"
+        elif pct_ < KARNE_ESIK_PCT or ardisik >= KARNE_ARDISIK or gun_basarisiz:
+            durum = "ZAYIF"
+            HEALTH[f"kaynak_{kaynak}"] = (f"UYARI: {kaynak} kaynağı düzenli veri vermiyor — son {len(son)} denemenin %{100 - pct_}'i "
+                                         f"başarısız, art arda {ardisik}, son başarı {son_basari or 'yok'}; başarısız saatler "
+                                         f"{dict(sorted(saatler.items()))} → erişimi düzelt ya da yeni kaynak bul")
+        else:
+            durum = "İYİ"
+        ozet[kaynak] = {"durum": durum, "son_deneme_sayisi": len(son), "basari_pct": pct_, "ardisik_basarisiz": ardisik,
+                        "son_basari": son_basari, "basarisiz_saatler": dict(sorted(saatler.items())),
+                        "bu_calisma": KARNE_SAYAC.get(kaynak)}
+    return ozet
+
 def safe(name, fn):
     if name in AGIR_MODULLER and butce_doldu():
         HEALTH[name] = f"NOT: süre bütçesi ({SURE_BUTCE_DK:.0f} dk) doldu — bu turda atlandı, önceki veri korunur"
@@ -86,6 +166,7 @@ def safe(name, fn):
     finally:
         dt = time.time() - t0
         SURELER[name] = round(SURELER.get(name, 0) + dt, 1); CALISAN[0] = None
+        _karne_say(name)
         if dt >= 3 or HEALTH.get(name) != "OK":
             print(f"[{gecen_dk():5.1f} dk] {name}: {str(HEALTH.get(name))[:90]} ({dt:.1f} sn)", flush=True)
 
@@ -296,7 +377,7 @@ def index_block(sym, with_ma=True):
 # ---- TEFAS DEVRE KESİCİ (12 Eki) --------------------------------------------
 # 12 Eki: TEFAS yanıt vermedi; yedek fon çağrıları fon başına ~90 sn bekleyip 9 dk harcadı (birincil Fonoloji çalışıyordu).
 # İkinci ağ hatasından sonra bu turdaki diğer TEFAS çağrıları hiç denenmez.
-TEFAS_DURUM = {"hata": 0, "kapali": False, "neden": None}
+TEFAS_DURUM = {"hata": 0, "kapali": False, "neden": None, "tek_deneme": False}
 _AG_HATASI = ("timed out", "timeout", "disconnected", "connecterror", "connection", "remote end closed", "reset by peer")
 
 def tefas_cagri(fn):
@@ -949,7 +1030,7 @@ def _fon_evreni_cek():
     import time
     bekle = 0 if (os.environ.get("RADAR_TEST_NOW") or os.environ.get("RADAR_TEST_HIZLI")) else 15
     son_hata = None
-    for deneme in range(1 if TEFAS_DURUM["kapali"] else 3):    # 12 Eki: TEFAS zaten yanıt vermiyorsa tek deneme
+    for deneme in range(1 if (TEFAS_DURUM["kapali"] or TEFAS_DURUM["tek_deneme"]) else 3):  # 12 Eki: TEFAS kapalıysa / saatlik tekrarda tek deneme
         try:
             return bp.screen_funds(fund_type="YAT", limit=5000)
         except Exception as e:
@@ -1842,6 +1923,13 @@ def agir_slot():
     return None
 
 
+def _yedek_siniflandir(fono):
+    """6/12 Eki: birincil (Fonoloji) çalıştıysa yedek TEFAS fon/bilgi/ücret hataları bildirim üretmez."""
+    for c in FUNDS:
+        for _on in ("fon", "fon_bilgi", "fon_ucret"):
+            if (fono or {}).get(c) and str(HEALTH.get(f"{_on}_{c}", "")).startswith("HATA"):
+                HEALTH[f"yedek_borsapy_{_on}_{c}"] = HEALTH.pop(f"{_on}_{c}") + " (birincil Fonoloji çalıştı)"
+
 def main():
     print(f"BIST RADAR başladı {NOW:%Y-%m-%d %H:%M} | bütçe {SURE_BUTCE_DK:.0f} dk, sert sınır {SURE_SERT_DK:.0f} dk", flush=True)
     if os.environ.get("RADAR_TEST_YAVAS"):                 # test: sert süre sınırı senaryosu (asılı kalan istek)
@@ -1906,10 +1994,9 @@ def main():
         R["fon_capraz"] = fon_capraz(fono, bors)
         if POZISYON_KURALLARI and bp:
             R["pozisyon_takip"] = pozisyon_takip()
-        for c in FUNDS:   # 6 Eki: birincil (Fonoloji) çalıştıysa yedek TEFAS hatası bildirim üretmez
-            for _on in ("fon", "fon_bilgi", "fon_ucret"):    # 12 Eki: bilgi/ücret yedek hataları da
-                if fono.get(c) and str(HEALTH.get(f"{_on}_{c}", "")).startswith("HATA"):
-                    HEALTH[f"yedek_borsapy_{_on}_{c}"] = HEALTH.pop(f"{_on}_{c}") + " (birincil Fonoloji çalıştı)"
+        _yedek_siniflandir(fono)
+        if bp and any(fono.values()) and not any(bors.values()):
+            R["tefas_yedek_tekrar"] = 1        # 12 Eki: TEFAS yedek verisi alınamadı → alınana kadar her saat denenir
         if not any(R["fonlar"].values()):
             agir_basarisiz.append("fonlar")
         R["fonlar_zamani"] = NOW.strftime("%Y-%m-%d %H:%M")
@@ -1924,11 +2011,23 @@ def main():
         R["pozisyon_takip"] = prev.get("pozisyon_takip") or (pozisyon_takip() if (POZISYON_KURALLARI and bp) else {})
         for k in ("fonlar_borsapy", "fonlar_fonoloji", "fonlar_kaynak", "fon_capraz"):
             R[k] = prev.get(k)
+        _yt = int(prev.get("tefas_yedek_tekrar") or 0)
+        if _yt and bp:      # 12 Eki: sabah alınamayan TEFAS yedek verisi alınana kadar her saat tekrar denenir
+            fono_p = prev.get("fonlar_fonoloji") or {}
+            bors = {c: safe(f"fon_{c}", lambda c=c: fund_block(c)) for c in FUNDS}
+            _yedek_siniflandir(fono_p)
+            if any(bors.values()):
+                R["fonlar_borsapy"], R["fon_capraz"] = bors, fon_capraz(fono_p, bors)
+                R["tefas_yedek_zamani"] = NOW.strftime("%Y-%m-%d %H:%M")
+            else:
+                R["tefas_yedek_tekrar"] = _yt + 1
     _prt = prev.get("rakip_tarama") or {}
     _prt_surum = ((_prt.get("para_piyasasi") or {}).get("surum")) if isinstance(_prt, dict) else None
-    # 12 Eki: tarama başarısızsa ağır pencere artık tüketilir; sonraki 3 saatlik çalışmada SADECE tarama yeniden denenir
+    # 12 Eki (kullanıcı kararı): tarama başarısızsa ağır pencere tüketilir; alınana kadar HER saatlik çalışmada
+    # SADECE tarama yeniden denenir (tek deneme, devre kesicili) → veri alınabilen en erken saatte gelir.
     _rk_once = 0 if gunluk_saat else int(prev.get("rakip_tekrar") or 0)
-    if bp and (gunluk_saat or not _prt or _prt_surum != RAKIP_SURUM or 0 < _rk_once < 4):
+    if bp and (gunluk_saat or not _prt or _prt_surum != RAKIP_SURUM or _rk_once > 0):
+        TEFAS_DURUM["tek_deneme"] = not gunluk_saat and _rk_once > 0
         yeni = safe("rakip_tarama", rakip_tarama)
         if yeni is None and _prt:
             # 6 Eki: tarama başarısızsa bir önceki sonuç (tahvil adayları dahil) korunur
@@ -1938,11 +2037,9 @@ def main():
         else:
             R["rakip_tarama"] = yeni
         if yeni is None and not str(HEALTH.get("rakip_tarama", "")).startswith("NOT: süre"):
-            R["rakip_tekrar"] = _rk_once + 1            # 4'e ulaşınca bir sonraki ağır pencereye kadar denenmez
+            R["rakip_tekrar"] = _rk_once + 1            # başarıya ya da bir sonraki ağır pencereye kadar her saat denenir
     else:
         R["rakip_tarama"] = prev.get("rakip_tarama")
-        if prev.get("rakip_tekrar"):
-            R["rakip_tekrar"] = prev["rakip_tekrar"]    # sayaç taşınır (sıfırlanması = ağır pencere ya da başarı)
     if bp:
         R["tcmb"] = tcmb_block()
         if os.environ.get("EVDS_API_KEY"):
@@ -2224,6 +2321,7 @@ def main():
 
     # ---- SAĞLIK ----
     R["fonoloji_cagri"] = dict(FONOLOJI_SAYAC)
+    R["kaynak_karnesi"] = safe("kaynak_karnesi_hesap", kaynak_karnesi)
     # 6 Eki: ağır çalışmanın kritik parçası başarısızsa pencere "kullanılmış" sayılmaz → sonraki çalışma yeniden dener
     if agir_basarisiz and not zorla:
         R["agir_slot"] = prev.get("agir_slot")
