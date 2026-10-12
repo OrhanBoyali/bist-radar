@@ -25,10 +25,17 @@ def scan(index, cond, limit=800):
     n = 30 if index == "XU030" else 580
     ch = np.r_[np.full(int(n*0.6), 1.0), np.full(n - int(n*0.6), -0.5)]   # %60 yükselen
     return pd.DataFrame({"symbol": range(n), "change_percent": ch})
+def _tefas_say(ne):
+    """12 Eki: test için TEFAS'a giden her çağrıyı dosyaya yazar (döngü/tekrar sayısı ölçülür)."""
+    import os
+    f = os.environ.get("RADAR_MOCK_SAYAC")
+    if f:
+        open(f, "a").write(ne + "\n")
 class Fund:
     def __init__(self, c): self.c = c
     def history(self, period="3mo"):
         import os
+        _tefas_say("history")
         if os.environ.get("RADAR_MOCK_TEFAS_TIMEOUT"):                 # 12 Eki: TEFAS hiç yanıt vermiyor
             raise ConnectionError("ConnectTimeout: timed out")
         if self.c in (os.environ.get("RADAR_MOCK_FON_HATA") or "").split(","):   # 6 Eki: TEFAS fon geçmişi boş
@@ -43,6 +50,7 @@ class Fund:
     @property
     def info(self):
         import os
+        _tefas_say("info")
         if os.environ.get("RADAR_MOCK_TEFAS_TIMEOUT"):
             raise ConnectionError("Server disconnected without sending a response.")
         size = 1e8 if self.c == "KCK" else 1e9           # KCK: küçük fon senaryosu
@@ -105,6 +113,7 @@ def evds_search(term, lang="tr", scope="all"):
 def screen_funds(fund_type="YAT", limit=50, **k):
     """Sahte fon evreni — bilinçli senaryolar içerir."""
     import os
+    _tefas_say("screen")
     if os.environ.get("RADAR_MOCK_SCREEN_HATA") or os.environ.get("RADAR_MOCK_TEFAS_TIMEOUT"):           # 6 Eki: TEFAS taraması takıldı senaryosu
         raise TimeoutError("API Error: Failed to screen funds: timed out")
     rows = [
