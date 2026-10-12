@@ -29,6 +29,8 @@ class Fund:
     def __init__(self, c): self.c = c
     def history(self, period="3mo"):
         import os
+        if os.environ.get("RADAR_MOCK_TEFAS_TIMEOUT"):                 # 12 Eki: TEFAS hiç yanıt vermiyor
+            raise ConnectionError("ConnectTimeout: timed out")
         if self.c in (os.environ.get("RADAR_MOCK_FON_HATA") or "").split(","):   # 6 Eki: TEFAS fon geçmişi boş
             raise ValueError("fon geçmişi boş")
         idx = pd.bdate_range(end=_son_is_gunu(), periods=70)
@@ -40,6 +42,9 @@ class Fund:
         return pd.DataFrame({"Price": p, "FundSize": np.full(len(idx), np.nan), "Investors": np.full(len(idx), np.nan)}, index=idx)
     @property
     def info(self):
+        import os
+        if os.environ.get("RADAR_MOCK_TEFAS_TIMEOUT"):
+            raise ConnectionError("Server disconnected without sending a response.")
         size = 1e8 if self.c == "KCK" else 1e9           # KCK: küçük fon senaryosu
         return {"fund_size": size, "investor_count": 1000, "sell_valor": 0, "risk_value": 1}
     @property
@@ -100,7 +105,7 @@ def evds_search(term, lang="tr", scope="all"):
 def screen_funds(fund_type="YAT", limit=50, **k):
     """Sahte fon evreni — bilinçli senaryolar içerir."""
     import os
-    if os.environ.get("RADAR_MOCK_SCREEN_HATA"):           # 6 Eki: TEFAS taraması takıldı senaryosu
+    if os.environ.get("RADAR_MOCK_SCREEN_HATA") or os.environ.get("RADAR_MOCK_TEFAS_TIMEOUT"):           # 6 Eki: TEFAS taraması takıldı senaryosu
         raise TimeoutError("API Error: Failed to screen funds: timed out")
     rows = [
         # para piyasası: bizimkiler
