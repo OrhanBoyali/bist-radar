@@ -5,7 +5,7 @@ Piyasa verisi üretir → output/radar.json. KİŞİSEL VERİ (pay adedi, tutar)
 Her modül ayrı denenir; kırılan modül "saglik" bölümüne yazılır,
 iş akışı bunu GitHub Issue olarak açar (e-posta bildirimi).
 """
-import json, math, os, re, socket
+import json, math, os, re, signal, socket, time
 from datetime import datetime, timezone, timedelta
 socket.setdefaulttimeout(60)   # 3 Eki: cevap vermeyen kaynak betiği sonsuza kadar bekletmesin
 import numpy as np
@@ -52,8 +52,44 @@ def _gizle(metin):
             metin = metin.replace(v, "***")
     return metin
 
+# ---- SÜRE YÖNETİMİ (12 Eki) ------------------------------------------------
+# 12 Eki sabah ağır çalışması 40 dk iş sınırına takılıp iptal edildi; nerede yavaşladığı günlükte görünmüyordu.
+# (1) Her modülün süresi ölçülür ve günlüğe yazılır; (2) yumuşak bütçe dolunca ağır modüller başlatılmaz
+# (önceki veri korunur); (3) sert sınırda çalışma kesilir, önceki veri + süre raporu yazılır, iş yine de biter.
+BASLANGIC = time.time()
+SURE_BUTCE_DK = float(os.environ.get("RADAR_BUTCE_DK") or 25)
+SURE_SERT_DK = float(os.environ.get("RADAR_SERT_DK") or 34)
+SURELER, CALISAN = {}, [None]
+AGIR_MODULLER = ("rakip_tarama", "tahvil_analiz", "verim_evds", "gram_altin_gecmis")
+
+class SureAsimi(BaseException):
+    """Sert süre sınırı. BaseException: safe() bunu yutmaz, ana akışa kadar çıkar."""
+
+def gecen_dk():
+    return (time.time() - BASLANGIC) / 60
+
+def butce_doldu():
+    return gecen_dk() >= SURE_BUTCE_DK
+
+def en_yavaslar(n=10):
+    return dict(sorted(SURELER.items(), key=lambda x: -x[1])[:n])
+
 def safe(name, fn):
+    if name in AGIR_MODULLER and butce_doldu():
+        HEALTH[name] = f"NOT: süre bütçesi ({SURE_BUTCE_DK:.0f} dk) doldu — bu turda atlandı, önceki veri korunur"
+        print(f"[{gecen_dk():5.1f} dk] {name}: ATLANDI (süre bütçesi)", flush=True)
+        return None
     once = HEALTH.get(name)
+    t0 = time.time(); CALISAN[0] = name
+    try:
+        return _safe_ic(name, fn, once)
+    finally:
+        dt = time.time() - t0
+        SURELER[name] = round(SURELER.get(name, 0) + dt, 1); CALISAN[0] = None
+        if dt >= 3 or HEALTH.get(name) != "OK":
+            print(f"[{gecen_dk():5.1f} dk] {name}: {str(HEALTH.get(name))[:90]} ({dt:.1f} sn)", flush=True)
+
+def _safe_ic(name, fn, once):
     try:
         r = fn()
         simdi = HEALTH.get(name)
@@ -721,8 +757,12 @@ def kunye_onbellek_guncelle(evren_df, oncelikli):
     limit = KUNYE_GUNLUK_LIMIT if os.environ.get("FONOLOJI_KEY") else KUNYE_GUNLUK_LIMIT_BORSAPY
     yenilenen, hata = 0, 0
     limit_durdu = False
+    sure_durdu = False
     for code in sirali:
         if yenilenen >= limit:
+            break
+        if butce_doldu():                           # 12 Eki: süre bütçesi → kalanlar sonraki ağır çalışmada
+            sure_durdu = True
             break
         if not eski(code):
             continue
@@ -749,6 +789,8 @@ def kunye_onbellek_guncelle(evren_df, oncelikli):
     os.makedirs("output", exist_ok=True)
     json.dump(cache, open(KUNYE_FILE, "w", encoding="utf-8"), ensure_ascii=False)
     kapsam = sum(1 for c in evren_df["fund_code"] if c in cache)
+    if sure_durdu:
+        HEALTH["kunye_sure"] = f"NOT: süre bütçesi — künye yenileme {yenilenen}. fonda durdu, kalanlar sonraki ağır çalışmada"
     if limit_durdu:
         HEALTH["kunye_hiz_siniri"] = f"NOT: Fonoloji hız sınırı — künye yenileme {yenilenen}. fonda durdu, kalanlar sonraki ağır çalışmada"
     return cache, {"yenilenen": yenilenen, "hata": hata, "kapsam": kapsam, "evren": int(len(evren_df)),
@@ -1110,6 +1152,9 @@ def sektor_akis(rt, kunye):
         adaylar = sorted(adaylar, key=lambda r: -(kunye[r["kod"]]["buyukluk"]))[:SEKTOR_REFERANS_N]
         degerler, hatalar = [], []
         for r in adaylar:
+            if butce_doldu():
+                hatalar.append("süre bütçesi doldu — kalanlar atlandı")
+                break
             try:
                 degerler.append(_akis30(r["kod"]))
             except Exception as e:
@@ -1685,6 +1730,9 @@ def tahvil_analiz(R):
     kodlar = list(dict.fromkeys(list(TAHVIL) + [a["kod"] for a in adaylar if a.get("vade_ipucu") != "kısa"][:TAHVIL_ANALIZ_N]))
     out = {"verim_kaynagi": kaynak, "verim_gozlem_gun": int(len(verim)), "iki_yil_verim": v2, "fiili_faiz": aofm, "fonlar": {}}
     for kod in kodlar:
+        if butce_doldu() and kod not in TAHVIL:     # 12 Eki: portföydeki tahvil fonu her zaman, adaylar bütçe varsa
+            out.setdefault("atlanan", []).append(kod)
+            continue
         try:
             fiyat = _fiyat_serisi(kod)
             es = etkin_sure(fiyat, verim) if len(verim) else {"sure_yil": None, "not": "verim geçmişi yok"}
@@ -1766,6 +1814,9 @@ def agir_slot():
 
 
 def main():
+    print(f"BIST RADAR başladı {NOW:%Y-%m-%d %H:%M} | bütçe {SURE_BUTCE_DK:.0f} dk, sert sınır {SURE_SERT_DK:.0f} dk", flush=True)
+    if os.environ.get("RADAR_TEST_YAVAS"):                 # test: sert süre sınırı senaryosu (asılı kalan istek)
+        time.sleep(float(os.environ["RADAR_TEST_YAVAS"]))
     if os.environ.get("RADAR_TEST_COKME"):
         raise RuntimeError("test amaçlı kontrollü çökme")
     R = {"ayarlar": {"kaynak": AYAR_KAYNAK, "fonlar": _FONLAR, "seviyeler": LEVELS, "politika_faizi": POLITIKA_FAIZI},
@@ -1848,8 +1899,8 @@ def main():
             HEALTH["rakip_tarama"] = HEALTH.get("rakip_tarama", "HATA") + " → önceki tarama korundu"
         else:
             R["rakip_tarama"] = yeni
-        if yeni is None and gunluk_saat:
-            agir_basarisiz.append("rakip_tarama")
+        if yeni is None and gunluk_saat and not str(HEALTH.get("rakip_tarama", "")).startswith("NOT: süre"):
+            agir_basarisiz.append("rakip_tarama")       # 12 Eki: süre bütçesiyle atlandıysa tekrar deneme yok (akşam çalışması yapar)
     else:
         R["rakip_tarama"] = prev.get("rakip_tarama")
     if bp:
@@ -2126,7 +2177,7 @@ def main():
     R["tetikler"] = T
     # 7 Eki: tahvil analizi (etkin süre + senaryo) — ağır çalışmada; diğerlerinde önceki sonuç
     if bp and (gunluk_saat or not prev.get("tahvil_analiz")):
-        R["tahvil_analiz"] = safe("tahvil_analiz", lambda: tahvil_analiz(R))
+        R["tahvil_analiz"] = safe("tahvil_analiz", lambda: tahvil_analiz(R)) or prev.get("tahvil_analiz")
     else:
         R["tahvil_analiz"] = prev.get("tahvil_analiz")
     R["arsiv"] = safe("gunluk_arsiv", lambda: gunluk_arsiv(R))
@@ -2143,20 +2194,34 @@ def main():
     # 6 Eki: kendi kendini onaran durumlar ("NOT:") ve yedek kaynak hataları bildirim (Issue) üretmez
     bp_bad = {k: v for k, v in bad.items()
               if not k.startswith(("yahoo_yedek", "yedek_")) and not str(v).startswith("NOT:")}
+    R["calisma_suresi_dk"] = round(gecen_dk(), 1)
     R["saglik"] = {"ozet": "TAMAM" if not bp_bad else "SORUN VAR", "issue_tetikleyen": sorted(bp_bad),
+                   "sure_dk": round(gecen_dk(), 1), "en_yavas_moduller_sn": en_yavaslar(),
                    "hatali_moduller": bad, "tum_moduller": HEALTH,
                    "aciklama": "SORUN VAR ise bir veya daha fazla modül kırıldı; yedekler devrede olabilir. GitHub Issue açılır."}
 
+    if hasattr(signal, "SIGALRM"):
+        signal.alarm(0)                       # 12 Eki: yazım sırasında kesilip yarım JSON kalmasın
     os.makedirs("output", exist_ok=True)
     json.dump(R, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-    print("SAGLIK:", R["saglik"]["ozet"])
+    print(f"SAGLIK: {R['saglik']['ozet']} | süre {R['calisma_suresi_dk']} dk | en yavaş: {en_yavaslar(5)}", flush=True)
     for k, v in bad.items():
         print(" -", k, v)
 
+def _alarm(signum, frame):
+    raise SureAsimi(f"{SURE_SERT_DK:g} dk sert süre sınırı aşıldı (o an çalışan modül: {CALISAN[0] or 'ana akış'})")
+
 if __name__ == "__main__":
+    if hasattr(signal, "SIGALRM"):
+        signal.signal(signal.SIGALRM, _alarm)
+        signal.alarm(max(1, int(SURE_SERT_DK * 60 - (time.time() - BASLANGIC))))
     try:
         main()
-    except Exception as e:
+        if hasattr(signal, "SIGALRM"):
+            signal.alarm(0)
+    except (Exception, SureAsimi) as e:
+        if hasattr(signal, "SIGALRM"):
+            signal.alarm(0)
         # 3 Eki: çökmede bir önceki çalışmanın verisi (önbellekler) korunur, sadece sağlık güncellenir
         os.makedirs("output", exist_ok=True)
         onceki = {}
@@ -2170,6 +2235,16 @@ if __name__ == "__main__":
                        "saglik": {"ozet": "SORUN VAR",
                                   "hatali_moduller": {"ana_akis": _gizle(f"{type(e).__name__}: {e}")},
                                   "tum_moduller": {k: _gizle(v) for k, v in HEALTH.items()},
+                                  "issue_tetikleyen": ["ana_akis"],
+                                  "sure_dk": round(gecen_dk(), 1), "en_yavas_moduller_sn": en_yavaslar(),
                                   "aciklama": "Ana akış çöktü; aşağıdaki veriler BİR ÖNCEKİ başarılı çalışmaya aittir."}})
+        if isinstance(e, SureAsimi):
+            # 12 Eki: süre aşımında ağır pencere "kullanılmış" sayılır → her saat 35 dk'lık deneme zinciri olmaz
+            try:
+                if agir_slot():
+                    onceki["agir_slot"] = agir_slot()
+            except Exception as e2:
+                onceki["agir_slot_hata"] = f"{type(e2).__name__}: {e2}"
         json.dump(onceki, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-        print("ANA AKIŞ ÇÖKTÜ:", _gizle(e))
+        print("ANA AKIŞ ÇÖKTÜ:", _gizle(e), flush=True)
+        print("EN YAVAŞ MODÜLLER (sn):", en_yavaslar(), flush=True)
