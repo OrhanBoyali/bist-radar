@@ -72,13 +72,14 @@ def main():
     kontrol(d.get("agir_calisma") is False,                         "18:17 — hafif çalışma (kesin kapanış fiyatları 18:40 sonrası)")
     d, p = calistir(tmp, f"{g} 18:45", {"RADAR_MOCK_SCREEN_HATA": "1"})
     kontrol(bool(d.get("rakip_tarama")) and bool(d.get("rakip_tarama_onbellek")), "18:45 — TEFAS takıldı: önceki tarama (tahvil adayları dahil) korundu")
-    kontrol("rakip_tarama" in (d.get("agir_tekrar_denenecek") or []) and not str(d.get("agir_slot")).endswith("aksam"),
-            "18:45 — başarısız ağır çalışma pencereyi tüketmedi (sonraki çalışma yeniden dener)")
+    kontrol(d.get("rakip_tekrar") == 1 and str(d.get("agir_slot")).endswith("aksam"),
+            "18:45 — tarama başarısız: ağır pencere tüketildi, sadece tarama yeniden denenecek (12 Eki)")
 
     d, p = calistir(tmp, f"{g} 18:52")
-    kontrol(d.get("agir_calisma") is True,                          "18:52 — akşamın tek ağır çalışması")
+    kontrol(d.get("agir_calisma") is False and not d.get("rakip_tekrar") and not d.get("rakip_tarama_onbellek"),
+            "18:52 — sadece tarama yeniden denendi ve başarılı (ağır işin tamamı tekrarlanmadı)")
     kontrol("ana_akis" not in d["saglik"]["hatali_moduller"],       "18:52 — KAPANIŞ çalışması çökmeden tamamlandı")
-    kontrol("önbellek" not in str(d.get("fonlar_zamani")),          "18:52 — fonlar taze (kapanış fiyatı)")
+    kontrol(f"{g} 18:4" in str(d.get("fonlar_zamani")),              "18:52 — fonlar kapanış fiyatıyla (18:40 sonrası ağır çalışmadan)")
     kontrol(d["bist100"].get("son_bar_kismi_mi") is False,          "18:52 — son bar kesinleşmiş kapanış sayılıyor")
     kontrol("k3_donus_kapisi" in d["tetikler"],                      "18:52 — üçüncü kademe kapıları hesaplandı")
     kontrol("tez_cizgisi_haftalik_kirildi" in d["tetikler"],         "18:52 — haftalık tez çizgisi kontrolü var")
