@@ -155,6 +155,12 @@ def main():
     d_vkod = calistir(kok={"ayarlar.json": _aj({**json.loads(_poz()), "verim_evds_kodu": "TP.DIBS.G2Y"})},
                       ek_env={"RADAR_MOCK_EVDS_VERIM_YOK": "1"})
     sozlesme = sozlesme_kontrol()
+    # 12 Eki: sabah ağır çalışması 40 dk'da iptal edildi → süre bütçesi + sert sınır
+    calistir()                                             # önceki veriyi üreten temel çalışma
+    _sure_klasor = EVREN["son"]
+    d_butce = calistir_klasor(_sure_klasor, {"RADAR_BUTCE_DK": "0", "RADAR_AGIR": "true"})
+    d_sert = calistir_klasor(_sure_klasor, {"RADAR_SERT_DK": "0.05", "RADAR_TEST_YAVAS": "8",
+                                            "RADAR_TEST_NOW": "2026-10-12 08:17"})
     d_yedek = calistir(ek_env={"RADAR_MOCK_FON_HATA": "YLB,IJV", "RADAR_MOCK_HISTORY_HATA": "1"})  # 6 Eki: TEFAS boş + rakip geçmişleri hata
     rt = d.get("rakip_tarama") or {}; pp = rt.get("para_piyasasi") or {}
     vs = rt.get("varlik_siniflari") or {}
@@ -205,6 +211,20 @@ def main():
                                                                     "Verim: seri yokken tahvil analizi çalışmaya devam eder (kaba tahmin etiketiyle)"),
         ((d_vkod.get("verim_evds") or {}).get("kod") == "TP.DIBS.G2Y" and "elle" in str((d_vkod.get("verim_evds") or {}).get("ad")),
                                                                     "Verim: ayarlar.json'daki 'verim_evds_kodu' ile seri elle verilebilir"),
+        # --- 12 Eki: süre yönetimi ---
+        (str(d_butce["saglik"]["tum_moduller"].get("rakip_tarama", "")).startswith("NOT: süre")
+         and "rakip_tarama" not in d_butce["saglik"].get("issue_tetikleyen", [])
+         and bool((d_butce.get("rakip_tarama") or {}).get("para_piyasasi")),
+                                                                    "Süre: bütçe dolunca ağır tarama atlanır, önceki tarama korunur, bildirim açılmaz"),
+        ("rakip_tarama" not in (d_butce.get("agir_tekrar_denenecek") or []),
+                                                                    "Süre: bütçeyle atlanan tarama her saat yeniden denenmez (akşam çalışması yapar)"),
+        (bool(d_butce.get("tahvil_analiz")),                       "Süre: tahvil analizi atlanırsa önceki sonuç korunur"),
+        (isinstance(d_butce["saglik"].get("en_yavas_moduller_sn"), dict) and d_butce["saglik"]["en_yavas_moduller_sn"]
+         and isinstance(d_butce.get("calisma_suresi_dk"), (int, float)),
+                                                                    "Süre: her modülün süresi ölçülür, en yavaşlar raporlanır"),
+        ("sert süre" in str(d_sert.get("cokme", "")) and bool((d_sert.get("bist100") or {}).get("son_fiyat")),
+                                                                    "Süre: sert sınırda çalışma kesilir, önceki veri korunur (iş iptal edilmez)"),
+        (d_sert.get("agir_slot") == "2026-10-12-sabah",            "Süre: sert sınıra takılan ağır pencere kullanılmış sayılır (saatlik deneme zinciri olmaz)"),
         (sozlesme["ok"],                                            "Sözleşme: sahte borsapy, gerçek borsapy ile aynı arama sütunlarını ve betiğin kullandığı parametreleri taşır"
                                                                     + ("" if sozlesme["gercek"] else " (gerçek borsapy yüklü değil — ATLANDI)")),
         ("KABA TAHMİN" in str((((d_kaba.get("tahvil_analiz") or {}).get("fonlar") or {}).get("YOT") or {}).get("sure_kaynagi")),
