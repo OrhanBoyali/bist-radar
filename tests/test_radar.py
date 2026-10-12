@@ -166,8 +166,13 @@ def main():
     _tf = EVREN["son"]
     d_tf1 = calistir_klasor(_tf, {"RADAR_MOCK_TEFAS_TIMEOUT": "1", "RADAR_TEST_NOW": "2026-10-12 08:17",
                                   "RADAR_YABANCI_SURE_SN": "0"})
-    d_tf2 = calistir_klasor(_tf, {"RADAR_MOCK_TEFAS_TIMEOUT": "1", "RADAR_TEST_NOW": "2026-10-12 10:17"})
-    d_tf3 = calistir_klasor(_tf, {"RADAR_TEST_NOW": "2026-10-12 11:17"})
+    _sayac2 = os.path.join(_tf, "tefas_sayac_saatlik.txt")
+    d_tf2 = calistir_klasor(_tf, {"RADAR_MOCK_TEFAS_TIMEOUT": "1", "RADAR_TEST_NOW": "2026-10-12 10:17",
+                                  "RADAR_MOCK_SAYAC": _sayac2})
+    _cagri2 = open(_sayac2).read().split() if os.path.exists(_sayac2) else []
+    for _sa in ("11:17", "12:17", "13:17"):                      # kullanıcı kararı: alınana kadar her saat denenir (sınır yok)
+        d_tf5 = calistir_klasor(_tf, {"RADAR_MOCK_TEFAS_TIMEOUT": "1", "RADAR_TEST_NOW": f"2026-10-12 {_sa}"})
+    d_tf3 = calistir_klasor(_tf, {"RADAR_TEST_NOW": "2026-10-12 14:17"})
     d_yedek = calistir(ek_env={"RADAR_MOCK_FON_HATA": "YLB,IJV", "RADAR_MOCK_HISTORY_HATA": "1"})  # 6 Eki: TEFAS boş + rakip geçmişleri hata
     rt = d.get("rakip_tarama") or {}; pp = rt.get("para_piyasasi") or {}
     vs = rt.get("varlik_siniflari") or {}
@@ -242,10 +247,25 @@ def main():
         (d_tf1.get("agir_slot") == "2026-10-12-sabah" and d_tf1.get("rakip_tekrar") == 1
          and bool((d_tf1.get("rakip_tarama") or {}).get("para_piyasasi")),
                                                                     "TEFAS: tarama başarısızsa ağır pencere tüketilir, önceki tarama korunur, tekrar sayacı başlar"),
+        (_cagri2.count("screen") == 1 and len(_cagri2) <= 3,       "Döngü yok: saatlik tekrarda TEFAS'a en fazla 3 istek gider (tarama 1 kez, fon verisi devre kesiciyle 2)"),
         (d_tf2.get("rakip_tekrar") == 2 and not d_tf2.get("agir_calisma"),
                                                                     "TEFAS: sonraki saatte sadece tarama yeniden denenir (bütün ağır iş değil)"),
-        (not d_tf3.get("rakip_tekrar") and str((d_tf3.get("rakip_tarama") or {}).get("zaman", "")).startswith("2026-10-12 11"),
+        (d_tf5.get("rakip_tekrar") == 5 and d_tf5.get("tefas_yedek_tekrar") == 5,
+                                                                    "TEFAS: tarama ve yedek fon verisi alınana kadar her saat yeniden denenir (üst sınır yok)"),
+        (d_tf1.get("tefas_yedek_tekrar") == 1 and not d_tf3.get("tefas_yedek_tekrar")
+         and str(d_tf3.get("tefas_yedek_zamani", "")).startswith("2026-10-12 14") and bool(d_tf3.get("fonlar_borsapy", {}).get("YLB")),
+                                                                    "TEFAS: düzelince yedek fon verisi (çapraz kontrol) aynı gün alınır, sayaç sıfırlanır"),
+        (not d_tf3.get("rakip_tekrar") and str((d_tf3.get("rakip_tarama") or {}).get("zaman", "")).startswith("2026-10-12 14"),
                                                                     "TEFAS: düzelince tarama yenilenir ve sayaç sıfırlanır"),
+        (str(d_tf5["saglik"]["tum_moduller"].get("kaynak_tefas", "")).startswith("UYARI")
+         and "kaynak_tefas" in d_tf5["saglik"].get("issue_tetikleyen", []),
+                                                                    "Karne: bir kaynak art arda başarısız olursa bildirim açılır (erişimi düzelt / yeni kaynak)"),
+        ("kaynak_tefas" not in d_tf3["saglik"]["tum_moduller"]
+         and {"08", "10", "11", "12", "13"} <= set(((d_tf3.get("kaynak_karnesi") or {}).get("tefas") or {}).get("basarisiz_saatler", {})),
+                                                                    "Karne: kaynak düzelince uyarı kalkar; başarısız olduğu saatler kayıtlı"),
+        (((d_tf3.get("kaynak_karnesi") or {}).get("fonoloji") or {}).get("ardisik_basarisiz") == 0
+         and os.path.exists(os.path.join(_tf, "output", "kaynak_karnesi.json")),
+                                                                    "Karne: her kaynağın geçmişi dosyada birikir (Fonoloji kesintisiz)"),
         (str(d_tf1["saglik"]["tum_moduller"].get("yabanci_orani", "")).startswith("NOT:")
          and "önceki veri" in str((d_tf1.get("yabanci") or {}).get("not_onbellek", "")),
                                                                     "Yabancı oranı: kaynak yavaşsa süre sınırında durur, önceki veri kullanılır, bildirim yok"),
