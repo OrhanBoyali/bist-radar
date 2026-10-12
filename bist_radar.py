@@ -293,13 +293,34 @@ def index_block(sym, with_ma=True):
     return {"hata": "veri alınamadı"}
 
 # ---- MODÜLLER -------------------------------------------------------------
+# ---- TEFAS DEVRE KESİCİ (12 Eki) --------------------------------------------
+# 12 Eki: TEFAS yanıt vermedi; yedek fon çağrıları fon başına ~90 sn bekleyip 9 dk harcadı (birincil Fonoloji çalışıyordu).
+# İkinci ağ hatasından sonra bu turdaki diğer TEFAS çağrıları hiç denenmez.
+TEFAS_DURUM = {"hata": 0, "kapali": False, "neden": None}
+_AG_HATASI = ("timed out", "timeout", "disconnected", "connecterror", "connection", "remote end closed", "reset by peer")
+
+def tefas_cagri(fn):
+    if TEFAS_DURUM["kapali"]:
+        raise ValueError(f"TEFAS yanıt vermiyor — bu turda atlandı ({TEFAS_DURUM['neden']})")
+    try:
+        return fn()
+    except Exception as e:
+        m = f"{type(e).__name__}: {e}".lower()
+        if any(k in m for k in _AG_HATASI):
+            TEFAS_DURUM["hata"] += 1
+            if TEFAS_DURUM["hata"] >= 2 and not TEFAS_DURUM["kapali"]:
+                TEFAS_DURUM["kapali"], TEFAS_DURUM["neden"] = True, f"{type(e).__name__}: {str(e)[:60]}"
+                HEALTH["tefas_devre"] = (f"NOT: TEFAS yanıt vermiyor ({TEFAS_DURUM['neden']}) — bu turdaki yedek TEFAS "
+                                         f"çağrıları atlandı; birincil kaynak Fonoloji")
+        raise
+
 def fund_block(code):
     f = bp.Fund(code)
     h = None
     son_hata = None
     for per in ("3mo", "1mo"):
         try:
-            h = f.history(period=per)
+            h = tefas_cagri(lambda: f.history(period=per))
             if h is not None and len(h):
                 break
         except Exception as e:
@@ -340,11 +361,11 @@ def fund_block(code):
     out = {"fiyat": J(s.iloc[-1]), "fiyat_tarihi": last_d.strftime("%Y-%m-%d"), "akis": out_trend,
            "gunluk_getiri_pct": pct(s.iloc[-1], s.iloc[-2]) if len(s) > 1 else None,
            "getiri_30g_pct": pct(s.iloc[-1], past.iloc[-1]) if len(past) else None}
-    info = safe(f"fon_bilgi_{code}", lambda: f.info) or {}
+    info = safe(f"fon_bilgi_{code}", lambda: tefas_cagri(lambda: f.info)) or {}
     keep = ("name", "fund_name", "title", "category", "category_rank", "daily_return",
             "buy_valor", "sell_valor", "risk", "risk_value", "fund_size", "investor_count")
     out["bilgi"] = J({k: v for k, v in info.items() if k in keep}) if isinstance(info, dict) else None
-    out["yonetim_ucreti"] = J(safe(f"fon_ucret_{code}", lambda: f.management_fee))
+    out["yonetim_ucreti"] = J(safe(f"fon_ucret_{code}", lambda: tefas_cagri(lambda: f.management_fee)))
     return out
 
 def breadth_and_foreign():
@@ -395,7 +416,12 @@ def foreign_ratios():
     import time
     comps = bp.Index("XU030").component_symbols
     out, fails = {}, 0
+    t0, sinir = time.time(), float(os.environ.get("RADAR_YABANCI_SURE_SN") or 150)   # 12 Eki: 8 dk sürmüştü
     for sym in comps:
+        if time.time() - t0 > sinir:
+            HEALTH["yabanci_orani_kismi"] = (f"NOT: yabancı oranı kaynağı yavaş — {sinir:.0f} sn sınırında "
+                                             f"{len(out)}/{len(comps)} hisse alındı")
+            break
         try:
             fr = bp.Ticker(sym).fast_info["foreign_ratio"]
             if fr is not None:
@@ -403,8 +429,8 @@ def foreign_ratios():
         except Exception:
             fails += 1
         time.sleep(0.4)   # kaynağı yormamak için
-    if fails > len(comps) / 2:
-        raise ValueError(f"{fails}/{len(comps)} yabancı oranı alınamadı")
+    if len(out) < len(comps) / 2:
+        raise ValueError(f"yabancı oranı: {len(out)}/{len(comps)} hisse alınabildi ({fails} hata)")
     return out
 
 
@@ -442,9 +468,12 @@ def foreign_trend(today):
     res = {"bugun_ort_yabanci_orani": J(avg(key)), "gecmis_gun_sayisi": len(dates)}
     old = [d for d in dates if d <= (NOW - timedelta(days=7)).strftime("%Y-%m-%d")]
     if old:
-        a, b = avg(key), avg(old[-1])
-        res["1hafta_degisim_puan"] = J(a - b) if a is not None and b is not None else None
         common = set(hist[key]) & set(hist[old[-1]])
+        # 12 Eki: kısmi veri gelebilir → değişim sadece iki günde de olan hisselerle (ortak küme) hesaplanır
+        a = sum(hist[key][x] for x in common) / len(common) if common else None
+        b = sum(hist[old[-1]][x] for x in common) / len(common) if common else None
+        res["1hafta_degisim_puan"] = J(a - b) if a is not None and b is not None else None
+        res["karsilastirilan_hisse"] = len(common)
         ch = {s: round(hist[key][s] - hist[old[-1]][s], 2) for s in common}
         res["en_cok_artan"] = dict(sorted(ch.items(), key=lambda x: -x[1])[:5])
         res["en_cok_azalan"] = dict(sorted(ch.items(), key=lambda x: x[1])[:5])
@@ -710,7 +739,7 @@ def _kunye_cek(code):
         except Exception:
             FONOLOJI_SAYAC["hata"] += 1             # 6 Eki: yutulmaz, sayılır (çıktıda fonoloji_cagri.hata)
     import time
-    bi = bp.Fund(code).info or {}
+    bi = tefas_cagri(lambda: bp.Fund(code).info) or {}
     time.sleep(0.3)
     return {"buyukluk": J(bi.get("fund_size")), "yatirimci": J(bi.get("investor_count")),
             "satis_valoru": J(bi.get("sell_valor")), "risk": J(bi.get("risk_value")), "kunye_kaynak": "borsapy"}
@@ -903,7 +932,7 @@ def _kunye(code, cache):
     if not out:
         try:
             import time
-            bi = bp.Fund(code).info or {}
+            bi = tefas_cagri(lambda: bp.Fund(code).info) or {}
             out = {"buyukluk": J(bi.get("fund_size")), "yatirimci": J(bi.get("investor_count")),
                    "satis_valoru": J(bi.get("sell_valor")), "risk": J(bi.get("risk_value")), "kunye_kaynak": "borsapy"}
             time.sleep(0.3)
@@ -920,7 +949,7 @@ def _fon_evreni_cek():
     import time
     bekle = 0 if (os.environ.get("RADAR_TEST_NOW") or os.environ.get("RADAR_TEST_HIZLI")) else 15
     son_hata = None
-    for deneme in range(3):
+    for deneme in range(1 if TEFAS_DURUM["kapali"] else 3):    # 12 Eki: TEFAS zaten yanıt vermiyorsa tek deneme
         try:
             return bp.screen_funds(fund_type="YAT", limit=5000)
         except Exception as e:
@@ -1546,7 +1575,7 @@ def _fiyat_serisi_cek(code):
             raise
         except Exception:
             FONOLOJI_SAYAC["hata"] += 1
-    h = to_dt_index(bp.Fund(code).history(period="3mo").copy())
+    h = to_dt_index(tefas_cagri(lambda: bp.Fund(code).history(period="3mo")).copy())
     pc = next(c for c in h.columns if str(c).lower() in ("price", "fiyat", "close"))
     return pd.to_numeric(h[pc], errors="coerce").dropna().sort_index()
 
@@ -1855,7 +1884,13 @@ def main():
     onceki_yab = prev.get("yabanci") or {}
     if bp and (gunluk_saat or not onceki_yab or "hata" in onceki_yab):
         fr = safe("yabanci_orani", foreign_ratios)
-        R["yabanci"] = safe("yabanci_trend", lambda: foreign_trend(fr)) if fr else {"hata": "yabancı oranı alınamadı"}
+        if fr:
+            R["yabanci"] = safe("yabanci_trend", lambda: foreign_trend(fr))
+        elif onceki_yab and "hata" not in onceki_yab:     # 12 Eki: kaynak yavaş/kapalı → önceki veri, bildirim yok
+            R["yabanci"] = {**onceki_yab, "not_onbellek": "yabancı oranı bu turda alınamadı — önceki veri"}
+            HEALTH["yabanci_orani"] = "NOT: " + str(HEALTH.get("yabanci_orani", ""))[:150] + " → önceki veri kullanıldı"
+        else:
+            R["yabanci"] = {"hata": "yabancı oranı alınamadı"}
     else:
         R["yabanci"] = onceki_yab
         if isinstance(R["yabanci"], dict):
@@ -1872,8 +1907,9 @@ def main():
         if POZISYON_KURALLARI and bp:
             R["pozisyon_takip"] = pozisyon_takip()
         for c in FUNDS:   # 6 Eki: birincil (Fonoloji) çalıştıysa yedek TEFAS hatası bildirim üretmez
-            if fono.get(c) and str(HEALTH.get(f"fon_{c}", "")).startswith("HATA"):
-                HEALTH[f"yedek_borsapy_fon_{c}"] = HEALTH.pop(f"fon_{c}") + " (birincil Fonoloji çalıştı)"
+            for _on in ("fon", "fon_bilgi", "fon_ucret"):    # 12 Eki: bilgi/ücret yedek hataları da
+                if fono.get(c) and str(HEALTH.get(f"{_on}_{c}", "")).startswith("HATA"):
+                    HEALTH[f"yedek_borsapy_{_on}_{c}"] = HEALTH.pop(f"{_on}_{c}") + " (birincil Fonoloji çalıştı)"
         if not any(R["fonlar"].values()):
             agir_basarisiz.append("fonlar")
         R["fonlar_zamani"] = NOW.strftime("%Y-%m-%d %H:%M")
@@ -1890,7 +1926,9 @@ def main():
             R[k] = prev.get(k)
     _prt = prev.get("rakip_tarama") or {}
     _prt_surum = ((_prt.get("para_piyasasi") or {}).get("surum")) if isinstance(_prt, dict) else None
-    if bp and (gunluk_saat or not _prt or _prt_surum != RAKIP_SURUM):
+    # 12 Eki: tarama başarısızsa ağır pencere artık tüketilir; sonraki 3 saatlik çalışmada SADECE tarama yeniden denenir
+    _rk_once = 0 if gunluk_saat else int(prev.get("rakip_tekrar") or 0)
+    if bp and (gunluk_saat or not _prt or _prt_surum != RAKIP_SURUM or 0 < _rk_once < 4):
         yeni = safe("rakip_tarama", rakip_tarama)
         if yeni is None and _prt:
             # 6 Eki: tarama başarısızsa bir önceki sonuç (tahvil adayları dahil) korunur
@@ -1899,10 +1937,12 @@ def main():
             HEALTH["rakip_tarama"] = HEALTH.get("rakip_tarama", "HATA") + " → önceki tarama korundu"
         else:
             R["rakip_tarama"] = yeni
-        if yeni is None and gunluk_saat and not str(HEALTH.get("rakip_tarama", "")).startswith("NOT: süre"):
-            agir_basarisiz.append("rakip_tarama")       # 12 Eki: süre bütçesiyle atlandıysa tekrar deneme yok (akşam çalışması yapar)
+        if yeni is None and not str(HEALTH.get("rakip_tarama", "")).startswith("NOT: süre"):
+            R["rakip_tekrar"] = _rk_once + 1            # 4'e ulaşınca bir sonraki ağır pencereye kadar denenmez
     else:
         R["rakip_tarama"] = prev.get("rakip_tarama")
+        if prev.get("rakip_tekrar"):
+            R["rakip_tekrar"] = prev["rakip_tekrar"]    # sayaç taşınır (sıfırlanması = ağır pencere ya da başarı)
     if bp:
         R["tcmb"] = tcmb_block()
         if os.environ.get("EVDS_API_KEY"):
