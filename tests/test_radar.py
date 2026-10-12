@@ -161,6 +161,13 @@ def main():
     d_butce = calistir_klasor(_sure_klasor, {"RADAR_BUTCE_DK": "0", "RADAR_AGIR": "true"})
     d_sert = calistir_klasor(_sure_klasor, {"RADAR_SERT_DK": "0.05", "RADAR_TEST_YAVAS": "8",
                                             "RADAR_TEST_NOW": "2026-10-12 08:17"})
+    # 12 Eki öğlen: TEFAS hiç yanıt vermiyor (gerçek olay) → devre kesici, sadece taramanın tekrarı, yabancı oranı süre sınırı
+    calistir(ek_env={"RADAR_TEST_NOW": "2026-10-09 19:00"})      # önceki gün akşamı: sağlam veri
+    _tf = EVREN["son"]
+    d_tf1 = calistir_klasor(_tf, {"RADAR_MOCK_TEFAS_TIMEOUT": "1", "RADAR_TEST_NOW": "2026-10-12 08:17",
+                                  "RADAR_YABANCI_SURE_SN": "0"})
+    d_tf2 = calistir_klasor(_tf, {"RADAR_MOCK_TEFAS_TIMEOUT": "1", "RADAR_TEST_NOW": "2026-10-12 10:17"})
+    d_tf3 = calistir_klasor(_tf, {"RADAR_TEST_NOW": "2026-10-12 11:17"})
     d_yedek = calistir(ek_env={"RADAR_MOCK_FON_HATA": "YLB,IJV", "RADAR_MOCK_HISTORY_HATA": "1"})  # 6 Eki: TEFAS boş + rakip geçmişleri hata
     rt = d.get("rakip_tarama") or {}; pp = rt.get("para_piyasasi") or {}
     vs = rt.get("varlik_siniflari") or {}
@@ -225,6 +232,23 @@ def main():
         ("sert süre" in str(d_sert.get("cokme", "")) and bool((d_sert.get("bist100") or {}).get("son_fiyat")),
                                                                     "Süre: sert sınırda çalışma kesilir, önceki veri korunur (iş iptal edilmez)"),
         (d_sert.get("agir_slot") == "2026-10-12-sabah",            "Süre: sert sınıra takılan ağır pencere kullanılmış sayılır (saatlik deneme zinciri olmaz)"),
+        # --- 12 Eki: TEFAS kesintisi ---
+        (str(d_tf1["saglik"]["tum_moduller"].get("tefas_devre", "")).startswith("NOT:")
+         and any("bu turda atlandı" in str(v) for k, v in d_tf1["saglik"]["tum_moduller"].items() if k.startswith("yedek_borsapy_fon_")),
+                                                                    "TEFAS: iki ağ hatasından sonra diğer TEFAS çağrıları denenmez (devre kesici)"),
+        (not any(k.startswith(("fon_bilgi_", "fon_ucret_")) or k in [f"fon_{c}" for c in ("YLB", "IJV", "ZBJ", "BGP", "YOT", "TIE", "AKU")]
+                 for k in d_tf1["saglik"].get("issue_tetikleyen", [])),
+                                                                    "TEFAS: Fonoloji çalışırken yedek bilgi/ücret hataları bildirim açmaz"),
+        (d_tf1.get("agir_slot") == "2026-10-12-sabah" and d_tf1.get("rakip_tekrar") == 1
+         and bool((d_tf1.get("rakip_tarama") or {}).get("para_piyasasi")),
+                                                                    "TEFAS: tarama başarısızsa ağır pencere tüketilir, önceki tarama korunur, tekrar sayacı başlar"),
+        (d_tf2.get("rakip_tekrar") == 2 and not d_tf2.get("agir_calisma"),
+                                                                    "TEFAS: sonraki saatte sadece tarama yeniden denenir (bütün ağır iş değil)"),
+        (not d_tf3.get("rakip_tekrar") and str((d_tf3.get("rakip_tarama") or {}).get("zaman", "")).startswith("2026-10-12 11"),
+                                                                    "TEFAS: düzelince tarama yenilenir ve sayaç sıfırlanır"),
+        (str(d_tf1["saglik"]["tum_moduller"].get("yabanci_orani", "")).startswith("NOT:")
+         and "önceki veri" in str((d_tf1.get("yabanci") or {}).get("not_onbellek", "")),
+                                                                    "Yabancı oranı: kaynak yavaşsa süre sınırında durur, önceki veri kullanılır, bildirim yok"),
         (sozlesme["ok"],                                            "Sözleşme: sahte borsapy, gerçek borsapy ile aynı arama sütunlarını ve betiğin kullandığı parametreleri taşır"
                                                                     + ("" if sozlesme["gercek"] else " (gerçek borsapy yüklü değil — ATLANDI)")),
         ("KABA TAHMİN" in str((((d_kaba.get("tahvil_analiz") or {}).get("fonlar") or {}).get("YOT") or {}).get("sure_kaynagi")),
