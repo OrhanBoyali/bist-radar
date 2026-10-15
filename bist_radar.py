@@ -1188,7 +1188,14 @@ def fonoloji_get(path, params=None, timeout=20):
             time.sleep(bekle)
         _FONOLOJI_SON[0] = time.time()
         FONOLOJI_SAYAC["cagri"] += 1
-        r = requests.get(FONOLOJI_BASE + path, params=params or {}, headers={"X-API-Key": key}, timeout=timeout)
+        try:
+            r = requests.get(FONOLOJI_BASE + path, params=params or {}, headers={"X-API-Key": key}, timeout=timeout)
+        except Exception as e:                       # 15 Eki: tek seferlik zaman aşımında bir kez daha dene
+            if deneme == 0 and any(k in f"{type(e).__name__} {e}".lower() for k in ("timeout", "timed out", "connection")):
+                FONOLOJI_SAYAC["ag_tekrar"] = FONOLOJI_SAYAC.get("ag_tekrar", 0) + 1
+                time.sleep(0 if _TEST_HIZLI else 3)
+                continue
+            raise
         if r.status_code == 429:
             FONOLOJI_SAYAC["limit_429"] += 1
             try:
@@ -1743,6 +1750,11 @@ def _tv_tahvil_seri(vade, period="5d"):
             son_hata = f"TVC:{sem}: {type(e).__name__}: {str(e)[:60]}"
     raise ValueError(son_hata)
 
+def _bilesik(s):
+    """15 Eki: TradingView TR tahvil verimi yarıyıllık (tahvil eşdeğeri) — doviz.com/arşivimiz yıllık bileşik.
+    Ölçülen fark sabit ~3,3 puandı; (1+s/200)^2−1 dönüşümü farkı ~0,1 puana indiriyor."""
+    return round(((1 + float(s) / 200.0) ** 2 - 1) * 100, 3)
+
 def tahvil_tradingview():
     out = []
     for vade in ("2Y", "5Y", "10Y"):
@@ -1752,8 +1764,8 @@ def tahvil_tradingview():
             if vade == "2Y":
                 raise
             continue
-        son = float(c.iloc[-1]); onc = float(c.iloc[-2]) if len(c) > 1 else None
-        out.append({"name": f"TR {vade} ({sem})", "maturity": vade, "yield": round(son, 2),
+        son = _bilesik(c.iloc[-1]); onc = _bilesik(c.iloc[-2]) if len(c) > 1 else None
+        out.append({"name": f"TR {vade} ({sem}, bileşiğe çevrildi)", "maturity": vade, "yield": round(son, 2),
                     "change": round(son - onc, 4) if onc else None, "change_pct": pct(son, onc) if onc else None, "kaynak": sem})
     return out
 
@@ -1762,11 +1774,11 @@ def verim_gecmisi_tv():
     karşılaştırılır; ortalama fark ≤1 puan ise 'doğrulandı' sayılır ve faize duyarlılık hesabında kullanılır."""
     sem, c = _tv_tahvil_seri("2Y", period="2y")
     c.index = pd.to_datetime(c.index)
-    seri = {d.strftime("%Y-%m-%d"): round(float(v), 3) for d, v in c.items()}
+    seri = {d.strftime("%Y-%m-%d"): _bilesik(v) for d, v in c.items()}      # yıllık bileşik (arşivle aynı birim)
     arsiv = json.load(open(VERIM_ARSIV, encoding="utf-8")) if os.path.exists(VERIM_ARSIV) else {}
     ortak = [(seri[d], v.get("2Y")) for d, v in arsiv.items() if d in seri and v.get("2Y") is not None]
     fark = round(sum(abs(a - b) for a, b in ortak) / len(ortak), 2) if ortak else None
-    out = {"kod": sem, "gozlem": len(seri), "ilk": min(seri) if seri else None, "son": max(seri) if seri else None,
+    out = {"kod": sem, "birim": "yıllık bileşik (TradingView yarıyıllık verimden çevrildi)", "gozlem": len(seri), "ilk": min(seri) if seri else None, "son": max(seri) if seri else None,
            "arsivle_ortak_gun": len(ortak), "ortalama_fark_puan": fark, "dogrulandi": bool(ortak) and fark <= 1.0,
            "zaman": NOW.strftime("%Y-%m-%d %H:%M"), "seri": seri}
     os.makedirs("output", exist_ok=True)
@@ -1774,6 +1786,9 @@ def verim_gecmisi_tv():
     if ortak and fark > 1.0:
         HEALTH["verim_tv_dogrulama"] = f"UYARI: TradingView {sem} kendi arşivimizden ortalama {fark} puan farklı — kullanılmadı"
     return {k: v for k, v in out.items() if k != "seri"}
+
+def _makul_verim(vade, v):
+    return vade in ("2Y", "5Y", "10Y") and isinstance(v, (int, float)) and not isinstance(v, bool) and 5 <= v <= 80
 
 def verim_arsivi_guncelle(tahvil_listesi):
     """bp.bonds() anlık verimlerini günlük arşive yazar (her çalışma; aynı gün üzerine yazar)."""
@@ -1784,7 +1799,17 @@ def verim_arsivi_guncelle(tahvil_listesi):
         except Exception as e:
             HEALTH["verim_arsivi"] = f"UYARI: verim arşivi okunamadı, yeniden başlatıldı ({type(e).__name__})"
             arsiv = {}
-    gun = {str(x.get("maturity")): x.get("yield") for x in (tahvil_listesi or []) if isinstance(x, dict) and x.get("yield") is not None}
+    # 15 Eki: 14 Eki 14:17'de kaynak 'çalıştı' ama yanlış sütunu okudu (2Y=3,29) → makul olmayan değer arşive giremez,
+    # eski bozuk kayıtlar temizlenir
+    temiz = {d: {k: v for k, v in (e or {}).items() if _makul_verim(k, v)} for d, e in arsiv.items()}
+    temiz = {d: e for d, e in temiz.items() if e}
+    if temiz != arsiv:
+        HEALTH["verim_arsivi_temizlik"] = f"NOT: verim arşivinden makul olmayan kayıtlar silindi ({sorted(set(arsiv) - set(temiz)) or 'kısmi'})"
+        arsiv = temiz
+        os.makedirs("output", exist_ok=True)
+        json.dump(arsiv, open(VERIM_ARSIV, "w", encoding="utf-8"), ensure_ascii=False)
+    gun = {str(x.get("maturity")): x.get("yield") for x in (tahvil_listesi or [])
+           if isinstance(x, dict) and _makul_verim(str(x.get("maturity")), x.get("yield"))}
     if gun:
         arsiv[NOW.strftime("%Y-%m-%d")] = gun
         arsiv = dict(sorted(arsiv.items())[-900:])
@@ -2114,6 +2139,9 @@ def main():
         if POZISYON_KURALLARI and bp:
             R["pozisyon_takip"] = pozisyon_takip()
         _yedek_siniflandir(fono)
+        for c in FUNDS:   # 15 Eki: birincil Fonoloji başarısız ama TEFAS yedeği veriyi getirdiyse bildirim değil not
+            if not fono.get(c) and bors.get(c) and str(HEALTH.get(f"fonoloji_{c}", "")).startswith("HATA"):
+                HEALTH[f"fonoloji_{c}"] = "NOT: " + HEALTH[f"fonoloji_{c}"][6:] + " (yedek TEFAS verisi kullanıldı)"
         if bp and any(fono.values()) and not any(bors.values()):
             R["tefas_yedek_tekrar"] = 1        # 12 Eki: TEFAS yedek verisi alınamadı → alınana kadar her saat denenir
         if not any(R["fonlar"].values()):
@@ -2178,6 +2206,12 @@ def main():
                         R["tufe_ek_cekim"] = NOW.strftime("%Y-%m-%d %H:%M")
         R["enflasyon"] = safe("enflasyon", lambda: J(bp.Inflation().latest()))
         R["tahvil"] = safe("tahvil", lambda: J(bp.bonds()))
+        _v2 = next((x.get("yield") for x in (R["tahvil"] or []) if isinstance(x, dict) and str(x.get("maturity")) == "2Y"), None)
+        if R["tahvil"] and not _makul_verim("2Y", _v2):   # 15 Eki: "çalıştı" ama yanlış veri → başarısız say, yedeğe geç
+            HEALTH["tahvil"] = f"HATA: borsapy tahvil verisi makul değil (2Y={_v2}) — sayfa düzeni değişmiş olabilir"
+            if KARNE_SAYAC.get("tahvil_faizi"):
+                KARNE_SAYAC["tahvil_faizi"][1] -= 1
+            R["tahvil"] = None
         if not R["tahvil"]:                   # 15 Eki: yedek okuyucular (doviz.com kendi okuma → TradingView)
             _birincil = str(HEALTH.get("tahvil", ""))[:100]
             _yedek = None
