@@ -82,10 +82,12 @@ KARNE_FILE = "output/kaynak_karnesi.json"
 KAYNAK_ESLEME = (("fonoloji", ("fonoloji_",)), ("tefas", ("fon_", "rakip_tarama")), ("evds", ("evds_", "verim_evds")),
                  ("yahoo", ("yahoo_",)), ("borsapy_endeks", ("borsapy_endeks_", "genislik_")),
                  ("yabanci_payi", ("yabanci_orani",)), ("doviz_altin", ("fx_", "gram_altin_gecmis")),
-                 ("tahvil_faizi", ("tahvil",)), ("takvim", ("takvim_",)))
+                 ("tahvil_faizi", ("tahvil", "tahvil_doviz_kendi")),
+                 ("tradingview", ("tahvil_tradingview", "verim_gecmisi_tv")), ("takvim", ("takvim_",)))
 KAYNAK_HARIC = ("fon_akis", "fon_tutarlilik")          # hesaplama modülleri, veri kaynağı değil
 KARNE_SAYAC = {}
 KARNE_ESIK_PCT, KARNE_ARDISIK, KARNE_MIN_DENEME = 70, 4, 8
+YEDEK_KAYNAK = {"tahvil_faizi": "tradingview", "tefas": "fonoloji"}   # 15 Eki: yedeği çalışan kaynak uyarı değil not üretir
 
 def _kaynak_bul(name):
     if name in KAYNAK_HARIC:
@@ -144,9 +146,12 @@ def kaynak_karnesi():
             durum = "VERİ BİRİKİYOR"
         elif pct_ < KARNE_ESIK_PCT or ardisik >= KARNE_ARDISIK or gun_basarisiz:
             durum = "ZAYIF"
-            HEALTH[f"kaynak_{kaynak}"] = (f"UYARI: {kaynak} kaynağı düzenli veri vermiyor — son {len(son)} denemenin %{100 - pct_}'i "
+            _y = YEDEK_KAYNAK.get(kaynak)
+            _yedek_ok = bool(_y and KARNE_SAYAC.get(_y) and KARNE_SAYAC[_y][1] > 0)
+            HEALTH[f"kaynak_{kaynak}"] = (("NOT" if _yedek_ok else "UYARI") + f": {kaynak} kaynağı düzenli veri vermiyor — son {len(son)} denemenin %{100 - pct_}'i "
                                          f"başarısız, art arda {ardisik}, son başarı {son_basari or 'yok'}; başarısız saatler "
-                                         f"{dict(sorted(saatler.items()))} → erişimi düzelt ya da yeni kaynak bul")
+                                         f"{dict(sorted(saatler.items()))} → erişimi düzelt ya da yeni kaynak bul"
+                                         + (f" (yedek {_y} bu turda çalıştı, veri kesintisiz)" if _yedek_ok else ""))
         else:
             durum = "İYİ"
         ozet[kaynak] = {"durum": durum, "son_deneme_sayisi": len(son), "basari_pct": pct_, "ardisik_basarisiz": ardisik,
@@ -1662,6 +1667,113 @@ def _fiyat_serisi_cek(code):
 
 VERIM_ARSIV = "output/verim_gecmisi.json"
 VERIM_EVDS = "output/verim_evds.json"
+VERIM_TV = "output/verim_tv.json"
+TAHVIL_TANI = "output/tahvil_tani.json"
+
+# ---- TAHVİL FAİZİ YEDEKLERİ (15 Eki) ----------------------------------------
+# 14 Eki 15:17'den beri borsapy'nin doviz.com okuyucusu 'Bond table not found' veriyor; sayfa insan gözüyle açık.
+# Sıra: (1) borsapy (doviz.com) → (2) doviz.com'u kendimiz okuruz (tablo kimliğine bağlı değil, satır metninden)
+# → (3) TradingView (TVC:TR02Y …). Başarısız okumada sayfanın ne döndürdüğü output/tahvil_tani.json'a yazılır.
+DOVIZ_TAHVIL_URL = "https://www.doviz.com/tahvil"
+TV_TAHVIL = {"2Y": ("TR02Y", "TR2Y"), "5Y": ("TR05Y", "TR5Y"), "10Y": ("TR10Y",)}
+
+def _sayi(x):
+    try:
+        t = str(x).replace("%", "").replace("\xa0", " ").strip()
+        t = t.replace(".", "").replace(",", ".") if "," in t else t
+        return float(t)
+    except (TypeError, ValueError):
+        return None
+
+def tahvil_doviz_kendi():
+    import requests
+    from bs4 import BeautifulSoup
+    r = requests.get(DOVIZ_TAHVIL_URL, timeout=20, headers={
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        "Accept-Language": "tr-TR,tr;q=0.9"})
+    html = getattr(r, "text", "") or ""
+    soup = BeautifulSoup(html, "html.parser")
+    tani = {"zaman": NOW.strftime("%Y-%m-%d %H:%M"), "http": getattr(r, "status_code", None), "uzunluk": len(html),
+            "baslik": soup.title.get_text(strip=True)[:80] if soup.title else None,
+            "tablo_kimlikleri": [t.get("id") for t in soup.find_all("table")][:10],
+            "bot_isareti": any(k in html.lower() for k in ("just a moment", "cf-chl", "captcha", "access denied", "attention required"))}
+    out = []
+    for tr in soup.find_all("tr"):
+        hucre = [td.get_text(" ", strip=True) for td in tr.find_all(["td", "th"])]
+        if len(hucre) < 2:
+            continue
+        m = re.search(r"(\d+)\s*YIL", _tr_up(hucre[0]))
+        vade = f"{int(m.group(1))}Y" if m else None
+        if vade not in ("2Y", "5Y", "10Y") or any(o["maturity"] == vade for o in out):
+            continue
+        y = _sayi(hucre[1])
+        if y is None or not 5 <= y <= 80:
+            continue
+        out.append({"name": hucre[0], "maturity": vade, "yield": y, "change": None,
+                    "change_pct": _sayi(hucre[2]) if len(hucre) > 2 else None, "kaynak": "doviz.com (kendi okuma)"})
+    tani["bulunan_vadeler"] = [o["maturity"] for o in out]
+    os.makedirs("output", exist_ok=True)
+    json.dump(tani, open(TAHVIL_TANI, "w", encoding="utf-8"), ensure_ascii=False)
+    if not any(o["maturity"] == "2Y" for o in out):
+        raise ValueError(f"doviz.com tahvil sayfası okunamadı (HTTP {tani['http']}, başlık '{tani['baslik']}', "
+                         f"bot işareti {tani['bot_isareti']}, tablolar {tani['tablo_kimlikleri']})")
+    return out
+
+def _tv_provider():
+    try:
+        from borsapy._providers.tradingview import get_tradingview_provider
+        return get_tradingview_provider()
+    except Exception:
+        return getattr(bp, "_TEST_TV", None)          # yalnızca test düzeneği (sahte borsapy paket değil)
+
+def _tv_tahvil_seri(vade, period="5d"):
+    tv = _tv_provider()
+    if tv is None:
+        raise ValueError("TradingView sağlayıcısı bulunamadı")
+    son_hata = None
+    for sem in TV_TAHVIL[vade]:
+        try:
+            df = tv.get_history(sem, period=period, interval="1d", exchange="TVC")
+            col = next((c for c in df.columns if str(c).lower() == "close"), None)
+            c = pd.to_numeric(df[col], errors="coerce").dropna() if col is not None else pd.Series(dtype=float)
+            if len(c) and 5 <= float(c.iloc[-1]) <= 80:
+                return f"TVC:{sem}", c
+            son_hata = f"TVC:{sem}: boş ya da makul olmayan veri"
+        except Exception as e:
+            son_hata = f"TVC:{sem}: {type(e).__name__}: {str(e)[:60]}"
+    raise ValueError(son_hata)
+
+def tahvil_tradingview():
+    out = []
+    for vade in ("2Y", "5Y", "10Y"):
+        try:
+            sem, c = _tv_tahvil_seri(vade)
+        except Exception:
+            if vade == "2Y":
+                raise
+            continue
+        son = float(c.iloc[-1]); onc = float(c.iloc[-2]) if len(c) > 1 else None
+        out.append({"name": f"TR {vade} ({sem})", "maturity": vade, "yield": round(son, 2),
+                    "change": round(son - onc, 4) if onc else None, "change_pct": pct(son, onc) if onc else None, "kaynak": sem})
+    return out
+
+def verim_gecmisi_tv():
+    """15 Eki: 2 yıllık gösterge faizinin geçmişi TradingView'den (2 yıl). Kendi arşivimizle çakışan günlerde
+    karşılaştırılır; ortalama fark ≤1 puan ise 'doğrulandı' sayılır ve faize duyarlılık hesabında kullanılır."""
+    sem, c = _tv_tahvil_seri("2Y", period="2y")
+    c.index = pd.to_datetime(c.index)
+    seri = {d.strftime("%Y-%m-%d"): round(float(v), 3) for d, v in c.items()}
+    arsiv = json.load(open(VERIM_ARSIV, encoding="utf-8")) if os.path.exists(VERIM_ARSIV) else {}
+    ortak = [(seri[d], v.get("2Y")) for d, v in arsiv.items() if d in seri and v.get("2Y") is not None]
+    fark = round(sum(abs(a - b) for a, b in ortak) / len(ortak), 2) if ortak else None
+    out = {"kod": sem, "gozlem": len(seri), "ilk": min(seri) if seri else None, "son": max(seri) if seri else None,
+           "arsivle_ortak_gun": len(ortak), "ortalama_fark_puan": fark, "dogrulandi": bool(ortak) and fark <= 1.0,
+           "zaman": NOW.strftime("%Y-%m-%d %H:%M"), "seri": seri}
+    os.makedirs("output", exist_ok=True)
+    json.dump(out, open(VERIM_TV, "w", encoding="utf-8"), ensure_ascii=False)
+    if ortak and fark > 1.0:
+        HEALTH["verim_tv_dogrulama"] = f"UYARI: TradingView {sem} kendi arşivimizden ortalama {fark} puan farklı — kullanılmadı"
+    return {k: v for k, v in out.items() if k != "seri"}
 
 def verim_arsivi_guncelle(tahvil_listesi):
     """bp.bonds() anlık verimlerini günlük arşive yazar (her çalışma; aynı gün üzerine yazar)."""
@@ -1765,7 +1877,14 @@ def verim_gecmisi_evds():
 
 def _verim_serisi():
     """2 yıllık verim serisi: EVDS geçmişi + kendi arşivimiz (çakışan günlerde arşiv)."""
-    s, evds_var, arsiv_var = {}, False, False
+    s, evds_var, arsiv_var, tv_var = {}, False, False, False
+    if os.path.exists(VERIM_TV):                       # 15 Eki: doğrulanmış TradingView geçmişi
+        try:
+            t = json.load(open(VERIM_TV, encoding="utf-8"))
+            if t.get("dogrulandi") and t.get("seri"):
+                s.update(t["seri"]); tv_var = True
+        except Exception as e:
+            HEALTH["verim_tv_okuma"] = f"UYARI: TradingView verim dosyası okunamadı ({type(e).__name__})"
     if os.path.exists(VERIM_EVDS):
         try:
             e = json.load(open(VERIM_EVDS, encoding="utf-8")).get("seri") or {}
@@ -1776,7 +1895,7 @@ def _verim_serisi():
         for d, v in json.load(open(VERIM_ARSIV, encoding="utf-8")).items():
             if v.get("2Y") is not None:
                 s[d] = v["2Y"]; arsiv_var = True
-    kaynak = "EVDS + arşiv" if evds_var and arsiv_var else ("EVDS" if evds_var else "arşiv")
+    kaynak = " + ".join(k for k, v in (("TradingView", tv_var), ("EVDS", evds_var), ("arşiv", arsiv_var)) if v) or "yok"
     ser = pd.Series({pd.Timestamp(d): float(v) for d, v in s.items() if v is not None}, dtype=float).sort_index()
     return ser, kaynak
 
@@ -2059,7 +2178,23 @@ def main():
                         R["tufe_ek_cekim"] = NOW.strftime("%Y-%m-%d %H:%M")
         R["enflasyon"] = safe("enflasyon", lambda: J(bp.Inflation().latest()))
         R["tahvil"] = safe("tahvil", lambda: J(bp.bonds()))
+        if not R["tahvil"]:                   # 15 Eki: yedek okuyucular (doviz.com kendi okuma → TradingView)
+            _birincil = str(HEALTH.get("tahvil", ""))[:100]
+            _yedek = None
+            for _ad, _fn in (("tahvil_doviz_kendi", tahvil_doviz_kendi), ("tahvil_tradingview", tahvil_tradingview)):
+                _yedek = safe(_ad, _fn)
+                if _yedek:
+                    break
+            if _yedek:
+                R["tahvil"], R["tahvil_kaynak"] = _yedek, _yedek[0].get("kaynak")
+                HEALTH["tahvil"] = f"NOT: borsapy (doviz.com) okunamadı ({_birincil}) → yedek kaynak: {R['tahvil_kaynak']}"
+                if str(HEALTH.get("tahvil_doviz_kendi", "")).startswith("HATA"):
+                    HEALTH["tahvil_doviz_kendi"] = "NOT: " + HEALTH["tahvil_doviz_kendi"][6:] + " (TradingView yedeği çalıştı)"
+        else:
+            R["tahvil_kaynak"] = "borsapy (doviz.com)"
         R["verim_arsivi"] = safe("verim_arsivi", lambda: verim_arsivi_guncelle(R.get("tahvil")))
+        if gunluk_saat:                       # 15 Eki: TradingView 2 yıllık geçmiş (arşivle doğrulanır)
+            R["verim_tv"] = safe("verim_gecmisi_tv", verim_gecmisi_tv)
         if gunluk_saat:                       # 9 Eki: dosya yoksa her saat aramıyordu → sadece ağır çalışmada
             if os.environ.get("EVDS_API_KEY"):
                 R["verim_evds"] = safe("verim_evds", lambda: {k: v for k, v in verim_gecmisi_evds().items() if k != "seri"})
