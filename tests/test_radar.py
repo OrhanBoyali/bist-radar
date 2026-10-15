@@ -172,6 +172,13 @@ def main():
         d_th2b = calistir_klasor(EVREN["son"], {"RADAR_MOCK_TAHVIL_HATA": "1", "RADAR_MOCK_DOVIZ_SAYFA": "bot"})
     d_th3 = calistir(kok={"ayarlar.json": _poz()}, ek_env={"RADAR_MOCK_TAHVIL_HATA": "1", "RADAR_MOCK_TV_HATA": "1"})
     d_tvh = calistir(kok={"ayarlar.json": _poz()}, ek_env={"RADAR_AGIR": "true", "RADAR_MOCK_EVDS_VERIM_YOK": "1"})
+    # 15 Eki: yanlış ama "başarılı" kaynak verisi, bozuk arşiv kaydı, Fonoloji zaman aşımı
+    d_sacma = calistir(tohum={"verim_gecmisi.json": {"2026-10-14": {"2Y": 3.29, "5Y": 2.35, "10Y": 3.01, "None": 4.05},
+                                                     "2026-10-13": {"2Y": 39.58, "5Y": 38.62, "10Y": 35.52}}},
+                       ek_env={"RADAR_MOCK_TAHVIL_SACMA": "1", "RADAR_MOCK_DOVIZ_SAYFA": "yeni"})
+    _ars_sacma = json.load(open(os.path.join(EVREN["son"], "output", "verim_gecmisi.json"), encoding="utf-8"))
+    d_fz1 = calistir(ek_env={"RADAR_MOCK_FONO_TIMEOUT": "YLB"})
+    d_fz2 = calistir(ek_env={"RADAR_MOCK_FONO_TIMEOUT_HEP": "YLB"})
     # 12 Eki: sabah ağır çalışması 40 dk'da iptal edildi → süre bütçesi + sert sınır
     calistir()                                             # önceki veriyi üreten temel çalışma
     _sure_klasor = EVREN["son"]
@@ -305,6 +312,18 @@ def main():
         (str((d_tvh.get("tahvil_analiz") or {}).get("verim_kaynagi", "")).startswith("TradingView")
          and 1.3 <= ((((d_tvh.get("tahvil_analiz") or {}).get("fonlar") or {}).get("YOT") or {}).get("etkin_sure") or {}).get("sure_yil", 0) <= 1.7,
                                                                     "Tahvil: EVDS'de seri yokken bile YOT'un faize duyarlılığı geçmiş veriden hesaplanır (kaba tahmin bitti)"),
+        (abs((d_tvh.get("verim_tv") or {}).get("ortalama_fark_puan", 9) if (d_tvh.get("verim_tv") or {}).get("ortalama_fark_puan") is not None else 9) < 0.05,
+                                                                    "Tahvil: TradingView yarıyıllık verimi yıllık bileşiğe çevrilir (birim farkı ~3,3 puan giderilir)"),
+        (d_sacma.get("tahvil_kaynak") == "doviz.com (kendi okuma)" and "makul değil" in str(d_sacma["saglik"]["tum_moduller"].get("tahvil", "")),
+                                                                    "Tahvil: kaynak 'çalıştı' ama değer saçmaysa (2Y=3,29) başarısız sayılır, yedeğe geçilir"),
+        ("2026-10-14" not in _ars_sacma and _ars_sacma.get("2026-10-13", {}).get("2Y") == 39.58
+         and all(5 <= v <= 80 for e in _ars_sacma.values() for v in e.values()),
+                                                                    "Tahvil: arşivdeki bozuk kayıtlar temizlenir, sağlamlar korunur"),
+        (d_fz1["saglik"]["tum_moduller"].get("fonoloji_YLB") == "OK" and d_fz1.get("fonlar_kaynak", {}).get("YLB") == "fonoloji",
+                                                                    "Fonoloji: tek seferlik zaman aşımında bir kez daha denenir, veri gelir"),
+        (str(d_fz2["saglik"]["tum_moduller"].get("fonoloji_YLB", "")).startswith("NOT") and "fonoloji_YLB" not in d_fz2["saglik"].get("issue_tetikleyen", [])
+         and d_fz2.get("fonlar_kaynak", {}).get("YLB") == "borsapy",
+                                                                    "Fonoloji: kalıcı zaman aşımında TEFAS yedeği kullanılır, bildirim değil not düşer"),
         (sozlesme["ok"],                                            "Sözleşme: sahte borsapy, gerçek borsapy ile aynı arama sütunlarını ve betiğin kullandığı parametreleri taşır"
                                                                     + ("" if sozlesme["gercek"] else " (gerçek borsapy yüklü değil — ATLANDI)")),
         ("KABA TAHMİN" in str((((d_kaba.get("tahvil_analiz") or {}).get("fonlar") or {}).get("YOT") or {}).get("sure_kaynagi")),
