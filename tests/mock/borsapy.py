@@ -63,6 +63,8 @@ def bonds():
     import os
     if os.environ.get("RADAR_MOCK_TAHVIL_HATA"):                  # 14 Eki: doviz.com tablosu okunamadı
         raise RuntimeError("DataNotAvailableError: Bond table not found on page")
+    if os.environ.get("RADAR_MOCK_TAHVIL_SACMA"):                 # 14 Eki 14:17: "çalıştı" ama yanlış sütun (2Y=3,29)
+        return pd.DataFrame({"maturity": ["2Y", "5Y", "10Y", None], "yield": [3.29, 2.35, 3.01, 4.05], "change_pct": [0.1, 0.2, 0.1, 0.1]})
     return pd.DataFrame({"maturity": ["2Y", "10Y"], "yield": [39.7, 35.1], "change_pct": [0.1, 0.2]})
 
 class _SahteTV:
@@ -77,7 +79,9 @@ class _SahteTV:
         idx = pd.bdate_range(end=datetime.now().date(), periods=n)
         fark = {"TR02Y": 0.0, "TR05Y": -1.0, "TR10Y": -4.0}[symbol]
         kayma = 39.7 - _sahte_verim(datetime.now().date())          # bugünkü değer = bonds() sahtesi (doğrulama tutar)
-        return pd.DataFrame({"Close": [_sahte_verim(d.date()) + kayma + fark for d in idx]}, index=idx)
+        # 15 Eki: gerçekteki gibi YARIYILLIK verim döndür (doviz.com/arşiv yıllık bileşik) → betik çevirmeli
+        yariyil = lambda c: 200.0 * ((1 + c / 100.0) ** 0.5 - 1)
+        return pd.DataFrame({"Close": [yariyil(_sahte_verim(d.date()) + kayma + fark) for d in idx]}, index=idx)
 _TEST_TV = _SahteTV()
 class FX:
     def __init__(self, k): self.k = k
