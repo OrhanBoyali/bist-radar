@@ -17,6 +17,17 @@ class Index:
         return _ohlc(seed=hash(self.s) % 100)
     @property
     def component_symbols(self): return [f"H{i}" for i in range(30)]
+class Screener:
+    """15 Eki: İş Yatırım tarama ekranı sahtesi — gerçek: add_filter(criteria, min, max, required), run() → criteria_<id> sütunları."""
+    def __init__(self): self._f = []
+    def add_filter(self, criteria, min=None, max=None, required=False):
+        self._f.append(criteria); return self
+    def run(self, template=None):
+        import os
+        if os.environ.get("RADAR_MOCK_TARAMA_HATA"):
+            raise RuntimeError("API Error: Failed to screen stocks: timed out")
+        semb = [f"H{i}" for i in range(30)] + ["DIGER1", "DIGER2"]
+        return pd.DataFrame({"symbol": semb, "name": semb, "criteria_40": [41.0] * len(semb)})
 class Ticker:
     def __init__(self, s): self.s = s
     @property
