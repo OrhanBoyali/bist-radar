@@ -82,6 +82,19 @@ def sozlesme_kontrol():
                 sorun.append(f"TradingViewProvider.get_history gerçek imzasında '{_p}' yok")
     except Exception as e:
         sorun.append(f"TradingView sağlayıcısı içe aktarılamadı: {type(e).__name__}: {e}")
+    # 15 Eki: İş Yatırım tarama ekranı (yabancı oranı toplu)
+    try:
+        _af = inspect.signature(gercek.Screener.add_filter)
+        for _p in ("criteria", "min", "max"):
+            if _p not in _af.parameters:
+                sorun.append(f"Screener.add_filter gerçek imzasında '{_p}' yok")
+        from borsapy._providers.isyatirim_screener import IsyatirimScreenerProvider
+        if IsyatirimScreenerProvider.CRITERIA_MAP.get("foreign_ratio") != "40":
+            sorun.append("İş Yatırım kriter kodu değişmiş: foreign_ratio != 40 (betik criteria_40 okuyor)")
+        if 'f"criteria_{key}"' not in inspect.getsource(IsyatirimScreenerProvider.screen):
+            sorun.append("İş Yatırım tarama sonucu artık criteria_<id> sütunu üretmiyor")
+    except Exception as e:
+        sorun.append(f"Screener sözleşmesi kontrol edilemedi: {type(e).__name__}: {e}")
     kaynak = inspect.getsource(gercek.EVDS.search)
     for sutun in sahte.evds_search("gösterge").columns:
         if f'"{sutun}"' not in kaynak:
@@ -177,6 +190,8 @@ def main():
                                                      "2026-10-13": {"2Y": 39.58, "5Y": 38.62, "10Y": 35.52}}},
                        ek_env={"RADAR_MOCK_TAHVIL_SACMA": "1", "RADAR_MOCK_DOVIZ_SAYFA": "yeni"})
     _ars_sacma = json.load(open(os.path.join(EVREN["son"], "output", "verim_gecmisi.json"), encoding="utf-8"))
+    d_yt1 = calistir(ek_env={"RADAR_AGIR": "true"})
+    d_yt2 = calistir(ek_env={"RADAR_AGIR": "true", "RADAR_MOCK_TARAMA_HATA": "1"})
     d_fz1 = calistir(ek_env={"RADAR_MOCK_FONO_TIMEOUT": "YLB"})
     d_fz2 = calistir(ek_env={"RADAR_MOCK_FONO_TIMEOUT_HEP": "YLB"})
     # 12 Eki: sabah ağır çalışması 40 dk'da iptal edildi → süre bütçesi + sert sınır
@@ -189,7 +204,7 @@ def main():
     calistir(ek_env={"RADAR_TEST_NOW": "2026-10-09 19:00"})      # önceki gün akşamı: sağlam veri
     _tf = EVREN["son"]
     d_tf1 = calistir_klasor(_tf, {"RADAR_MOCK_TEFAS_TIMEOUT": "1", "RADAR_TEST_NOW": "2026-10-12 08:17",
-                                  "RADAR_YABANCI_SURE_SN": "0"})
+                                  "RADAR_YABANCI_SURE_SN": "0", "RADAR_MOCK_TARAMA_HATA": "1"})
     _sayac2 = os.path.join(_tf, "tefas_sayac_saatlik.txt")
     d_tf2 = calistir_klasor(_tf, {"RADAR_MOCK_TEFAS_TIMEOUT": "1", "RADAR_TEST_NOW": "2026-10-12 10:17",
                                   "RADAR_MOCK_SAYAC": _sayac2})
@@ -324,6 +339,11 @@ def main():
         (str(d_fz2["saglik"]["tum_moduller"].get("fonoloji_YLB", "")).startswith("NOT") and "fonoloji_YLB" not in d_fz2["saglik"].get("issue_tetikleyen", [])
          and d_fz2.get("fonlar_kaynak", {}).get("YLB") == "borsapy",
                                                                     "Fonoloji: kalıcı zaman aşımında TEFAS yedeği kullanılır, bildirim değil not düşer"),
+        (d_yt1.get("yabanci_kaynak") == "İş Yatırım tarama (toplu)" and (d_yt1.get("yabanci") or {}).get("bugun_ort_yabanci_orani") == 41.0,
+                                                                    "Yabancı oranı: tek istekle (İş Yatırım tarama) alınır, sadece BIST 30 hisseleri kullanılır"),
+        (d_yt2.get("yabanci_kaynak") == "hisse hisse (yedek)" and str(d_yt2["saglik"]["tum_moduller"].get("yabanci_orani_toplu", "")).startswith("NOT")
+         and "yabanci_orani_toplu" not in d_yt2["saglik"].get("issue_tetikleyen", []),
+                                                                    "Yabancı oranı: toplu tarama çalışmazsa eski yöntem yedek olarak devreye girer, bildirim açılmaz"),
         (sozlesme["ok"],                                            "Sözleşme: sahte borsapy, gerçek borsapy ile aynı arama sütunlarını ve betiğin kullandığı parametreleri taşır"
                                                                     + ("" if sozlesme["gercek"] else " (gerçek borsapy yüklü değil — ATLANDI)")),
         ("KABA TAHMİN" in str((((d_kaba.get("tahvil_analiz") or {}).get("fonlar") or {}).get("YOT") or {}).get("sure_kaynagi")),
