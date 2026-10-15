@@ -81,7 +81,7 @@ def en_yavaslar(n=10):
 KARNE_FILE = "output/kaynak_karnesi.json"
 KAYNAK_ESLEME = (("fonoloji", ("fonoloji_",)), ("tefas", ("fon_", "rakip_tarama")), ("evds", ("evds_", "verim_evds")),
                  ("yahoo", ("yahoo_",)), ("borsapy_endeks", ("borsapy_endeks_", "genislik_")),
-                 ("yabanci_payi", ("yabanci_orani",)), ("doviz_altin", ("fx_", "gram_altin_gecmis")),
+                 ("yabanci_payi", ("yabanci_orani", "yabanci_orani_toplu")), ("doviz_altin", ("fx_", "gram_altin_gecmis")),
                  ("tahvil_faizi", ("tahvil", "tahvil_doviz_kendi")),
                  ("tradingview", ("tahvil_tradingview", "verim_gecmisi_tv")), ("takvim", ("takvim_",)))
 KAYNAK_HARIC = ("fon_akis", "fon_tutarlilik")          # hesaplama modülleri, veri kaynağı değil
@@ -497,6 +497,24 @@ def breadth_scan(index_code="XUTUM", min_rows=100):
             "yukselen_orani_pct": round(float((ch > 0).mean() * 100), 1),
             "medyan_degisim_pct": round(float(ch.median()), 2)}
 
+
+def foreign_ratios_toplu():
+    """15 Eki: İş Yatırım hisse tarama ekranından TEK istekle bütün hisselerin yabancı oranı.
+    Eski yöntem (30 hisseyi tek tek sormak) yavaşladı: 8 dk sürdü, son günlerde 150 sn'de 3-18/30 hisse."""
+    comps = set(bp.Index("XU030").component_symbols)
+    sc = bp.Screener()
+    sc.add_filter("foreign_ratio", min=0, max=100)
+    df = sc.run()
+    col = "criteria_40" if "criteria_40" in df.columns else None     # İş Yatırım kriter 40 = Cari Yabancı Oranı (%)
+    if col is None:
+        raise ValueError(f"tarama sonucunda yabancı oranı sütunu yok ({list(df.columns)[:6]})")
+    out = {}
+    for sym, v in zip(df["symbol"], df[col]):
+        if sym in comps and isinstance(v, (int, float)) and not isinstance(v, bool) and 0 <= v <= 100:
+            out[sym] = float(v)
+    if len(out) < len(comps) / 2:
+        raise ValueError(f"toplu tarama: BIST 30'un {len(out)}/{len(comps)} hissesi geldi")
+    return out
 
 def foreign_ratios():
     import time
@@ -2115,7 +2133,14 @@ def main():
 
     onceki_yab = prev.get("yabanci") or {}
     if bp and (gunluk_saat or not onceki_yab or "hata" in onceki_yab):
-        fr = safe("yabanci_orani", foreign_ratios)
+        fr = safe("yabanci_orani_toplu", foreign_ratios_toplu)        # 15 Eki: önce tek istek
+        R["yabanci_kaynak"] = "İş Yatırım tarama (toplu)" if fr else None
+        if not fr:
+            fr = safe("yabanci_orani", foreign_ratios)                     # yedek: hisse hisse (150 sn sınırlı)
+            if fr:
+                R["yabanci_kaynak"] = "hisse hisse (yedek)"
+                if str(HEALTH.get("yabanci_orani_toplu", "")).startswith("HATA"):
+                    HEALTH["yabanci_orani_toplu"] = "NOT: " + HEALTH["yabanci_orani_toplu"][6:] + " (yedek yöntem çalıştı)"
         if fr:
             R["yabanci"] = safe("yabanci_trend", lambda: foreign_trend(fr))
         elif onceki_yab and "hata" not in onceki_yab:     # 12 Eki: kaynak yavaş/kapalı → önceki veri, bildirim yok
