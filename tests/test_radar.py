@@ -73,6 +73,15 @@ def sozlesme_kontrol():
                     sorun.append(f"bp.{ad}(…{kw.arg}=…) gerçek imzada yok")
     spec = importlib.util.spec_from_file_location("sahte_bp", os.path.join(MOCK, "borsapy.py"))
     sahte = importlib.util.module_from_spec(spec); spec.loader.exec_module(sahte)
+    # 15 Eki: TradingView sağlayıcısı (tahvil faizi yedeği) — gerçek imza betiğin kullandığı parametreleri içeriyor mu
+    try:
+        from borsapy._providers.tradingview import get_tradingview_provider, TradingViewProvider
+        _im = inspect.signature(TradingViewProvider.get_history)
+        for _p in ("symbol", "period", "interval", "exchange"):
+            if _p not in _im.parameters:
+                sorun.append(f"TradingViewProvider.get_history gerçek imzasında '{_p}' yok")
+    except Exception as e:
+        sorun.append(f"TradingView sağlayıcısı içe aktarılamadı: {type(e).__name__}: {e}")
     kaynak = inspect.getsource(gercek.EVDS.search)
     for sutun in sahte.evds_search("gösterge").columns:
         if f'"{sutun}"' not in kaynak:
@@ -147,14 +156,22 @@ def main():
     sys.path.insert(0, MOCK); import requests as _mreq; sys.path.pop(0)
     _p_son = _mreq.get("https://x/v1/funds/YOT/history", {"period": "1y"}).json()["points"][-1]["price"]
     d_poz_yakin = calistir(kok={"ayarlar.json": _poz(giris_fiyati=round(_p_son / 0.965, 6))})
-    d_kaba = calistir(kok={"ayarlar.json": _poz()}, ek_env={"EVDS_API_KEY": ""})   # verim geçmişi yok → kaba tahmin
+    d_kaba = calistir(kok={"ayarlar.json": _poz()}, ek_env={"EVDS_API_KEY": "", "RADAR_MOCK_TV_HATA": "1"})   # verim geçmişi yok → kaba tahmin
     # 9 Eki: EVDS'de gösterge seri yok (canlıdaki gerçek durum) → bilgi notu, Issue yok, aday listesi dosyada, haftada bir yeniden arama
-    d_vyok = calistir(kok={"ayarlar.json": _poz()}, ek_env={"RADAR_MOCK_EVDS_VERIM_YOK": "1"})
+    d_vyok = calistir(kok={"ayarlar.json": _poz()}, ek_env={"RADAR_MOCK_EVDS_VERIM_YOK": "1", "RADAR_MOCK_TV_HATA": "1"})
     _vyok_dosya = json.load(open(os.path.join(EVREN["son"], "output", "verim_evds.json"), encoding="utf-8"))
     d_vyok2 = calistir_klasor(EVREN["son"], {"RADAR_MOCK_EVDS_VERIM_YOK": "1", "RADAR_AGIR": "true"})
     d_vkod = calistir(kok={"ayarlar.json": _aj({**json.loads(_poz()), "verim_evds_kodu": "TP.DIBS.G2Y"})},
                       ek_env={"RADAR_MOCK_EVDS_VERIM_YOK": "1"})
     sozlesme = sozlesme_kontrol()
+    # 15 Eki: tahvil faizi kaynağı (doviz.com) bozuldu → yedekler
+    d_th1 = calistir(kok={"ayarlar.json": _poz()}, ek_env={"RADAR_MOCK_TAHVIL_HATA": "1", "RADAR_MOCK_DOVIZ_SAYFA": "yeni"})
+    d_th2 = calistir(kok={"ayarlar.json": _poz()}, ek_env={"RADAR_MOCK_TAHVIL_HATA": "1", "RADAR_MOCK_DOVIZ_SAYFA": "bot"})
+    _tani = json.load(open(os.path.join(EVREN["son"], "output", "tahvil_tani.json"), encoding="utf-8"))
+    for _i in range(4):                                     # art arda 4 bozuk birincil, yedek çalışıyor
+        d_th2b = calistir_klasor(EVREN["son"], {"RADAR_MOCK_TAHVIL_HATA": "1", "RADAR_MOCK_DOVIZ_SAYFA": "bot"})
+    d_th3 = calistir(kok={"ayarlar.json": _poz()}, ek_env={"RADAR_MOCK_TAHVIL_HATA": "1", "RADAR_MOCK_TV_HATA": "1"})
+    d_tvh = calistir(kok={"ayarlar.json": _poz()}, ek_env={"RADAR_AGIR": "true", "RADAR_MOCK_EVDS_VERIM_YOK": "1"})
     # 12 Eki: sabah ağır çalışması 40 dk'da iptal edildi → süre bütçesi + sert sınır
     calistir()                                             # önceki veriyi üreten temel çalışma
     _sure_klasor = EVREN["son"]
@@ -269,6 +286,25 @@ def main():
         (str(d_tf1["saglik"]["tum_moduller"].get("yabanci_orani", "")).startswith("NOT:")
          and "önceki veri" in str((d_tf1.get("yabanci") or {}).get("not_onbellek", "")),
                                                                     "Yabancı oranı: kaynak yavaşsa süre sınırında durur, önceki veri kullanılır, bildirim yok"),
+        # --- 15 Eki: tahvil faizi yedekleri + TradingView geçmişi ---
+        (d_th1.get("tahvil_kaynak") == "doviz.com (kendi okuma)" and str(d_th1["saglik"]["tum_moduller"].get("tahvil", "")).startswith("NOT")
+         and "tahvil" not in d_th1["saglik"].get("issue_tetikleyen", [])
+         and any(x.get("maturity") == "2Y" and abs(x.get("yield", 0) - 39.58) < 0.01 for x in d_th1.get("tahvil") or []),
+                                                                    "Tahvil: borsapy okuyamazsa doviz.com sayfası kendi yöntemimizle okunur (tablo kimliğine bağlı değil)"),
+        (str(d_th2.get("tahvil_kaynak", "")).startswith("TVC:TR02Y") and not any(k.startswith("tahvil") for k in d_th2["saglik"].get("issue_tetikleyen", [])),
+                                                                    "Tahvil: sayfa da okunamazsa TradingView yedeği devreye girer, bildirim açılmaz"),
+        (_tani.get("bot_isareti") is True and _tani.get("baslik") == "Just a moment...",
+                                                                    "Tahvil: okunamayan sayfanın ne döndürdüğü tanı dosyasına yazılır (bot sayfası teşhisi)"),
+        (str(d_th2b["saglik"]["tum_moduller"].get("kaynak_tahvil_faizi", "")).startswith("NOT")
+         and "kaynak_tahvil_faizi" not in d_th2b["saglik"].get("issue_tetikleyen", []),
+                                                                    "Karne: birincil kaynak bozuk ama yedeği çalışıyorsa uyarı değil not düşer"),
+        ("tahvil" in d_th3["saglik"].get("issue_tetikleyen", []),  "Tahvil: bütün kaynaklar bozuksa bildirim açılır"),
+        ((d_tvh.get("verim_tv") or {}).get("dogrulandi") is True and (d_tvh.get("verim_tv") or {}).get("kod") == "TVC:TR02Y"
+         and (d_tvh.get("verim_tv") or {}).get("gozlem", 0) >= 400,
+                                                                    "Tahvil: 2 yıllık faizin 2 yıllık geçmişi TradingView'den alınır, kendi arşivimizle doğrulanır"),
+        (str((d_tvh.get("tahvil_analiz") or {}).get("verim_kaynagi", "")).startswith("TradingView")
+         and 1.3 <= ((((d_tvh.get("tahvil_analiz") or {}).get("fonlar") or {}).get("YOT") or {}).get("etkin_sure") or {}).get("sure_yil", 0) <= 1.7,
+                                                                    "Tahvil: EVDS'de seri yokken bile YOT'un faize duyarlılığı geçmiş veriden hesaplanır (kaba tahmin bitti)"),
         (sozlesme["ok"],                                            "Sözleşme: sahte borsapy, gerçek borsapy ile aynı arama sütunlarını ve betiğin kullandığı parametreleri taşır"
                                                                     + ("" if sozlesme["gercek"] else " (gerçek borsapy yüklü değil — ATLANDI)")),
         ("KABA TAHMİN" in str((((d_kaba.get("tahvil_analiz") or {}).get("fonlar") or {}).get("YOT") or {}).get("sure_kaynagi")),
