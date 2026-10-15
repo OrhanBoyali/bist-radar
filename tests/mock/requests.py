@@ -38,8 +38,16 @@ _DOVIZ_SAYFA = {   # 15 Eki: doviz.com/tahvil sayfası senaryoları
              "<tr><td>TR 5 Yıllık</td><td>38,62</td><td>%0,78</td></tr>"
              "<tr><td>TR 10 Yıllık</td><td>35,52</td><td>%0,28</td></tr></tbody></table></body></html>")}
 
+_ZA = set()
+
 def get(url, params=None, headers=None, timeout=20):
     import os
+    _kod = url.rstrip("/").split("/funds/")[-1].split("/")[0] if "/funds/" in url else None
+    if _kod and _kod in (os.environ.get("RADAR_MOCK_FONO_TIMEOUT_HEP") or "").split(","):      # 15 Eki: Fonoloji hep zaman aşımı
+        raise TimeoutError("HTTPSConnectionPool(host='fonoloji.com', port=443): Read timed out. (read timeout=20)")
+    if _kod and _kod in (os.environ.get("RADAR_MOCK_FONO_TIMEOUT") or "").split(",") and _kod not in _ZA:
+        _ZA.add(_kod)                                                                          # 15 Eki: tek seferlik zaman aşımı
+        raise TimeoutError("HTTPSConnectionPool(host='fonoloji.com', port=443): Read timed out. (read timeout=20)")
     if "doviz.com/tahvil" in url:
         return _Resp({}, 200, {}, _DOVIZ_SAYFA.get(os.environ.get("RADAR_MOCK_DOVIZ_SAYFA") or "bot"))
     code = url.rstrip("/").split("/funds/")[-1].split("/")[0]
