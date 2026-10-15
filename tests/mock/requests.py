@@ -11,8 +11,8 @@ def _portfoy(code):
     return {"stock": 0, "cash": 100}
 
 class _Resp:
-    def __init__(self, data, status=200, headers=None):
-        self._d, self.status_code, self.headers = data, status, (headers or {})
+    def __init__(self, data, status=200, headers=None, text=""):
+        self._d, self.status_code, self.headers, self.text = data, status, (headers or {}), text
     def json(self): return self._d
     def raise_for_status(self):
         if self.status_code >= 400: raise RuntimeError(f"HTTP {self.status_code}")
@@ -31,8 +31,17 @@ _SURE = {"YOT": 1.5, "KB0": 4.0}      # 7 Eki: bilinen faiz duyarlılığı (yı
 _SAYAC = [0]
 _BIZIM = ("YLB", "IJV", "ZBJ", "BGP", "TIE", "AKU")
 
+_DOVIZ_SAYFA = {   # 15 Eki: doviz.com/tahvil sayfası senaryoları
+    "bot": "<html><head><title>Just a moment...</title></head><body>cf-chl</body></html>",
+    "yeni": ("<html><head><title>Tahvil Faizleri</title></head><body><table class='yeni'><tbody>"
+             "<tr><td>TR 2 Yıllık</td><td>39,58</td><td>%0,33</td></tr>"
+             "<tr><td>TR 5 Yıllık</td><td>38,62</td><td>%0,78</td></tr>"
+             "<tr><td>TR 10 Yıllık</td><td>35,52</td><td>%0,28</td></tr></tbody></table></body></html>")}
+
 def get(url, params=None, headers=None, timeout=20):
     import os
+    if "doviz.com/tahvil" in url:
+        return _Resp({}, 200, {}, _DOVIZ_SAYFA.get(os.environ.get("RADAR_MOCK_DOVIZ_SAYFA") or "bot"))
     code = url.rstrip("/").split("/funds/")[-1].split("/")[0]
     _SAYAC[0] += 1
     if _SAYAC[0] <= int(os.environ.get("RADAR_MOCK_429") or 0):            # 6 Eki: ilk N istek hız sınırı
