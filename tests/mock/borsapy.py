@@ -59,7 +59,26 @@ class Fund:
     def management_fee(self): return 1.0
 class Inflation:
     def latest(self): return {"monthly": 1.84}
-def bonds(): return pd.DataFrame({"maturity": ["2Y", "10Y"], "yield": [39.7, 35.1], "change_pct": [0.1, 0.2]})
+def bonds():
+    import os
+    if os.environ.get("RADAR_MOCK_TAHVIL_HATA"):                  # 14 Eki: doviz.com tablosu okunamadı
+        raise RuntimeError("DataNotAvailableError: Bond table not found on page")
+    return pd.DataFrame({"maturity": ["2Y", "10Y"], "yield": [39.7, 35.1], "change_pct": [0.1, 0.2]})
+
+class _SahteTV:
+    """15 Eki: TradingView sağlayıcısı sahtesi — gerçek imza: get_history(symbol, period, interval, start, end, exchange)."""
+    def get_history(self, symbol, period="1mo", interval="1d", start=None, end=None, exchange="BIST"):
+        import os
+        if os.environ.get("RADAR_MOCK_TV_HATA") or exchange != "TVC":
+            raise ConnectionError("TradingView error: timed out")
+        if symbol not in ("TR02Y", "TR05Y", "TR10Y"):
+            raise ValueError("Invalid symbol")
+        n = {"5d": 5, "2y": 500}.get(period, 22)
+        idx = pd.bdate_range(end=datetime.now().date(), periods=n)
+        fark = {"TR02Y": 0.0, "TR05Y": -1.0, "TR10Y": -4.0}[symbol]
+        kayma = 39.7 - _sahte_verim(datetime.now().date())          # bugünkü değer = bonds() sahtesi (doğrulama tutar)
+        return pd.DataFrame({"Close": [_sahte_verim(d.date()) + kayma + fark for d in idx]}, index=idx)
+_TEST_TV = _SahteTV()
 class FX:
     def __init__(self, k): self.k = k
     @property
