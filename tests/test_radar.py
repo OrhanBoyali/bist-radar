@@ -13,9 +13,20 @@ KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MOCK = os.path.join(KOK, "tests", "mock")
 
 EVREN = {}
+
+def _varsayilan_an():
+    """17 Eki: testler hafta sonu/öğleden sonra çalıştırılınca ağır pencere açılmıyor ve bazı testler düşüyordu
+    (saate bağımlılık, hata #17 benzeri). Varsayılan an: Türkiye saatiyle en son iş günü 09:17 (sabah ağır penceresi)."""
+    from datetime import datetime as _dt, timezone as _tz, timedelta as _td
+    g = _dt.now(_tz(_td(hours=3))).date()
+    while g.weekday() >= 5:
+        g -= _td(days=1)
+    return f"{g:%Y-%m-%d} 09:17"
+_AN = _varsayilan_an()
+
 def calistir_klasor(tmp, ek_env=None):
     """Aynı klasörde tekrar çalıştır (önbellek/çökme testleri)."""
-    env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK, RADAR_TEST_HIZLI="1"); env.update(ek_env or {})
+    env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK, RADAR_TEST_HIZLI="1", RADAR_TEST_NOW=_AN); env.update(ek_env or {})
     subprocess.run([sys.executable, "bist_radar.py"], cwd=tmp, env=env, capture_output=True, timeout=300)
     with open(os.path.join(tmp, "output", "radar.json"), encoding="utf-8") as f:
         return json.load(f)
@@ -32,7 +43,7 @@ def calistir(tohum=None, ek_env=None, kok=None):
     else:
         EVREN["klasor"] = tmp
     shutil.copy(os.path.join(KOK, "bist_radar.py"), tmp)
-    env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK, RADAR_TEST_HIZLI="1"); env.update(ek_env or {})
+    env = dict(os.environ, EVDS_API_KEY="test", FONOLOJI_KEY="test", PYTHONPATH=MOCK, RADAR_TEST_HIZLI="1", RADAR_TEST_NOW=_AN); env.update(ek_env or {})
     subprocess.run([sys.executable, "bist_radar.py"], cwd=tmp, env=env, capture_output=True, timeout=300)
     with open(os.path.join(tmp, "output", "radar.json"), encoding="utf-8") as f:
         return json.load(f)
@@ -192,6 +203,19 @@ def main():
     _ars_sacma = json.load(open(os.path.join(EVREN["son"], "output", "verim_gecmisi.json"), encoding="utf-8"))
     d_yt1 = calistir(ek_env={"RADAR_AGIR": "true"})
     d_yt2 = calistir(ek_env={"RADAR_AGIR": "true", "RADAR_MOCK_TARAMA_HATA": "1"})
+    # 17 Eki: borsa planı (kullanıcı kararı B) + panik dibi alarmı
+    _gercek_ayar = json.load(open(os.path.join(KOK, "ayarlar.json"), encoding="utf-8"))
+    _bp = _gercek_ayar["borsa_plani"]
+    def _plan(**degis):
+        import copy
+        bp_ = copy.deepcopy(_bp)
+        for k in bp_["kurallar"]:
+            k.update(degis.get(k["ad"], {}))
+        return _aj({**json.loads(_poz()), "borsa_plani": bp_, "panik_dibi": _gercek_ayar["panik_dibi"]})
+    d_plan = calistir(kok={"ayarlar.json": _plan()})
+    d_plan2 = calistir(kok={"ayarlar.json": _plan(azalt1={"gerceklesti": True}, azalt2={"gerceklesti": True}, koruma={"seviye": 20000})})
+    d_panik = calistir(kok={"ayarlar.json": _plan()}, ek_env={"RADAR_MOCK_PANIK": "1"})
+    d_plan_bozuk = calistir(kok={"ayarlar.json": _aj({"borsa_plani": {"kurallar": [{"ad": "x", "tip": "yanlis", "seviye": 12000, "islem": "?"}]}})})
     d_fz1 = calistir(ek_env={"RADAR_MOCK_FONO_TIMEOUT": "YLB"})
     d_fz2 = calistir(ek_env={"RADAR_MOCK_FONO_TIMEOUT_HEP": "YLB"})
     # 12 Eki: sabah ağır çalışması 40 dk'da iptal edildi → süre bütçesi + sert sınır
@@ -344,6 +368,19 @@ def main():
         (d_yt2.get("yabanci_kaynak") == "hisse hisse (yedek)" and str(d_yt2["saglik"]["tum_moduller"].get("yabanci_orani_toplu", "")).startswith("NOT")
          and "yabanci_orani_toplu" not in d_yt2["saglik"].get("issue_tetikleyen", []),
                                                                     "Yabancı oranı: toplu tarama çalışmazsa eski yöntem yedek olarak devreye girer, bildirim açılmaz"),
+        ((lambda bpk: bpk.get("azalt1") == "TETİKLENDİ" and bpk.get("azalt2") == "TETİKLENDİ" and bpk.get("plan1") == "BEKLİYOR"
+                     and bpk.get("koruma") == "BEKLİYOR")({k["ad"]: k["durum"] for k in ((d_plan["tetikler"].get("borsa_plani") or {}).get("kurallar") or [])})
+         and "borsa_plani_azalt1" in d_plan["saglik"].get("issue_tetikleyen", []),
+                                                                    "Borsa planı: seviye görülünce kural tetiklenir ve bildirim açılır (12.200 / 12.600 azaltma)"),
+        ((lambda bpk: bpk.get("azalt1") == "YAPILDI" and bpk.get("koruma") == "TETİKLENDİ")({k["ad"]: k["durum"] for k in ((d_plan2["tetikler"].get("borsa_plani") or {}).get("kurallar") or [])})
+         and "borsa_plani_azalt1" not in d_plan2["saglik"]["tum_moduller"] and "borsa_plani_koruma" in d_plan2["saglik"].get("issue_tetikleyen", []),
+                                                                    "Borsa planı: yapıldı işaretli kural susar; haftalık koruma seviyesi altında koruma tetiklenir"),
+        (((d_panik["tetikler"].get("borsa_plani") or {}).get("panik_dibi") or {}).get("durum") == "ALARM"
+         and "panik_dibi" in d_panik["saglik"].get("issue_tetikleyen", [])
+         and ((d_plan["tetikler"].get("borsa_plani") or {}).get("panik_dibi") or {}).get("durum") == "YOK",
+                                                                    "Panik dibi: sert düşüş + yüksek hacim + ertesi gün dönüş → alarm; normal günde alarm yok"),
+        ("borsa_plani" in str(d_plan_bozuk["saglik"]["hatali_moduller"].get("ayarlar")),
+                                                                    "Borsa planı: ayarlar.json'da hatalı kural reddedilir, uyarı verilir"),
         (sozlesme["ok"],                                            "Sözleşme: sahte borsapy, gerçek borsapy ile aynı arama sütunlarını ve betiğin kullandığı parametreleri taşır"
                                                                     + ("" if sozlesme["gercek"] else " (gerçek borsapy yüklü değil — ATLANDI)")),
         ("KABA TAHMİN" in str((((d_kaba.get("tahvil_analiz") or {}).get("fonlar") or {}).get("YOT") or {}).get("sure_kaynagi")),
