@@ -180,6 +180,12 @@ def main():
     sys.path.insert(0, MOCK); import requests as _mreq; sys.path.pop(0)
     _p_son = _mreq.get("https://x/v1/funds/YOT/history", {"period": "1y"}).json()["points"][-1]["price"]
     d_poz_yakin = calistir(kok={"ayarlar.json": _poz(giris_fiyati=round(_p_son / 0.965, 6))})
+    # 19 Eki: kıyas fona göre (göreli) zarar sınırı — aynı −%3,5 senaryosunda fark ≈ −3,5 − YLB getirisi
+    _gf = round(_p_son / 0.965, 6)
+    d_poz_goreli = calistir(kok={"ayarlar.json": _poz(giris_fiyati=_gf, goreli_zarar_puan=-1)})
+    _fy = ((d_poz_yakin.get("pozisyon_takip") or {}).get("YOT") or {}).get("fark_puan") or -4.0
+    d_poz_goreli_yakin = calistir(kok={"ayarlar.json": _poz(giris_fiyati=_gf, goreli_zarar_puan=round(_fy / 0.85, 2))})
+    d_poz_goreli_bozuk = calistir(kok={"ayarlar.json": _poz(goreli_zarar_puan=1)})
     d_kaba = calistir(kok={"ayarlar.json": _poz()}, ek_env={"EVDS_API_KEY": "", "RADAR_MOCK_TV_HATA": "1"})   # verim geçmişi yok → kaba tahmin
     # 9 Eki: EVDS'de gösterge seri yok (canlıdaki gerçek durum) → bilgi notu, Issue yok, aday listesi dosyada, haftada bir yeniden arama
     d_vyok = calistir(kok={"ayarlar.json": _poz()}, ek_env={"RADAR_MOCK_EVDS_VERIM_YOK": "1", "RADAR_MOCK_TV_HATA": "1"})
@@ -389,6 +395,17 @@ def main():
                                                                     "Pozisyon: bankadan teyitli giriş fiyatı esas alınır"),
         ("pozisyon_YOT_yakin" in d_poz_yakin["saglik"]["tum_moduller"] and "pozisyon_YOT_yakin" not in d_poz_yakin["saglik"].get("issue_tetikleyen", []),
                                                                     "Pozisyon: zarar sınırına yaklaşınca bildirimsiz erken not düşer"),
+        # --- 19 Eki göreli zarar sınırı (YOT kural revizyonu) ---
+        (((d_poz_goreli.get("pozisyon_takip") or {}).get("YOT") or {}).get("durum") == "GÖRELİ ZARAR SINIRI"
+         and "pozisyon_YOT" in d_poz_goreli["saglik"].get("issue_tetikleyen", []),
+                                                                    "Pozisyon: kıyas fonun 1 puan gerisine düşünce (mutlak sınır aşılmasa da) bildirim gelir"),
+        (((d_poz_goreli_yakin.get("pozisyon_takip") or {}).get("YOT") or {}).get("durum") == "İZLEMEDE"
+         and "pozisyon_YOT_goreli_yakin" in d_poz_goreli_yakin["saglik"]["tum_moduller"]
+         and "pozisyon_YOT_goreli_yakin" not in d_poz_goreli_yakin["saglik"].get("issue_tetikleyen", []),
+                                                                    "Pozisyon: göreli sınıra yaklaşınca bildirimsiz erken not düşer"),
+        ("pozisyon_kurallari" in str(d_poz_goreli_bozuk["saglik"]["hatali_moduller"].get("ayarlar"))
+         and ((d_poz.get("pozisyon_takip") or {}).get("YOT") or {}).get("goreli_sinira_mesafe_puan") is None,
+                                                                    "Pozisyon: göreli sınır pozitif yazılırsa reddedilir; yazılmazsa eski davranış sürer"),
         # --- 7 Eki tahvil rolü ve pozisyon kuralları ---
         ((d_poz.get("pozisyon_takip") or {}).get("YOT", {}).get("durum") == "İZLEMEDE"
          and isinstance((d_poz.get("pozisyon_takip") or {}).get("YOT", {}).get("fark_puan"), (int, float)),
