@@ -51,5 +51,59 @@
     "A1 PORTFOY",
     "PARDUS",
     "BULLS"
-  ]
+  ],
+  "_borsa_plani_not": "17 Eki kullanıcı kararı (B: tepkilerde azalt). Sistem her çalışmada kontrol eder; tetiklenen kural bildirim (Issue) üretir. Emri verdikten sonra o kurala \"gerceklesti\": true yazılır. tip: gunluk_kapanis_ustu = BIST 100 günlük kapanışı seviyenin üstünde; haftalik_kapanis_alti = cuma kapanışı seviyenin altında. Satışlar TIE'den (AKU daha iyi takip ediyor).",
+  "borsa_plani": {
+    "karar_tarihi": "2026-10-17",
+    "satis_fonu": "TIE",
+    "kurallar": [
+      {
+        "ad": "azalt1",
+        "tip": "gunluk_kapanis_ustu",
+        "seviye": 12200,
+        "islem": "TIE 87.400 adet sat (pozisyonun ~1/3'ü)",
+        "gerceklesti": false
+      },
+      {
+        "ad": "azalt2",
+        "tip": "gunluk_kapanis_ustu",
+        "seviye": 12600,
+        "islem": "TIE 87.400 adet daha sat (~1/3)",
+        "gerceklesti": false
+      },
+      {
+        "ad": "plan1",
+        "tip": "gunluk_kapanis_ustu",
+        "seviye": 14000,
+        "islem": "kalan pozisyonun yarısını sat",
+        "gerceklesti": false
+      },
+      {
+        "ad": "plan2",
+        "tip": "gunluk_kapanis_ustu",
+        "seviye": 14450,
+        "islem": "kalan pozisyonun tamamını sat",
+        "gerceklesti": false
+      },
+      {
+        "ad": "koruma",
+        "tip": "haftalik_kapanis_alti",
+        "seviye": 10500,
+        "islem": "kalan pozisyonun yarısını sat (koruma)",
+        "gerceklesti": false
+      }
+    ],
+    "zaman_duragi": {
+      "tarih": "2027-03-31",
+      "islem": "pozisyon aynı dönemde para piyasasını geçmediyse kalanı sat",
+      "gerceklesti": false
+    }
+  },
+  "_panik_dibi_not": "Panik dibi alarmı: bir gün dusus_pct'den sert düşüş + 20 günlük ortalamanın hacim_kat katı hacim (+ arşivde taban sayısı ≥ taban_min), ertesi gün donus_pct'den güçlü yükseliş → bildirim. Otomatik alım yok, konuşulur.",
+  "panik_dibi": {
+    "dusus_pct": -3.0,
+    "hacim_kat": 1.8,
+    "donus_pct": 1.5,
+    "taban_min": 40
+  }
 }
