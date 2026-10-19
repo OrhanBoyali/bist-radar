@@ -13,7 +13,12 @@ class Index:
     def __init__(self, s): self.s = s
     def history(self, period="1y"):
         if self.s == "XU100":   # son iki kapanış MA200'ün üstünde olsun → dönüş kapısı teste açık
-            df = _ohlc(); df.iloc[-2:, df.columns.get_loc("Close")] = [13700, 13720]; return df
+            import os
+            df = _ohlc(); df.iloc[-2:, df.columns.get_loc("Close")] = [13700, 13720]
+            if os.environ.get("RADAR_MOCK_PANIK"):      # 17 Eki: panik günü (−%4, 3× hacim) + ertesi gün +%2 dönüş
+                df.iloc[-3:, df.columns.get_loc("Close")] = [13000, 12480, 12730]
+                df.iloc[-2, df.columns.get_loc("Volume")] = int(df["Volume"].iloc[-22:-2].mean() * 3)
+            return df
         return _ohlc(seed=hash(self.s) % 100)
     @property
     def component_symbols(self): return [f"H{i}" for i in range(30)]
@@ -89,7 +94,7 @@ class _SahteTV:
         n = {"5d": 5, "2y": 500}.get(period, 22)
         idx = pd.bdate_range(end=datetime.now().date(), periods=n)
         fark = {"TR02Y": 0.0, "TR05Y": -1.0, "TR10Y": -4.0}[symbol]
-        kayma = 39.7 - _sahte_verim(datetime.now().date())          # bugünkü değer = bonds() sahtesi (doğrulama tutar)
+        kayma = 39.7 - _sahte_verim(idx[-1].date())                 # son iş günü değeri = bonds() sahtesi (doğrulama tutar)
         # 15 Eki: gerçekteki gibi YARIYILLIK verim döndür (doviz.com/arşiv yıllık bileşik) → betik çevirmeli
         yariyil = lambda c: 200.0 * ((1 + c / 100.0) ** 0.5 - 1)
         return pd.DataFrame({"Close": [yariyil(_sahte_verim(d.date()) + kayma + fark) for d in idx]}, index=idx)
