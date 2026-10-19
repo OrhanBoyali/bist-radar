@@ -226,12 +226,14 @@ def ayarlari_yukle():
         "verim_evds_kodu": lambda v: isinstance(v, str) and v.startswith("TP.") and len(v) < 60,   # 9 Eki: EVDS seri kodu elle
         # 7 Eki: pozisyon kuralları — {"YOT": {"giris_tarihi": "YYYY-AA-GG", "kiyas": "YLB", "kar_sarti_puan": 2,
         #        "kar_tarihi": "...", "zaman_duragi_tarihi": "...", "zarar_siniri_pct": -4}}
+        # 19 Eki: isteğe bağlı "goreli_zarar_puan": -1 → kıyas fonun bu kadar puan gerisine düşerse çıkış (≤ 0 olmalı)
         "pozisyon_kurallari": lambda v: isinstance(v, dict) and all(
             isinstance(k, str) and isinstance(x, dict) and isinstance(x.get("giris_tarihi"), str) and len(x["giris_tarihi"]) == 10
             and isinstance(x.get("kiyas"), str) and all(num(x.get(n), -100, 100) for n in ("kar_sarti_puan", "zarar_siniri_pct"))
             and all(isinstance(x.get(n), str) and len(x[n]) == 10 for n in ("kar_tarihi", "zaman_duragi_tarihi"))
             and (x.get("baslangic_politika_faizi") is None or num(x.get("baslangic_politika_faizi"), 0, 100))
             and (x.get("giris_fiyati") is None or num(x.get("giris_fiyati"), 1e-9, 1e9))      # 7 Eki: bankadan teyitli
+            and (x.get("goreli_zarar_puan") is None or num(x.get("goreli_zarar_puan"), -100, 0))   # 19 Eki
             for k, x in v.items()),
     }
     for alan, ok in kontroller.items():
@@ -2058,10 +2060,15 @@ def pozisyon_takip():
             fark = round(get1 - get2, 2)
             bas_pf = k.get("baslangic_politika_faizi")
             indirim = bool(bas_pf is not None and POLITIKA_FAIZI["oran"] < bas_pf)
+            gz = k.get("goreli_zarar_puan")        # 19 Eki: kıyas fona göre zarar sınırı (puan, ≤ 0)
             durum, mesaj = "İZLEMEDE", None
             if get1 <= k["zarar_siniri_pct"]:
                 durum = "ZARAR SINIRI"
                 mesaj = f"{kod} alıştan bu yana %{get1} — zarar sınırı (%{k['zarar_siniri_pct']}) aşıldı: çık ve değerlendir"
+            elif gz is not None and fark <= gz:
+                durum = "GÖRELİ ZARAR SINIRI"
+                mesaj = (f"{kod} {k['kiyas']}'in {fark} puan gerisinde — göreli zarar sınırı ({gz} puan) aşıldı: "
+                         f"{k['kiyas']}'e dönüş değerlendir")
             elif bugun >= k["kar_tarihi"]:
                 durum = "BAŞARILI" if fark >= k["kar_sarti_puan"] else "KÂR ŞARTI SAĞLANMADI"
                 mesaj = f"{kod} kâr tarihi geldi: {k['kiyas']}'e göre {fark:+} puan (şart +{k['kar_sarti_puan']}) → {durum}"
@@ -2072,12 +2079,16 @@ def pozisyon_takip():
             if durum == "İZLEMEDE" and get1 <= 0.75 * k["zarar_siniri_pct"]:
                 HEALTH[f"pozisyon_{kod}_yakin"] = (f"NOT: {kod} zarar sınırına yaklaşıyor: alıştan bu yana %{get1} "
                                                     f"(sınır %{k['zarar_siniri_pct']})")
+            if durum == "İZLEMEDE" and gz is not None and gz < 0 and fark <= 0.75 * gz:
+                HEALTH[f"pozisyon_{kod}_goreli_yakin"] = (f"NOT: {kod} göreli zarar sınırına yaklaşıyor: {k['kiyas']}'e göre "
+                                                           f"{fark} puan (sınır {gz} puan)")
             out[kod] = {"giris_tarihi": k["giris_tarihi"], "giris_fiyati": J(giris),
                         "giris_fiyati_kaynak": "banka (ayarlar.json)" if k.get("giris_fiyati") else "tahmini (alım sonrası ilk fiyat)",
                         "son_fiyat": J(a1.iloc[-1]),
                         "son_fiyat_tarihi": a1.index[-1].strftime("%Y-%m-%d"), "getiri_pct": get1,
                         "kiyas": k["kiyas"], "kiyas_getiri_pct": get2, "fark_puan": fark,
                         "zarar_sinirina_mesafe_puan": round(get1 - k["zarar_siniri_pct"], 2),
+                        "goreli_sinira_mesafe_puan": round(fark - gz, 2) if gz is not None else None,
                         "faiz_indirimi_basladi": indirim, "durum": durum, "kurallar": k}
             if mesaj:
                 HEALTH[f"pozisyon_{kod}"] = "UYARI: POZİSYON KURALI — " + mesaj
