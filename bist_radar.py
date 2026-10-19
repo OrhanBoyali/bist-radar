@@ -214,6 +214,15 @@ def ayarlari_yukle():
         "tufe_aylik_manuel": lambda v: num(v, -5, 20),
         "min_fon_buyuklugu": lambda v: num(v, 0, 1e12),
         "tasfiye_kurucular": lambda v: isinstance(v, list) and all(isinstance(x, str) and x for x in v),
+        # 17 Eki: borsa planı (kullanıcı kararı B) ve panik dibi alarmı eşikleri
+        "borsa_plani": lambda v: isinstance(v, dict) and isinstance(v.get("kurallar"), list) and all(
+            isinstance(k, dict) and isinstance(k.get("ad"), str) and k.get("tip") in ("gunluk_kapanis_ustu", "haftalik_kapanis_alti")
+            and num(k.get("seviye"), 1000, 100000) and isinstance(k.get("islem"), str)
+            and isinstance(k.get("gerceklesti", False), bool) for k in v["kurallar"])
+            and (v.get("zaman_duragi") is None or (isinstance(v["zaman_duragi"], dict) and isinstance(v["zaman_duragi"].get("tarih"), str)
+                                                   and len(v["zaman_duragi"]["tarih"]) == 10)),
+        "panik_dibi": lambda v: isinstance(v, dict) and num(v.get("dusus_pct"), -20, 0) and num(v.get("hacim_kat"), 1, 10)
+                                and num(v.get("donus_pct"), 0, 20) and num(v.get("taban_min", 0), 0, 1000),
         "verim_evds_kodu": lambda v: isinstance(v, str) and v.startswith("TP.") and len(v) < 60,   # 9 Eki: EVDS seri kodu elle
         # 7 Eki: pozisyon kuralları — {"YOT": {"giris_tarihi": "YYYY-AA-GG", "kiyas": "YLB", "kar_sarti_puan": 2,
         #        "kar_tarihi": "...", "zaman_duragi_tarihi": "...", "zarar_siniri_pct": -4}}
@@ -362,6 +371,11 @@ def summarize(df, src, with_ma=True, bist=True):
             v20 = df["Volume"].tail(21).iloc[:-1].mean()
             out["hacim_orani_20g"] = J(df["Volume"].iloc[-1] / v20) if v20 else None
         out["son_5_kapanis"] = [{"t": d.strftime("%Y-%m-%d"), "k": J(v)} for d, v in c.tail(5).items()]
+        if "Volume" in df.columns:          # 17 Eki: panik dibi alarmı için son günlerin değişimi ve hacim oranı
+            vol = df["Volume"]; v20 = vol.shift(1).rolling(20).mean(); deg = c.pct_change() * 100
+            out["son_5_bar"] = [{"t": d.strftime("%Y-%m-%d"), "k": J(c[d]), "degisim_pct": J(round(deg[d], 2)) if pd.notna(deg[d]) else None,
+                                 "hacim_orani": J(round(vol[d] / v20[d], 2)) if pd.notna(v20[d]) and v20[d] else None,
+                                 "kismi": bool(partial and d == df.index[-1])} for d in c.tail(5).index]
     return out
 
 def index_block(sym, with_ma=True):
@@ -2085,6 +2099,65 @@ def agir_slot():
     return None
 
 
+PANIK_VARSAYILAN = {"dusus_pct": -3.0, "hacim_kat": 1.8, "donus_pct": 1.5, "taban_min": 40}
+
+def borsa_plani_kontrol(R, T):
+    """17 Eki (kullanıcı kararı B): borsa pozisyonu satış/koruma kuralları + panik dibi alarmı.
+    Tetiklenen ve 'gerceklesti' işaretlenmemiş her kural UYARI üretir → bildirim (Issue) gelir."""
+    b = R.get("bist100") or {}
+    barlar = [x for x in (b.get("son_5_bar") or []) if not x.get("kismi")]
+    if not barlar:
+        return {"not": "tamamlanmış günlük kapanış yok"}
+    son = barlar[-1]; kap = son.get("k")
+    hk = T.get("tez_cizgisi_referans_kapanis")
+    out = {"son_kapanis": kap, "son_kapanis_tarihi": son.get("t"), "haftalik_kapanis": hk, "kurallar": []}
+    plan = AYAR.get("borsa_plani") or {}
+    for k in plan.get("kurallar") or []:
+        if k.get("gerceklesti"):
+            durum = "YAPILDI"
+        else:
+            ref = kap if k["tip"] == "gunluk_kapanis_ustu" else hk
+            tetik = ref is not None and ((ref >= k["seviye"]) if k["tip"] == "gunluk_kapanis_ustu" else (ref < k["seviye"]))
+            durum = "TETİKLENDİ" if tetik else "BEKLİYOR"
+            if tetik:
+                ne = "günlük kapanış" if k["tip"] == "gunluk_kapanis_ustu" else "haftalık kapanış"
+                HEALTH[f"borsa_plani_{k['ad']}"] = (f"UYARI: BORSA PLANI — {ne} {ref} {'≥' if k['tip'] == 'gunluk_kapanis_ustu' else '<'} "
+                                                    f"{k['seviye']} → {k['islem']}. Emri ilk iş günü 13:30'dan önce ver; "
+                                                    f"yapınca ayarlar.json'da bu kurala \"gerceklesti\": true yaz")
+        ref = kap if k["tip"] == "gunluk_kapanis_ustu" else hk
+        out["kurallar"].append({"ad": k["ad"], "tip": k["tip"], "seviye": k["seviye"], "islem": k["islem"], "durum": durum,
+                                "uzaklik_pct": pct(k["seviye"], ref) if ref else None})
+    zd = plan.get("zaman_duragi") or {}
+    if zd.get("tarih") and not zd.get("gerceklesti") and NOW.strftime("%Y-%m-%d") >= zd["tarih"]:
+        HEALTH["borsa_plani_zaman_duragi"] = f"UYARI: BORSA PLANI — zaman durağı ({zd['tarih']}) geldi → {zd.get('islem', 'değerlendir')}"
+    out["zaman_duragi"] = zd or None
+    # panik dibi: önceki tamamlanmış gün panik (sert düşüş + yüksek hacim [+ taban sayısı]), son gün güçlü dönüş
+    e = {**PANIK_VARSAYILAN, **(AYAR.get("panik_dibi") or {})}
+    pnk = {"esikler": e, "durum": "YOK"}
+    if len(barlar) >= 2:
+        p_, d_ = barlar[-2], barlar[-1]
+        taban = None
+        if os.path.exists(ARSIV_FILE):
+            try:
+                import csv as _csv
+                for row in _csv.DictReader(open(ARSIV_FILE, encoding="utf-8")):
+                    if row.get("tarih") == p_["t"] and row.get("tum_taban") not in (None, ""):
+                        taban = float(row["tum_taban"])
+            except Exception as ex:
+                pnk["arsiv_hata"] = f"{type(ex).__name__}: {str(ex)[:60]}"
+        panik_gunu = ((p_.get("degisim_pct") or 0) <= e["dusus_pct"] and (p_.get("hacim_orani") or 0) >= e["hacim_kat"]
+                      and (taban is None or taban >= e["taban_min"]))
+        pnk.update({"panik_aday_gun": p_, "donus_gun": d_, "panik_gunu_taban": taban})
+        if panik_gunu and (d_.get("degisim_pct") or 0) >= e["donus_pct"]:
+            pnk["durum"] = "ALARM"
+            HEALTH["panik_dibi"] = (f"UYARI: PANİK DİBİ ALARMI — {p_['t']} %{p_['degisim_pct']} düşüş, hacim {p_['hacim_orani']}× "
+                                    f"(taban {taban if taban is not None else '?'}), ardından {d_['t']} %{d_['degisim_pct']} dönüş. "
+                                    f"Küçük ve kurala bağlı alım KONUŞULACAK (otomatik alım değil)")
+        elif (d_.get("degisim_pct") or 0) <= e["dusus_pct"] and (d_.get("hacim_orani") or 0) >= e["hacim_kat"]:
+            pnk["durum"] = "PANİK GÜNÜ — ertesi gün dönüş bekleniyor"
+    out["panik_dibi"] = pnk
+    return out
+
 def _yedek_siniflandir(fono):
     """6/12 Eki: birincil (Fonoloji) çalıştıysa yedek TEFAS fon/bilgi/ücret hataları bildirim üretmez."""
     for c in FUNDS:
@@ -2505,6 +2578,7 @@ def main():
     T["reel_getiri_tahvil"] = reel_t
     T["pozisyon_takip"] = R.get("pozisyon_takip") or {}
     T["reel_getiri_yontem"] = f"NET: getiri×(1-{STOPAJ_PP}) − aylık TÜFE; ALARM <{REEL_ALARM}, ACİL ≤{REEL_ACIL}"
+    T["borsa_plani"] = safe("borsa_plani_hesap", lambda: borsa_plani_kontrol(R, T))
     R["tetikler"] = T
     # 7 Eki: tahvil analizi (etkin süre + senaryo) — ağır çalışmada; diğerlerinde önceki sonuç
     if bp and (gunluk_saat or not prev.get("tahvil_analiz")):
