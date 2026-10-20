@@ -186,6 +186,16 @@ def main():
     _fy = ((d_poz_yakin.get("pozisyon_takip") or {}).get("YOT") or {}).get("fark_puan") or -4.0
     d_poz_goreli_yakin = calistir(kok={"ayarlar.json": _poz(giris_fiyati=_gf, goreli_zarar_puan=round(_fy / 0.85, 2))})
     d_poz_goreli_bozuk = calistir(kok={"ayarlar.json": _poz(goreli_zarar_puan=1)})
+    # 20 Eki (hata #25): para piyasası fonlarındaki özel sektör tahvili payı alarmı
+    _gun5 = (_pd.Timestamp(_AN[:10]) - _pd.Timedelta(days=5)).strftime("%Y-%m-%d")
+    _gun60 = (_pd.Timestamp(_AN[:10]) - _pd.Timedelta(days=60)).strftime("%Y-%m-%d")
+    d_osba_yuksek = calistir(ek_env={"RADAR_MOCK_OSBA": "YLB:12"})
+    d_osba_artis = calistir(tohum={"ozel_tahvil_gecmis.json": {_gun5: {"ZBJ": 1.0}, _gun60: {"ZBJ": 0.0}}},
+                            ek_env={"RADAR_MOCK_OSBA": "ZBJ:6.5"})
+    d_osba_eski = calistir(tohum={"ozel_tahvil_gecmis.json": {_gun60: {"ZBJ": 0.0}}}, ek_env={"RADAR_MOCK_OSBA": "ZBJ:6.5"})
+    d_osba_yakin = calistir(ek_env={"RADAR_MOCK_OSBA": "BGP:8"})
+    d_osba_izleme = calistir(kok={"ayarlar.json": _aj({"fonlar": {"YLB": "cephane", "IJV": "izleme", "TIE": "borsa"}})},
+                             ek_env={"RADAR_MOCK_OSBA": "IJV:30"})
     d_kaba = calistir(kok={"ayarlar.json": _poz()}, ek_env={"EVDS_API_KEY": "", "RADAR_MOCK_TV_HATA": "1"})   # verim geçmişi yok → kaba tahmin
     # 9 Eki: EVDS'de gösterge seri yok (canlıdaki gerçek durum) → bilgi notu, Issue yok, aday listesi dosyada, haftada bir yeniden arama
     d_vyok = calistir(kok={"ayarlar.json": _poz()}, ek_env={"RADAR_MOCK_EVDS_VERIM_YOK": "1", "RADAR_MOCK_TV_HATA": "1"})
@@ -395,6 +405,25 @@ def main():
                                                                     "Pozisyon: bankadan teyitli giriş fiyatı esas alınır"),
         ("pozisyon_YOT_yakin" in d_poz_yakin["saglik"]["tum_moduller"] and "pozisyon_YOT_yakin" not in d_poz_yakin["saglik"].get("issue_tetikleyen", []),
                                                                     "Pozisyon: zarar sınırına yaklaşınca bildirimsiz erken not düşer"),
+        # --- 20 Eki özel sektör tahvili payı (hata #25) ---
+        ((((d_osba_yuksek.get("tetikler") or {}).get("ozel_tahvil") or {}).get("fonlar") or {}).get("YLB", {}).get("durum") == "YÜKSEK PAY"
+         and "ozel_tahvil_YLB" in d_osba_yuksek["saglik"].get("issue_tetikleyen", []),
+                                                                    "Özel tahvil: para piyasası fonunda şirket tahvili payı %10'u geçince bildirim gelir"),
+        ((((d_osba_artis.get("tetikler") or {}).get("ozel_tahvil") or {}).get("fonlar") or {}).get("ZBJ", {}).get("durum") == "HIZLI ARTIŞ"
+         and "ozel_tahvil_ZBJ" in d_osba_artis["saglik"].get("issue_tetikleyen", []),
+                                                                    "Özel tahvil: pay eşiğin altında olsa da 30 günde ≥5 puan artarsa bildirim gelir"),
+        ((((d_osba_eski.get("tetikler") or {}).get("ozel_tahvil") or {}).get("fonlar") or {}).get("ZBJ", {}).get("durum") == "OK"
+         and "ozel_tahvil_ZBJ" not in d_osba_eski["saglik"].get("issue_tetikleyen", []),
+                                                                    "Özel tahvil: 30 günden eski kayıt artış hesabına girmez (yanlış alarm yok)"),
+        ("ozel_tahvil_BGP_yakin" in d_osba_yakin["saglik"]["tum_moduller"]
+         and "ozel_tahvil_BGP_yakin" not in d_osba_yakin["saglik"].get("issue_tetikleyen", []),
+                                                                    "Özel tahvil: eşiğe yaklaşınca bildirimsiz not düşer"),
+        ("IJV" not in ((((d_osba_izleme.get("tetikler") or {}).get("ozel_tahvil") or {}).get("fonlar")) or {})
+         and not any(k.startswith("ozel_tahvil_IJV") for k in d_osba_izleme["saglik"].get("issue_tetikleyen", [])),
+                                                                    "Özel tahvil: elimizde olmayan ('izleme') fon alarm üretmez"),
+        ((((d_osba_artis.get("tetikler") or {}).get("ozel_tahvil") or {}).get("fonlar") or {}).get("ZBJ", {}).get("gozlem_gun") == 1
+         and (((d_osba_artis.get("tetikler") or {}).get("ozel_tahvil") or {}).get("fonlar") or {}).get("ZBJ", {}).get("30g_en_dusuk_pct") == 1.0,
+                                                                    "Özel tahvil: günlük pay geçmişi tutulur ve gözlem sayısı raporlanır"),
         # --- 19 Eki göreli zarar sınırı (YOT kural revizyonu) ---
         (((d_poz_goreli.get("pozisyon_takip") or {}).get("YOT") or {}).get("durum") == "GÖRELİ ZARAR SINIRI"
          and "pozisyon_YOT" in d_poz_goreli["saglik"].get("issue_tetikleyen", []),
