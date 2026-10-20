@@ -3,13 +3,18 @@
   "_fonlar_not": "Takip edilen fonlar ve rolleri. cephane = güvenli para / para piyasası (reel getiri alarmı ve rakip taraması), borsa = hisse fonu (endeks tutarlılık kontrolü), tahvil = tahvil fonu (pozisyon kurallarıyla izlenir), izleme = elimizde yok ama takipte (alarm üretmez). Fon alınca ekle, satınca sil ya da 'izleme' yap.",
   "fonlar": {
     "YLB": "cephane",
-    "IJV": "cephane",
+    "IJV": "izleme",
     "ZBJ": "cephane",
     "BGP": "cephane",
     "YOT": "tahvil",
     "TIE": "borsa",
     "AKU": "borsa",
     "DLY": "izleme"
+  },
+  "_ozel_tahvil_not": "20 Eki: elimizdeki para piyasası (cephane) ve tahvil fonlarının içindeki özel sektör (şirket) tahvili payı izlenir. pay_pct: bu yüzdeyi geçerse bildirim; artis_puan: son 30 günün en düşüğüne göre bu kadar puan artarsa bildirim (yöneticinin kolay satılanı satıp şirket tahvilini bırakması). IJV 20 Eki'de bu yüzden YLB'ye taşındı ve 'izleme'ye alındı.",
+  "ozel_tahvil_esik": {
+    "pay_pct": 10.0,
+    "artis_puan": 5.0
   },
   "_seviyeler_not": "Borsa planı seviyeleri (BIST 100 puan). Plan değişirse güncellenir.",
   "seviyeler": {
