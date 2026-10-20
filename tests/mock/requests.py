@@ -2,6 +2,11 @@
 import pandas as pd
 
 def _portfoy(code):
+    import os      # 20 Eki: RADAR_MOCK_OSBA="YLB:12,IJV:30" → o fonların özel sektör tahvili payı
+    for parca in (os.environ.get("RADAR_MOCK_OSBA") or "").split(","):
+        if ":" in parca and parca.split(":")[0] == code:
+            p = float(parca.split(":")[1])
+            return {"corporate_bond": p, "government_bond": 10, "cash": 90 - p, "stock": 0}
     if code.startswith("KB") or code == "PB1":
         return {"government_bond": 85, "cash": 15}
     if code.startswith("OS"):
