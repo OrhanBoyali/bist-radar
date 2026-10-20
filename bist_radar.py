@@ -223,6 +223,7 @@ def ayarlari_yukle():
                                                    and len(v["zaman_duragi"]["tarih"]) == 10)),
         "panik_dibi": lambda v: isinstance(v, dict) and num(v.get("dusus_pct"), -20, 0) and num(v.get("hacim_kat"), 1, 10)
                                 and num(v.get("donus_pct"), 0, 20) and num(v.get("taban_min", 0), 0, 1000),
+        "ozel_tahvil_esik": lambda v: isinstance(v, dict) and all(num(v.get(n, 1), 0.1, 100) for n in ("pay_pct", "artis_puan")),   # 20 Eki
         "verim_evds_kodu": lambda v: isinstance(v, str) and v.startswith("TP.") and len(v) < 60,   # 9 Eki: EVDS seri kodu elle
         # 7 Eki: pozisyon kuralları — {"YOT": {"giris_tarihi": "YYYY-AA-GG", "kiyas": "YLB", "kar_sarti_puan": 2,
         #        "kar_tarihi": "...", "zaman_duragi_tarihi": "...", "zarar_siniri_pct": -4}}
@@ -2041,6 +2042,65 @@ def tahvil_analiz(R):
     return out
 
 
+OZEL_TAHVIL_FILE = "output/ozel_tahvil_gecmis.json"
+OZEL_TAHVIL_VARSAYILAN = {"pay_pct": 10.0, "artis_puan": 5.0}
+
+
+def ozel_tahvil_kontrol(R):
+    """20 Eki (hata #25): elimizdeki para piyasası ve tahvil fonlarının içindeki ÖZEL SEKTÖR TAHVİLİ payı.
+    Fon krizinde temerrüt riski bu kanaldan gelir; çıkışlarda yönetici önce kolay satılanı satar → pay yükselir
+    (IJV, 30 Eyl → 1 Eki: %15,7 → %22,8). Alarm: pay > eşik (vars. %10) YA DA son 30 günün en düşüğüne göre
+    ≥ artış eşiği (vars. 5 puan). Payın %75'ine gelince bildirimsiz not. Geçmiş: output/ozel_tahvil_gecmis.json."""
+    esik = dict(OZEL_TAHVIL_VARSAYILAN)
+    esik.update(AYAR.get("ozel_tahvil_esik") or {})
+    bugun = NOW.strftime("%Y-%m-%d")
+    try:
+        with open(OZEL_TAHVIL_FILE, encoding="utf-8") as f:
+            gecmis = json.load(f)
+    except Exception:
+        gecmis = {}
+    if not isinstance(gecmis, dict):
+        gecmis = {}
+    simdi, eksik = {}, []
+    for c in list(CEPHANE) + list(TAHVIL):
+        pf = ((R.get("fonlar") or {}).get(c) or {}).get("portfoy")
+        v = pf.get("corporate_bond") if isinstance(pf, dict) else None
+        if isinstance(v, (int, float)) and not isinstance(v, bool):
+            simdi[c] = round(float(v), 2)
+        else:
+            eksik.append(c)
+    if simdi:
+        gecmis[bugun] = {**(gecmis.get(bugun) or {}), **simdi}
+    alt90 = (NOW - pd.Timedelta(days=90)).strftime("%Y-%m-%d")
+    gecmis = {t: v for t, v in sorted(gecmis.items()) if t >= alt90 and isinstance(v, dict)}
+    os.makedirs("output", exist_ok=True)
+    with open(OZEL_TAHVIL_FILE, "w", encoding="utf-8") as f:
+        json.dump(gecmis, f, ensure_ascii=False, indent=1)
+    alt30 = (NOW - pd.Timedelta(days=30)).strftime("%Y-%m-%d")
+    out = {}
+    for c, pay in simdi.items():
+        onceki = [v[c] for t, v in gecmis.items()
+                  if alt30 <= t < bugun and isinstance(v.get(c), (int, float)) and not isinstance(v.get(c), bool)]
+        en_dusuk = min(onceki) if onceki else None
+        artis = round(pay - en_dusuk, 2) if en_dusuk is not None else None
+        if pay > esik["pay_pct"]:
+            durum = "YÜKSEK PAY"
+        elif artis is not None and artis >= esik["artis_puan"]:
+            durum = "HIZLI ARTIŞ"
+        else:
+            durum = "OK"
+        out[c] = {"ozel_tahvil_payi_pct": pay, "30g_en_dusuk_pct": en_dusuk, "artis_puan": artis,
+                  "gozlem_gun": len(onceki), "durum": durum}
+        if durum != "OK":
+            HEALTH[f"ozel_tahvil_{c}"] = (f"UYARI: {c} içindeki özel sektör tahvili payı %{pay}"
+                                         + (f" (30 günün en düşüğüne göre +{artis} puan)" if artis is not None else "")
+                                         + f" — eşik %{esik['pay_pct']} / +{esik['artis_puan']} puan → fonu değiştirmeyi değerlendir")
+        elif pay >= 0.75 * esik["pay_pct"]:
+            HEALTH[f"ozel_tahvil_{c}_yakin"] = f"NOT: {c} özel sektör tahvili payı %{pay}, eşiğe (%{esik['pay_pct']}) yaklaşıyor"
+    return {"esikler": esik, "fonlar": out, "veri_yok": eksik,
+            "not": "Para piyasası/tahvil fonlarımızda şirket tahvili payı (temerrüt kanalı); 'izleme' fonları dahil değil"}
+
+
 def pozisyon_takip():
     """ayarlar.json → pozisyon_kurallari: alıştan bu yana getiri, kıyas fonla fark ve kuralların durumu.
     Bir kural tetiklenirse sağlık raporuna UYARI yazar → bildirim gelir."""
@@ -2590,6 +2650,7 @@ def main():
     T["pozisyon_takip"] = R.get("pozisyon_takip") or {}
     T["reel_getiri_yontem"] = f"NET: getiri×(1-{STOPAJ_PP}) − aylık TÜFE; ALARM <{REEL_ALARM}, ACİL ≤{REEL_ACIL}"
     T["borsa_plani"] = safe("borsa_plani_hesap", lambda: borsa_plani_kontrol(R, T))
+    T["ozel_tahvil"] = safe("ozel_tahvil_hesap", lambda: ozel_tahvil_kontrol(R))     # 20 Eki
     R["tetikler"] = T
     # 7 Eki: tahvil analizi (etkin süre + senaryo) — ağır çalışmada; diğerlerinde önceki sonuç
     if bp and (gunluk_saat or not prev.get("tahvil_analiz")):
