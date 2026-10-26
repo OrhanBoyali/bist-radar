@@ -370,6 +370,17 @@ def summarize(df, src, with_ma=True, bist=True):
         wk = cc.resample("W-FRI").last().dropna()
         if len(wk) >= 2:
             out["haftalik_kapanis"] = {"son_tamamlanan_hafta": J(wk.iloc[-2]), "bu_hafta_son": J(wk.iloc[-1])}
+            # 24 Eki: son BİTMİŞ haftanın kapanışı. Eski seçim (son bar cuma mı?) pazartesi seans içinde
+            # İKİ hafta önceki kapanışı veriyordu (tamamlanmış barlar cuma'da bitince wk[-2] bir önceki hafta).
+            # Hafta bitti = cuması bugünden önce YA DA haftanın son işlem günü cuma (tamamlanmış bar).
+            hft = [(per.end_time.date(), ser.index[-1].date(), float(ser.iloc[-1]))
+                   for per, ser in cc.groupby(cc.index.to_period("W-FRI")) if len(ser)]
+            bitmis = [i for i, (cuma, son_g, _) in enumerate(hft) if cuma < NOW.date() or son_g == cuma]
+            if bitmis:
+                i = bitmis[-1]
+                out["haftalik_kapanis"]["son_biten_hafta"] = {
+                    "hafta_sonu": hft[i][0].strftime("%Y-%m-%d"), "son_islem_gunu": hft[i][1].strftime("%Y-%m-%d"),
+                    "k": J(hft[i][2]), "onceki_k": J(hft[i - 1][2]) if i >= 1 else None}
         if "Volume" in df.columns and df["Volume"].tail(20).sum() > 0:
             v20 = df["Volume"].tail(21).iloc[:-1].mean()
             out["hacim_orani_20g"] = J(df["Volume"].iloc[-1] / v20) if v20 else None
@@ -379,6 +390,10 @@ def summarize(df, src, with_ma=True, bist=True):
             out["son_5_bar"] = [{"t": d.strftime("%Y-%m-%d"), "k": J(c[d]), "degisim_pct": J(round(deg[d], 2)) if pd.notna(deg[d]) else None,
                                  "hacim_orani": J(round(vol[d] / v20[d], 2)) if pd.notna(v20[d]) and v20[d] else None,
                                  "kismi": bool(partial and d == df.index[-1])} for d in c.tail(5).index]
+            # 24 Eki: koruma kuralının "panik haftası" kontrolü için son 10 gün (aynı biçim)
+            out["son_10_bar"] = [{"t": d.strftime("%Y-%m-%d"), "k": J(c[d]), "degisim_pct": J(round(deg[d], 2)) if pd.notna(deg[d]) else None,
+                                  "hacim_orani": J(round(vol[d] / v20[d], 2)) if pd.notna(v20[d]) and v20[d] else None,
+                                  "kismi": bool(partial and d == df.index[-1])} for d in c.tail(10).index]
     return out
 
 def index_block(sym, with_ma=True):
@@ -2183,13 +2198,44 @@ def borsa_plani_kontrol(R, T):
     hk = T.get("tez_cizgisi_referans_kapanis")
     out = {"son_kapanis": kap, "son_kapanis_tarihi": son.get("t"), "haftalik_kapanis": hk, "kurallar": []}
     plan = AYAR.get("borsa_plani") or {}
+    e = {**PANIK_VARSAYILAN, **(AYAR.get("panik_dibi") or {})}
+    taban_arsiv = {}
+    if os.path.exists(ARSIV_FILE):
+        try:
+            import csv as _csv
+            for row in _csv.DictReader(open(ARSIV_FILE, encoding="utf-8")):
+                if row.get("tarih") and row.get("tum_taban") not in (None, ""):
+                    taban_arsiv[row["tarih"]] = float(row["tum_taban"])
+        except Exception as ex:
+            out["arsiv_hata"] = f"{type(ex).__name__}: {str(ex)[:60]}"
+
+    def _panik(x):
+        tb = taban_arsiv.get(x.get("t"))
+        return ((x.get("degisim_pct") or 0) <= e["dusus_pct"] and (x.get("hacim_orani") or 0) >= e["hacim_kat"]
+                and (tb is None or tb >= e["taban_min"]))
+    sbh = ((b.get("haftalik_kapanis") or {}).get("son_biten_hafta")) or {}
     for k in plan.get("kurallar") or []:
+        ertele = None
         if k.get("gerceklesti"):
             durum = "YAPILDI"
         else:
             ref = kap if k["tip"] == "gunluk_kapanis_ustu" else hk
             tetik = ref is not None and ((ref >= k["seviye"]) if k["tip"] == "gunluk_kapanis_ustu" else (ref < k["seviye"]))
-            durum = "TETİKLENDİ" if tetik else "BEKLİYOR"
+            # 24 Eki (kullanıcı kararı A): haftalık koruma, seviyenin altına İLK kez inilen hafta bir PANİK GÜNÜ
+            # içeriyorsa 1 hafta ertelenir (panikte dipte satmamak için). Ertesi hafta da altındaysa satış.
+            if tetik and k["tip"] == "haftalik_kapanis_alti" and sbh.get("hafta_sonu"):
+                bas = (datetime.strptime(sbh["hafta_sonu"], "%Y-%m-%d") - timedelta(days=6)).strftime("%Y-%m-%d")
+                pg = [x for x in (b.get("son_10_bar") or [])
+                      if not x.get("kismi") and bas <= x["t"] <= sbh["hafta_sonu"] and _panik(x)]
+                ilk_hafta = sbh.get("onceki_k") is None or sbh["onceki_k"] >= k["seviye"]
+                if pg and ilk_hafta:
+                    tetik = False
+                    ertele = {"panik_gunleri": [x["t"] for x in pg], "hafta_sonu": sbh["hafta_sonu"]}
+                    HEALTH[f"borsa_plani_{k['ad']}_ertelendi"] = (
+                        f"UYARI: BORSA PLANI — haftalık kapanış {ref} < {k['seviye']} AMA hafta içinde panik günü var "
+                        f"({', '.join(ertele['panik_gunleri'])}) → '{k['islem']}' 1 HAFTA ERTELENDİ. Gelecek cuma da "
+                        f"{k['seviye']} altında kapanırsa satış yapılır; üstünde kapanırsa iptal")
+            durum = "ERTELENDİ (panik haftası)" if ertele else ("TETİKLENDİ" if tetik else "BEKLİYOR")
             if tetik:
                 ne = "günlük kapanış" if k["tip"] == "gunluk_kapanis_ustu" else "haftalık kapanış"
                 HEALTH[f"borsa_plani_{k['ad']}"] = (f"UYARI: BORSA PLANI — {ne} {ref} {'≥' if k['tip'] == 'gunluk_kapanis_ustu' else '<'} "
@@ -2197,13 +2243,12 @@ def borsa_plani_kontrol(R, T):
                                                     f"yapınca ayarlar.json'da bu kurala \"gerceklesti\": true yaz")
         ref = kap if k["tip"] == "gunluk_kapanis_ustu" else hk
         out["kurallar"].append({"ad": k["ad"], "tip": k["tip"], "seviye": k["seviye"], "islem": k["islem"], "durum": durum,
-                                "uzaklik_pct": pct(k["seviye"], ref) if ref else None})
+                                "uzaklik_pct": pct(k["seviye"], ref) if ref else None, **({"erteleme": ertele} if ertele else {})})
     zd = plan.get("zaman_duragi") or {}
     if zd.get("tarih") and not zd.get("gerceklesti") and NOW.strftime("%Y-%m-%d") >= zd["tarih"]:
         HEALTH["borsa_plani_zaman_duragi"] = f"UYARI: BORSA PLANI — zaman durağı ({zd['tarih']}) geldi → {zd.get('islem', 'değerlendir')}"
     out["zaman_duragi"] = zd or None
     # panik dibi: önceki tamamlanmış gün panik (sert düşüş + yüksek hacim [+ taban sayısı]), son gün güçlü dönüş
-    e = {**PANIK_VARSAYILAN, **(AYAR.get("panik_dibi") or {})}
     pnk = {"esikler": e, "durum": "YOK"}
     if len(barlar) >= 2:
         p_, d_ = barlar[-2], barlar[-1]
@@ -2440,6 +2485,8 @@ def main():
         hafta_tamam = (datetime.strptime(b["son_bar_tarihi"], "%Y-%m-%d").weekday() == 4
                        and not b["son_bar_kismi_mi"])
         hk = wkc.get("bu_hafta_son") if hafta_tamam else wkc.get("son_tamamlanan_hafta")
+        if (wkc.get("son_biten_hafta") or {}).get("k") is not None:      # 24 Eki: doğru (son bitmiş) hafta
+            hk = wkc["son_biten_hafta"]["k"]
         T["tez_cizgisi_referans_kapanis"] = hk
         T["tez_cizgisi_haftalik_kirildi"] = bool(hk and hk < LEVELS["tez_cizgisi_haftalik"])
         T["korunan_taban_3gun"] = all(12900 <= x["k"] <= 13500 for x in b["son_5_kapanis"][-3:])
