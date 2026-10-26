@@ -18,6 +18,26 @@ class Index:
             if os.environ.get("RADAR_MOCK_PANIK"):      # 17 Eki: panik günü (−%4, 3× hacim) + ertesi gün +%2 dönüş
                 df.iloc[-3:, df.columns.get_loc("Close")] = [13000, 12480, 12730]
                 df.iloc[-2, df.columns.get_loc("Volume")] = int(df["Volume"].iloc[-22:-2].mean() * 3)
+            m = os.environ.get("RADAR_MOCK_HAFTA_PANIK")
+            if m:   # 24 Eki: son BİTMİŞ haftada (son cuma ≤ son bar) koruma senaryoları; seviye 12.000 ile test edilir
+                # 1: önceki hafta 12.500 (üstte), bu hafta panik günü (−%4,8, 3× hacim) ve kapanış 11.800 → ERTELE
+                # 2: aynı ama önceki hafta da 11.950 (altta) → ikinci hafta, SAT
+                # 3: panik yok, yavaş düşüş → SAT
+                idx = df.index; L = idx[-1]
+                cuma = L - pd.Timedelta(days=(L.weekday() - 4) % 7)
+                c = np.full(len(idx), 12500.0)
+                if m == "2":
+                    c[(idx > cuma - pd.Timedelta(days=14)) & (idx <= cuma - pd.Timedelta(days=7))] = 11950.0
+                hafta = np.where((idx > cuma - pd.Timedelta(days=7)) & (idx <= cuma))[0]
+                yol = [12300, 12150, 12000, 11900, 11800] if m == "3" else [12400, 11800, 11800, 11800, 11800]
+                for j, pos in enumerate(hafta):
+                    c[pos] = yol[min(j, len(yol) - 1)]
+                c[idx > cuma] = 11800.0
+                df["Close"] = c; df["Open"] = c; df["High"] = c + 50; df["Low"] = c - 50
+                vol = np.full(len(idx), 1_500_000)
+                if m != "3":
+                    vol[hafta[1]] = 4_500_000
+                df["Volume"] = vol
             return df
         return _ohlc(seed=hash(self.s) % 100)
     @property
