@@ -57,6 +57,18 @@ def birim_tarih_hizalama():
     out = subprocess.run([sys.executable, "-c", kod], env=env, capture_output=True, text=True, timeout=60).stdout.split()
     return [float(x) for x in out] if len(out) == 2 else [None, None]
 
+def haftalik_kapanis_birim():
+    """24 Eki: pazartesi seans içinde (son bar kısmi) 'son bitmiş hafta' bir önceki cuma olmalı (eskiden 2 hafta önceki okunuyordu)."""
+    kod = ("import pandas as pd, bist_radar as br\n"
+           "idx=pd.bdate_range('2026-10-12','2026-10-26')\n"
+           "c=[100.0]*5+[90.0]*5+[85.0]\n"
+           "df=pd.DataFrame({'Open':c,'High':c,'Low':c,'Close':c,'Volume':[1e6]*len(c)},index=idx)\n"
+           "o=br.summarize(df,'test')\n"
+           "h=o['haftalik_kapanis']['son_biten_hafta']\n"
+           "print(o['son_bar_kismi_mi'], h['k'], h['onceki_k'], h['hafta_sonu'])")
+    env = dict(os.environ, PYTHONPATH=MOCK + os.pathsep + KOK, RADAR_TEST_NOW="2026-10-26 11:17")
+    return subprocess.run([sys.executable, "-c", kod], env=env, capture_output=True, text=True, timeout=60, cwd=tempfile.mkdtemp()).stdout.split()
+
 def sozlesme_kontrol():
     """9 Eki (hata #22): Sahte kütüphane gerçeğinden farklıysa testler geçer ama canlı kırılır.
     (1) Betiğin bp.<fonksiyon>(...) çağrılarında kullandığı anahtar kelimeler GERÇEK borsapy imzasında var mı?
@@ -231,6 +243,12 @@ def main():
     d_plan = calistir(kok={"ayarlar.json": _plan()})
     d_plan2 = calistir(kok={"ayarlar.json": _plan(azalt1={"gerceklesti": True}, azalt2={"gerceklesti": True}, koruma={"seviye": 20000})})
     d_panik = calistir(kok={"ayarlar.json": _plan()}, ek_env={"RADAR_MOCK_PANIK": "1"})
+    # 24 Eki (kullanıcı kararı A): koruma kuralına "panik haftası" istisnası
+    _kor = _plan(koruma={"seviye": 12000})
+    d_kor_ertele = calistir(kok={"ayarlar.json": _kor}, ek_env={"RADAR_MOCK_HAFTA_PANIK": "1"})
+    d_kor_ikinci = calistir(kok={"ayarlar.json": _kor}, ek_env={"RADAR_MOCK_HAFTA_PANIK": "2"})
+    d_kor_yavas = calistir(kok={"ayarlar.json": _kor}, ek_env={"RADAR_MOCK_HAFTA_PANIK": "3"})
+    _hafta_birim = haftalik_kapanis_birim()
     d_plan_bozuk = calistir(kok={"ayarlar.json": _aj({"borsa_plani": {"kurallar": [{"ad": "x", "tip": "yanlis", "seviye": 12000, "islem": "?"}]}})})
     d_fz1 = calistir(ek_env={"RADAR_MOCK_FONO_TIMEOUT": "YLB"})
     d_fz2 = calistir(ek_env={"RADAR_MOCK_FONO_TIMEOUT_HEP": "YLB"})
@@ -395,6 +413,18 @@ def main():
          and "panik_dibi" in d_panik["saglik"].get("issue_tetikleyen", [])
          and ((d_plan["tetikler"].get("borsa_plani") or {}).get("panik_dibi") or {}).get("durum") == "YOK",
                                                                     "Panik dibi: sert düşüş + yüksek hacim + ertesi gün dönüş → alarm; normal günde alarm yok"),
+        ({k["ad"]: k for k in ((d_kor_ertele["tetikler"].get("borsa_plani") or {}).get("kurallar") or [])}.get("koruma", {}).get("durum") == "ERTELENDİ (panik haftası)"
+         and "borsa_plani_koruma_ertelendi" in d_kor_ertele["saglik"].get("issue_tetikleyen", [])
+         and "borsa_plani_koruma" not in d_kor_ertele["saglik"]["tum_moduller"],
+                                                                    "Koruma: seviyenin altına ilk inilen haftada panik günü varsa satış 1 hafta ertelenir ve bildirilir"),
+        ({k["ad"]: k for k in ((d_kor_ikinci["tetikler"].get("borsa_plani") or {}).get("kurallar") or [])}.get("koruma", {}).get("durum") == "TETİKLENDİ"
+         and "borsa_plani_koruma" in d_kor_ikinci["saglik"].get("issue_tetikleyen", []),
+                                                                    "Koruma: ikinci hafta da altındaysa panik olsa bile satış tetiklenir"),
+        ({k["ad"]: k for k in ((d_kor_yavas["tetikler"].get("borsa_plani") or {}).get("kurallar") or [])}.get("koruma", {}).get("durum") == "TETİKLENDİ"
+         and "borsa_plani_koruma" in d_kor_yavas["saglik"].get("issue_tetikleyen", []),
+                                                                    "Koruma: panik günü olmadan (yavaş düşüş) altında kapanış → satış tetiklenir"),
+        (_hafta_birim == ["True", "90.0", "100.0", "2026-10-23"],
+                                                                    "Haftalık kapanış: pazartesi seans içinde son bitmiş hafta doğru seçilir (2 hafta öncesi değil)"),
         ("borsa_plani" in str(d_plan_bozuk["saglik"]["hatali_moduller"].get("ayarlar")),
                                                                     "Borsa planı: ayarlar.json'da hatalı kural reddedilir, uyarı verilir"),
         (sozlesme["ok"],                                            "Sözleşme: sahte borsapy, gerçek borsapy ile aynı arama sütunlarını ve betiğin kullandığı parametreleri taşır"
