@@ -19,9 +19,16 @@ def _varsayilan_an():
     (saate bağımlılık, hata #17 benzeri). Varsayılan an: Türkiye saatiyle en son iş günü 09:17 (sabah ağır penceresi)."""
     from datetime import datetime as _dt, timezone as _tz, timedelta as _td
     g = _dt.now(_tz(_td(hours=3))).date()
-    while g.weekday() >= 5:
+    tatil = _tam_tatiller()
+    while g.weekday() >= 5 or g.strftime("%Y-%m-%d") in tatil:      # 30 Eki: resmi tatil de atlanır
         g -= _td(days=1)
     return f"{g:%Y-%m-%d} 09:17"
+
+def _tam_tatiller():
+    """30 Eki: betikteki tam gün tatil listesini (TATIL_VARSAYILAN) metinden okur — testler tatil gününe düşmesin."""
+    import re
+    kaynak = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "bist_radar.py"), encoding="utf-8").read()
+    return set(re.findall(r'"(\d{4}-\d{2}-\d{2})": "tam"', kaynak))
 _AN = _varsayilan_an()
 
 def calistir_klasor(tmp, ek_env=None):
@@ -56,6 +63,22 @@ def birim_tarih_hizalama():
     env = dict(os.environ, PYTHONPATH=MOCK + os.pathsep + KOK)
     out = subprocess.run([sys.executable, "-c", kod], env=env, capture_output=True, text=True, timeout=60).stdout.split()
     return [float(x) for x in out] if len(out) == 2 else [None, None]
+
+def piyasa_takvimi_birim():
+    """30 Eki: tatil/yarım gün, sonraki iş günü, TÜFE ve PPK tarihleri (gerçek takvimle sabit tarihlerde)."""
+    kod = ("import json, bist_radar as br\n"
+           "from datetime import date\n"
+           "o=br.piyasa_takvimi()\n"
+           "print(json.dumps({'yarin': o['sonraki_hafta_ici_gun']['durum'], 'tufe': o['sonraki_tufe'], 'ppk': o['sonraki_ppk'],"
+           " 'onceki': str(br.onceki_is_gunu(date(2026,10,30))), 'sonraki': str(br.sonraki_is_gunu(date(2026,10,28))),"
+           " 'tatil29': br.is_gunu(date(2026,10,29)), 'yarim28': br.is_gunu(date(2026,10,28)), 'tufe_ocak': str(br._tufe_gunu(2027,1)),"
+           " 'not': br.HEALTH.get('piyasa_takvimi_yarin','')}, ensure_ascii=False))")
+    env = dict(os.environ, PYTHONPATH=MOCK + os.pathsep + KOK, RADAR_TEST_NOW="2026-10-27 09:17")
+    out = subprocess.run([sys.executable, "-c", kod], env=env, capture_output=True, text=True, timeout=60, cwd=tempfile.mkdtemp()).stdout
+    try:
+        return json.loads(out.strip().splitlines()[-1])
+    except Exception:
+        return {}
 
 def haftalik_kapanis_birim():
     """24 Eki: pazartesi seans içinde (son bar kısmi) 'son bitmiş hafta' bir önceki cuma olmalı (eskiden 2 hafta önceki okunuyordu)."""
@@ -249,6 +272,17 @@ def main():
     d_kor_ikinci = calistir(kok={"ayarlar.json": _kor}, ek_env={"RADAR_MOCK_HAFTA_PANIK": "2"})
     d_kor_yavas = calistir(kok={"ayarlar.json": _kor}, ek_env={"RADAR_MOCK_HAFTA_PANIK": "3"})
     _hafta_birim = haftalik_kapanis_birim()
+    # 30 Eki: küresel para akışı, USDT primi, piyasa takvimi, kalibrasyon
+    _takvim = piyasa_takvimi_birim()
+    d_tur = calistir(ek_env={"RADAR_MOCK_TUR_DUSUS": "1", "RADAR_MOCK_KREDI_STRES": "1"})
+    d_usdt_yedek = calistir(ek_env={"RADAR_MOCK_BTCTURK_HATA": "1"})
+    _an_gun = _pd.Timestamp(_AN[:10])
+    _usdt_gecmis = {(_an_gun - _pd.offsets.BDay(i)).strftime("%Y-%m-%d"): 0.8 for i in range(1, 8)}
+    d_usdt_alarm = calistir(tohum={"usdt_prim_gecmis.json": _usdt_gecmis}, ek_env={"RADAR_MOCK_USDT_PRIM": "4.0"})
+    d_usdt_yeni = calistir(ek_env={"RADAR_MOCK_USDT_PRIM": "4.0"})
+    d_tatil_aksam = calistir(ek_env={"RADAR_TEST_NOW": "2026-10-29 18:17"})
+    d_kalib = calistir(kok={"ayarlar.json": _poz()}, ek_env={"RADAR_AGIR": "true"})
+    d_tatil_ayar = calistir(kok={"ayarlar.json": _aj({"tatiller": [{"tarih": "2026-11-02", "tur": "yanlis"}]})})
     d_plan_bozuk = calistir(kok={"ayarlar.json": _aj({"borsa_plani": {"kurallar": [{"ad": "x", "tip": "yanlis", "seviye": 12000, "islem": "?"}]}})})
     d_fz1 = calistir(ek_env={"RADAR_MOCK_FONO_TIMEOUT": "YLB"})
     d_fz2 = calistir(ek_env={"RADAR_MOCK_FONO_TIMEOUT_HEP": "YLB"})
@@ -435,6 +469,43 @@ def main():
                                                                     "Pozisyon: bankadan teyitli giriş fiyatı esas alınır"),
         ("pozisyon_YOT_yakin" in d_poz_yakin["saglik"]["tum_moduller"] and "pozisyon_YOT_yakin" not in d_poz_yakin["saglik"].get("issue_tetikleyen", []),
                                                                     "Pozisyon: zarar sınırına yaklaşınca bildirimsiz erken not düşer"),
+        # --- 30 Eki: küresel para akışı, USDT primi, piyasa takvimi, kalibrasyon ---
+        (((d["tetikler"].get("kuresel_akis")) or {}).get("turkiye_vs_gelismekte", {}).get("durum") == "NORMAL"
+         and ((d_tur["tetikler"].get("kuresel_akis")) or {}).get("turkiye_vs_gelismekte", {}).get("durum") == "TÜRKİYE'YE ÖZGÜ BASKI",
+                                                                    "Küresel: Türkiye ETF'i gelişmekte olan ülkelerden ayrışınca 'Türkiye'ye özgü baskı' der"),
+        (((d["tetikler"].get("kuresel_akis")) or {}).get("kuresel_kredi", {}).get("durum") == "NORMAL"
+         and ((d_tur["tetikler"].get("kuresel_akis")) or {}).get("kuresel_kredi", {}).get("durum") == "STRES",
+                                                                    "Küresel: yüksek riskli tahviller 1 ayda sert düşünce kredi stresi işaretlenir"),
+        (isinstance(((d["tetikler"].get("kuresel_akis")) or {}).get("bitcoin", {}).get("son_cumadan_beri_pct"), (int, float)),
+                                                                    "Küresel: Bitcoin'in son cumadan beri değişimi (hafta sonu risk iştahı) hesaplanır"),
+        (isinstance(((d["tetikler"].get("bist_dolar")) or {}).get("son"), (int, float)) and ((d["tetikler"].get("bist_dolar")) or {}).get("52h_dip") is not None
+         and ((d["tetikler"].get("bist_dolar")) or {}).get("durum"),
+                                                                    "BIST dolar bazında: değer, 52 haftalık aralık ve konum hesaplanır"),
+        (((d["tetikler"].get("usdt_prim")) or {}).get("kaynak") == "BtcTurk" and ((d["tetikler"].get("usdt_prim")) or {}).get("durum") == "NORMAL"
+         and abs((((d["tetikler"].get("usdt_prim")) or {}).get("prim_pct") or 0) - 0.8) < 0.05,
+                                                                    "USDT primi: BtcTurk fiyatı resmi kurla karşılaştırılır (normal prim)"),
+        (((d_usdt_yedek["tetikler"].get("usdt_prim")) or {}).get("kaynak") == "Paribu"
+         and not any(k.startswith("usdt_") for k in d_usdt_yedek["saglik"].get("issue_tetikleyen", [])),
+                                                                    "USDT primi: BtcTurk erişilemezse Paribu yedeği çalışır, bildirim üretmez"),
+        (((d_usdt_alarm["tetikler"].get("usdt_prim")) or {}).get("durum") == "ALARM" and "usdt_prim_alarm" in d_usdt_alarm["saglik"].get("issue_tetikleyen", []),
+                                                                    "USDT primi: olağanın belirgin üstüne çıkınca (%4 vs %0,8) bildirim gelir"),
+        (str(((d_usdt_yeni["tetikler"].get("usdt_prim")) or {}).get("durum", "")).startswith("YÜKSEK")
+         and "usdt_prim_alarm" not in d_usdt_yeni["saglik"].get("issue_tetikleyen", []),
+                                                                    "USDT primi: geçmiş birikmeden (olağan bilinmeden) yanlış alarm verilmez"),
+        (_takvim.get("yarin", "").startswith("YARIM") and _takvim.get("tufe") == "2026-11-03" and _takvim.get("ppk") == "2026-12-10"
+         and _takvim.get("onceki") == "2026-10-28" and _takvim.get("sonraki") == "2026-10-30" and _takvim.get("tatil29") is False
+         and _takvim.get("yarim28") is True and _takvim.get("tufe_ocak") == "2027-01-04" and "13:30" in _takvim.get("not", ""),
+                                                                    "Piyasa takvimi: tatil/yarım gün, iş günü sayımı, TÜFE ve PPK tarihleri doğru; yarın yarım günse uyarır"),
+        (d_tatil_aksam.get("arsiv") == "saat değil",
+                                                                    "Piyasa takvimi: resmi tatil akşamı günlük arşive (bayat veriyle) satır yazılmaz"),
+        ("tatiller" in str(d_tatil_ayar["saglik"]["hatali_moduller"].get("ayarlar")),
+                                                                    "Piyasa takvimi: hatalı yazılmış tatil kaydı reddedilir ve uyarılır"),
+        (isinstance((((d["tetikler"].get("kalibrasyon")) or {}).get("bist_oynaklik") or {}).get("gerceklesen_60g"), (int, float)),
+                                                                    "Kalibrasyon: BIST'in gerçekleşen oynaklığı simülasyon varsayımıyla karşılaştırılır"),
+        ((lambda y: isinstance(y.get("duzeltme_yillik_puan"), (int, float)) and y.get("uygulandi") is True)
+         (((d_kalib["tetikler"].get("kalibrasyon") or {}).get("tahvil_tasima") or {}).get("YOT") or {})
+         and "kalibrasyon" in str((((d_kalib.get("tahvil_analiz") or {}).get("fonlar") or {}).get("YOT") or {}).get("senaryo", {}).get("varsayimlar", {}).get("tasima")),
+                                                                    "Kalibrasyon: YOT'un gerçekleşen getirisinden taşıma farkı çıkarılır ve senaryoya uygulanır"),
         # --- 20 Eki özel sektör tahvili payı (hata #25) ---
         ((((d_osba_yuksek.get("tetikler") or {}).get("ozel_tahvil") or {}).get("fonlar") or {}).get("YLB", {}).get("durum") == "YÜKSEK PAY"
          and "ozel_tahvil_YLB" in d_osba_yuksek["saglik"].get("issue_tetikleyen", []),
