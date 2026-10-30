@@ -6,4 +6,9 @@ def download(t, period="300d", interval="1d", **k):
         son = (pd.Timestamp.today().normalize() - pd.Timedelta(days=10)).date()
     idx = pd.bdate_range(end=son, periods=260)
     c = np.linspace(100, 110, len(idx))                # BZ=F son değer 110 → borsapy 108 ile %1,8 fark (uyarı YOK)
+    import os
+    if t == "TUR" and os.environ.get("RADAR_MOCK_TUR_DUSUS"):     # 30 Eki: Türkiye ETF'i son 5 günde ~%12 düşer
+        c[-5:] = c[-5:] * 0.88
+    if t == "HYG" and os.environ.get("RADAR_MOCK_KREDI_STRES"):   # 30 Eki: yüksek getirili tahviller 1 ayda ~%6 düşer
+        c[-22:] = c[-22:] * np.linspace(1.0, 0.94, 22)
     return pd.DataFrame({"Open": c, "High": c + 1, "Low": c - 1, "Close": c, "Volume": 1000}, index=idx)
