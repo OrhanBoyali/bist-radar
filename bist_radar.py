@@ -6,7 +6,7 @@ Her modül ayrı denenir; kırılan modül "saglik" bölümüne yazılır,
 iş akışı bunu GitHub Issue olarak açar (e-posta bildirimi).
 """
 import json, math, os, re, signal, socket, time
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, date
 socket.setdefaulttimeout(60)   # 3 Eki: cevap vermeyen kaynak betiği sonsuza kadar bekletmesin
 import numpy as np
 import pandas as pd
@@ -37,7 +37,14 @@ SEKTOR = ["XBANK", "XUSIN", "XHOLD", "XUTEK", "XUMAL"]
 YAHOO_INDEX = {"XU100": "XU100.IS", "XU030": "XU030.IS", "XBANK": "XBANK.IS", "XUSIN": "XUSIN.IS"}
 KURESEL = {"brent_yahoo": "BZ=F",   # 3 Eki: sadece borsapy BRENT ile çapraz kontrol için
            "sp500": "^GSPC", "nasdaq": "^IXIC", "vix": "^VIX",
-           "dolar_endeksi": "DX-Y.NYB", "abd_10y": "^TNX", "ons_altin": "GC=F"}
+           "dolar_endeksi": "DX-Y.NYB", "abd_10y": "^TNX", "ons_altin": "GC=F",
+           # 30 Eki (kullanıcı onayı): küresel para akışı göstergeleri
+           "tur_etf": "TUR",          # iShares MSCI Türkiye (dolar) — yabancının Türkiye'ye bakışı
+           "eem_etf": "EEM",          # gelişmekte olan ülkeler (dolar) — Türkiye'ye özgü mü, genel mi?
+           "emb_etf": "EMB",          # gelişmekte olan ülke dolar tahvilleri — küresel kredi stresi
+           "hyg_etf": "HYG",          # ABD yüksek getirili şirket tahvilleri — risk iştahı
+           "bitcoin": "BTC-USD",      # 7/24 risk iştahı (hafta sonu dahil)
+           "usdtry_yahoo": "TRY=X"}   # BIST'in dolar bazında değeri + USDT primi için yedek kur
 # Brent Yahoo'dan ALINMAZ: vade geçişinde sahte düşüş gösterdi (21 Eyl). borsapy BRENT kullanılır.
 FX_LIST = ["USD", "EUR", "gram-altin", "ceyrek-altin", "yarim-altin", "tam-altin", "BRENT"]  # ons-altin çıkarıldı: borsapy anlamsız değer veriyordu
 
@@ -60,6 +67,7 @@ BASLANGIC = time.time()
 SURE_BUTCE_DK = float(os.environ.get("RADAR_BUTCE_DK") or 25)
 SURE_SERT_DK = float(os.environ.get("RADAR_SERT_DK") or 34)
 SURELER, CALISAN = {}, [None]
+_SERI = {}          # 30 Eki: ham günlük seriler (BIST dolar bazı vb. için) — sadece bu çalışma
 AGIR_MODULLER = ("rakip_tarama", "tahvil_analiz", "verim_evds", "gram_altin_gecmis")
 
 class SureAsimi(BaseException):
@@ -83,7 +91,8 @@ KAYNAK_ESLEME = (("fonoloji", ("fonoloji_",)), ("tefas", ("fon_", "rakip_tarama"
                  ("yahoo", ("yahoo_",)), ("borsapy_endeks", ("borsapy_endeks_", "genislik_")),
                  ("yabanci_payi", ("yabanci_orani", "yabanci_orani_toplu")), ("doviz_altin", ("fx_", "gram_altin_gecmis")),
                  ("tahvil_faizi", ("tahvil", "tahvil_doviz_kendi")),
-                 ("tradingview", ("tahvil_tradingview", "verim_gecmisi_tv")), ("takvim", ("takvim_",)))
+                 ("tradingview", ("tahvil_tradingview", "verim_gecmisi_tv")), ("takvim", ("takvim_",)),
+                 ("kripto", ("usdt_btcturk", "usdt_paribu")))
 KAYNAK_HARIC = ("fon_akis", "fon_tutarlilik")          # hesaplama modülleri, veri kaynağı değil
 KARNE_SAYAC = {}
 KARNE_ESIK_PCT, KARNE_ARDISIK, KARNE_MIN_DENEME = 70, 4, 8
@@ -224,6 +233,11 @@ def ayarlari_yukle():
         "panik_dibi": lambda v: isinstance(v, dict) and num(v.get("dusus_pct"), -20, 0) and num(v.get("hacim_kat"), 1, 10)
                                 and num(v.get("donus_pct"), 0, 20) and num(v.get("taban_min", 0), 0, 1000),
         "ozel_tahvil_esik": lambda v: isinstance(v, dict) and all(num(v.get(n, 1), 0.1, 100) for n in ("pay_pct", "artis_puan")),   # 20 Eki
+        # 30 Eki: piyasa takvimi (tatil / yarım gün, PPK tarihleri) ve USDT primi eşikleri
+        "tatiller": lambda v: isinstance(v, list) and all(isinstance(x, dict) and isinstance(x.get("tarih"), str)
+                                                          and len(x["tarih"]) == 10 and x.get("tur") in ("tam", "yarim") for x in v),
+        "ppk_takvimi": lambda v: isinstance(v, list) and all(isinstance(x, str) and len(x) == 10 for x in v),
+        "usdt_prim_esik": lambda v: isinstance(v, dict) and all(num(v.get(n, 1), 0.1, 50) for n in ("uyari_pct", "artis_puan")),
         "verim_evds_kodu": lambda v: isinstance(v, str) and v.startswith("TP.") and len(v) < 60,   # 9 Eki: EVDS seri kodu elle
         # 7 Eki: pozisyon kuralları — {"YOT": {"giris_tarihi": "YYYY-AA-GG", "kiyas": "YLB", "kar_sarti_puan": 2,
         #        "kar_tarihi": "...", "zaman_duragi_tarihi": "...", "zarar_siniri_pct": -4}}
@@ -258,6 +272,35 @@ STOPAJ_PP = AYAR.get("stopaj_ppf", STOPAJ_PP)
 REEL_ALARM = AYAR.get("reel_alarm", REEL_ALARM)
 REEL_ACIL = AYAR.get("reel_acil", REEL_ACIL)
 TUFE_AYLIK_MANUEL = AYAR.get("tufe_aylik_manuel", TUFE_AYLIK_MANUEL)
+
+# ---- PİYASA TAKVİMİ (30 Eki) ----------------------------------------------
+# Borsa İstanbul pay piyasası tatilleri. 2026: BIST tatil tablosu; 2027 dini bayramlar: Diyanet takvimi.
+# ayarlar.json → "tatiller": [{"tarih": "YYYY-AA-GG", "tur": "tam"|"yarim"}] ile eklenir/düzeltilir.
+TATIL_VARSAYILAN = {
+    "2026-01-01": "tam", "2026-03-19": "yarim", "2026-03-20": "tam", "2026-04-23": "tam", "2026-05-01": "tam",
+    "2026-05-19": "tam", "2026-05-26": "yarim", "2026-05-27": "tam", "2026-05-28": "tam", "2026-05-29": "tam",
+    "2026-07-15": "tam", "2026-10-28": "yarim", "2026-10-29": "tam",
+    "2027-01-01": "tam", "2027-03-08": "yarim", "2027-03-09": "tam", "2027-03-10": "tam", "2027-03-11": "tam",
+    "2027-04-23": "tam", "2027-05-17": "tam", "2027-05-18": "tam", "2027-05-19": "tam", "2027-07-15": "tam",
+    "2027-08-30": "tam", "2027-10-28": "yarim", "2027-10-29": "tam"}
+TATILLER = {**TATIL_VARSAYILAN, **{x["tarih"]: x["tur"] for x in (AYAR.get("tatiller") or [])}}
+PPK_TAKVIMI = sorted(AYAR.get("ppk_takvimi") or ["2026-12-10", "2027-01-21", "2027-03-18", "2027-04-22", "2027-06-10"])
+
+def is_gunu(d):
+    """Hafta içi ve tam gün tatil değil (yarım gün iş günü sayılır)."""
+    return d.weekday() < 5 and TATILLER.get(d.strftime("%Y-%m-%d")) != "tam"
+
+def onceki_is_gunu(d):
+    d = d - timedelta(days=1)
+    while not is_gunu(d):
+        d -= timedelta(days=1)
+    return d
+
+def sonraki_is_gunu(d):
+    d = d + timedelta(days=1)
+    while not is_gunu(d):
+        d += timedelta(days=1)
+    return d
 
 try:
     import borsapy as bp
@@ -385,6 +428,10 @@ def summarize(df, src, with_ma=True, bist=True):
             v20 = df["Volume"].tail(21).iloc[:-1].mean()
             out["hacim_orani_20g"] = J(df["Volume"].iloc[-1] / v20) if v20 else None
         out["son_5_kapanis"] = [{"t": d.strftime("%Y-%m-%d"), "k": J(v)} for d, v in c.tail(5).items()]
+        # 30 Eki (kalibrasyon): gerçekleşen yıllık oynaklık (tamamlanmış günler, log getiri)
+        _lr = np.log(cc / cc.shift(1)).dropna()
+        out["oynaklik_yillik_pct"] = {f"{n}g": J(round(float(_lr.tail(n).std() * np.sqrt(252) * 100), 1))
+                                      for n in (20, 60) if len(_lr) >= n}
         if "Volume" in df.columns:          # 17 Eki: panik dibi alarmı için son günlerin değişimi ve hacim oranı
             vol = df["Volume"]; v20 = vol.shift(1).rolling(20).mean(); deg = c.pct_change() * 100
             out["son_5_bar"] = [{"t": d.strftime("%Y-%m-%d"), "k": J(c[d]), "degisim_pct": J(round(deg[d], 2)) if pd.notna(deg[d]) else None,
@@ -401,12 +448,14 @@ def index_block(sym, with_ma=True):
     if bp:
         df = safe(f"borsapy_endeks_{sym}", lambda: norm_ohlc(bp.Index(sym).history(period="1y")))
         if df is not None:
+            _SERI[sym] = df
             return summarize(df, "borsapy", with_ma)
     ysym = YAHOO_INDEX.get(sym)
     if yf and ysym:
         df = safe(f"yahoo_yedek_{sym}", lambda: norm_ohlc(
             yf.download(ysym, period="400d", interval="1d", auto_adjust=False, progress=False)))
         if df is not None:
+            _SERI[sym] = df
             return summarize(df, "yahoo (yedek)", with_ma)
     return {"hata": "veri alınamadı"}
 
@@ -1541,7 +1590,7 @@ def onceki_islem_gunu_getirisi(kapanislar, fon_tarihi):
 def fon_tutarlilik(R):
     """Bağımsız kaynak yok → iç tutarlılık kontrolleri (28 Eyl). Sapma varsa HEALTH'e yazar."""
     fon = R.get("fonlar") or {}
-    son_is = (pd.Timestamp(NOW.date()) - pd.offsets.BDay(1)).date()
+    son_is = onceki_is_gunu(NOW.date())          # 30 Eki: tatile duyarlı
     b30 = R.get("bist30") or {}
     kap = list(b30.get("son_5_kapanis") or [])
     if b30.get("son_bar_kismi_mi"):
@@ -1628,7 +1677,7 @@ def _sinif_arsiv(R):
 
 def gunluk_arsiv(R):
     """Her iş günü akşam (18:00 sonrası ilk çalışmada) günün özetini tek satır ekler. Silinmez."""
-    if NOW.weekday() >= 5 or NOW.hour < 18:
+    if not is_gunu(NOW.date()) or NOW.hour < 18:      # 30 Eki: tatil günü satır yazılmaz (bayat veri)
         return "saat değil"
     T = R.get("tetikler") or {}
     b = R.get("bist100") or {}
@@ -1998,10 +2047,10 @@ def etkin_sure(fiyat, verim):
         guven = "güvenilmez"
     return {"sure_yil": round(D, 2), "r2": round(r2, 2), "gozlem": int(len(df)), "guven": guven}
 
-def tahvil_senaryo(sure, verim_2y, aofm):
+def tahvil_senaryo(sure, verim_2y, aofm, tasima_duzeltme=0.0):
     """3 aylık ufuk: tahvil fonu = taşıma (verim − ücret) − süre × Δverim; para piyasası = (fiili faiz − ücret + Δ/2).
     Varsayımlar sabit ve çıktıya yazılır; amaç büyüklük sırasını görmek, kesin tahmin değil."""
-    tasima = (verim_2y - TAHVIL_UCRET) * 0.25
+    tasima = (verim_2y - TAHVIL_UCRET + (tasima_duzeltme or 0.0)) * 0.25     # 30 Eki: gerçekleşenle kalibre
     ppf0 = (aofm - PPF_UCRET) * 0.25
     tablo = []
     for dy in SENARYO_DY:
@@ -2015,7 +2064,8 @@ def tahvil_senaryo(sure, verim_2y, aofm):
             "basabas_okuma": (f"2 yıllık faiz 3 ayda {basabas:+} puandan daha fazla düşerse tahvil fonu para piyasasını geçer"
                               if basabas is not None and basabas < 0 else
                               f"2 yıllık faiz 3 ayda {basabas:+} puandan daha az yükselirse tahvil fonu para piyasasını geçer"),
-            "varsayimlar": {"tasima": f"2Y verim %{verim_2y} − yıllık ücret %{TAHVIL_UCRET}",
+            "varsayimlar": {"tasima": f"2Y verim %{verim_2y} − yıllık ücret %{TAHVIL_UCRET}"
+                                      + (f" {tasima_duzeltme:+.2f} puan kalibrasyon (gerçekleşen getiriden)" if tasima_duzeltme else ""),
                             "para_piyasasi": f"fiili faiz %{aofm} − ücret %{PPF_UCRET}; faiz değişiminin ortalama yarısı yansır",
                             "fiyat_etkisi": "anlık ve doğrusal (süre × Δverim); vergi her ikisinde aynı (%17,5) olduğu için brüt kıyas"}}
 
@@ -2046,9 +2096,27 @@ def tahvil_analiz(R):
             else:
                 lo, hi = SURE_KABA.get(vade, SURE_KABA["orta/belirsiz"])
                 sure, sure_kaynak = round((lo + hi) / 2, 2), f"KABA TAHMİN ({vade} vade kategorisi: {lo}-{hi} yıl) — {es.get('not') or es.get('guven')}"
+            # 30 Eki: taşıma kalibrasyonu (gerçekleşen getiri ↔ model) — kıyas: pozisyon kuralındaki fon ya da ilk cephane fonu
+            kalib, duz = None, 0.0
+            kiyas_kod = (POZISYON_KURALLARI.get(kod) or {}).get("kiyas") or (CEPHANE[0] if CEPHANE else None)
+            if v2 is not None and kiyas_kod and len(verim):
+                try:
+                    kalib = tasima_kalibrasyon(fiyat, _fiyat_serisi(kiyas_kod), verim, sure, v2, aofm)
+                    kalib["kiyas"] = kiyas_kod
+                    if kalib.get("uygulandi"):
+                        duz = kalib["duzeltme_yillik_puan"]
+                        if kod in TAHVIL and abs(duz) >= 3:
+                            HEALTH[f"kalibrasyon_{kod}"] = (f"NOT: {kod} için model taşıma varsayımı gerçekleşenden {duz:+.1f} puan/yıl "
+                                                            "sapıyor — senaryo tablosu gerçekleşen getiriye göre düzeltildi")
+                except FonolojiLimit:
+                    raise
+                except Exception as e:
+                    kalib = {"hata": f"{type(e).__name__}: {str(e)[:80]}"}
             out["fonlar"][kod] = {"portfoyde": kod in TAHVIL, "etkin_sure": es, "kullanilan_sure_yil": sure,
-                                  "sure_kaynagi": sure_kaynak,
-                                  "senaryo": tahvil_senaryo(sure, v2, aofm) if v2 is not None else {"not": "2Y verim yok"}}
+                                  "sure_kaynagi": sure_kaynak, "kalibrasyon": kalib,
+                                  "senaryo": tahvil_senaryo(sure, v2, aofm, duz) if v2 is not None else {"not": "2Y verim yok"},
+                                  "senaryo_kalibrasyonsuz_basabas": (tahvil_senaryo(sure, v2, aofm)["basabas_verim_degisimi_puan"]
+                                                                     if v2 is not None and duz else None)}
         except FonolojiLimit:
             out["fonlar"][kod] = {"not": "Fonoloji hız sınırı — sonraki ağır çalışmada"}
         except Exception as e:
@@ -2173,6 +2241,256 @@ def pozisyon_takip():
             HEALTH[f"pozisyon_{kod}"] = f"UYARI: pozisyon takibi hesaplanamadı ({type(e).__name__}: {str(e)[:60]})"
     return out
 
+
+
+# ---- 30 EKİM: PİYASA TAKVİMİ, KÜRESEL PARA AKIŞI, USDT PRİMİ, KALİBRASYON ----------------
+def _tufe_gunu(y, m):
+    """TÜİK TÜFE'yi ayın 3'ünde açıklar; hafta sonu/tatilse sonraki iş günü."""
+    d = date(y, m, 3)
+    while not is_gunu(d):
+        d += timedelta(days=1)
+    return d
+
+def piyasa_takvimi():
+    """Bugün/yarın piyasa durumu, sonraki tatil, PPK ve TÜFE tarihleri. Yarın tatil/yarım günse NOT düşer."""
+    bugun = NOW.date(); bs = bugun.strftime("%Y-%m-%d")
+    def durum(d):
+        if d.weekday() >= 5:
+            return "hafta sonu"
+        return {"tam": "TATİL (piyasa kapalı)", "yarim": "YARIM GÜN (öğleden sonra kapalı)"}.get(
+            TATILLER.get(d.strftime("%Y-%m-%d")), "normal iş günü")
+    ilk_hafta_ici = bugun + timedelta(days=1)
+    while ilk_hafta_ici.weekday() >= 5:
+        ilk_hafta_ici += timedelta(days=1)
+    sonraki_tatil = next(({"tarih": d, "tur": t, "kalan_gun": (datetime.strptime(d, "%Y-%m-%d").date() - bugun).days}
+                          for d, t in sorted(TATILLER.items())
+                          if d > bs and datetime.strptime(d, "%Y-%m-%d").weekday() < 5), None)
+    t = _tufe_gunu(bugun.year, bugun.month)
+    if t < bugun:
+        t = _tufe_gunu(bugun.year + (bugun.month == 12), bugun.month % 12 + 1)
+    sonraki_ppk = next((d for d in PPK_TAKVIMI if d >= bs), None)
+    out = {"bugun": durum(bugun), "sonraki_hafta_ici_gun": {"tarih": ilk_hafta_ici.strftime("%Y-%m-%d"), "durum": durum(ilk_hafta_ici)},
+           "sonraki_is_gunu": sonraki_is_gunu(bugun).strftime("%Y-%m-%d"), "sonraki_tatil": sonraki_tatil,
+           "sonraki_ppk": sonraki_ppk, "sonraki_tufe": t.strftime("%Y-%m-%d"),
+           "tatil_listesi_son_tarih": max(TATILLER) if TATILLER else None}
+    olay = [{"tarih": t.strftime("%Y-%m-%d"), "olay": "TÜFE (aylık enflasyon) 10:00"}]
+    if sonraki_ppk:
+        olay.append({"tarih": sonraki_ppk, "olay": "TCMB PPK faiz kararı 14:00"})
+    if sonraki_tatil:
+        olay.append({"tarih": sonraki_tatil["tarih"], "olay": "Borsa " + ("kapalı" if sonraki_tatil["tur"] == "tam" else "yarım gün")})
+    out["yaklasan_olaylar"] = sorted(olay, key=lambda x: x["tarih"])
+    yd = TATILLER.get(ilk_hafta_ici.strftime("%Y-%m-%d"))
+    if yd:
+        HEALTH["piyasa_takvimi_yarin"] = (f"NOT: {ilk_hafta_ici:%d.%m} borsa ve fon piyasası "
+                                          + ("KAPALI" if yd == "tam" else "YARIM GÜN") + " — fon emirlerini bugün 13:30'dan önce ver")
+    if out["tatil_listesi_son_tarih"] and out["tatil_listesi_son_tarih"] < (bugun + timedelta(days=60)).strftime("%Y-%m-%d"):
+        HEALTH["piyasa_takvimi_liste"] = (f"NOT: tatil listesi {out['tatil_listesi_son_tarih']} tarihinde bitiyor — "
+                                          "ayarlar.json 'tatiller' ile yeni yılın tatillerini ekle")
+    pf_ppk = POLITIKA_FAIZI.get("sonraki_ppk")
+    if sonraki_ppk and pf_ppk and pf_ppk >= bs and pf_ppk != sonraki_ppk:
+        HEALTH["piyasa_takvimi_ppk"] = (f"NOT: ayarlar.json politika_faizi.sonraki_ppk ({pf_ppk}) PPK takvimindeki "
+                                        f"sıradaki toplantıyla ({sonraki_ppk}) uyuşmuyor — kontrol et")
+    return out
+
+TURKIYE_OZGU_5G, TURKIYE_OZGU_20G = -5.0, -10.0     # TUR − EEM farkı (puan) → "Türkiye'ye özgü baskı"
+KREDI_STRES_HYG, KREDI_STRES_EMB = -3.0, -4.0       # 1 aylık değişim (%) → "küresel kredi stresi"
+
+def kuresel_akis(R):
+    """Yabancının gözünden Türkiye (TUR vs EEM), küresel kredi stresi (HYG, EMB), Bitcoin (hafta sonu dahil risk iştahı)."""
+    k = R.get("kuresel") or {}
+    g = lambda n, f: (k.get(n) or {}).get(f)
+    out = {}
+    t5, e5, t20, e20 = (g("tur_etf", "haftalik_degisim_pct"), g("eem_etf", "haftalik_degisim_pct"),
+                        g("tur_etf", "aylik_degisim_pct"), g("eem_etf", "aylik_degisim_pct"))
+    if t5 is not None and e5 is not None:
+        f5 = round(t5 - e5, 2); f20 = round(t20 - e20, 2) if t20 is not None and e20 is not None else None
+        if f5 <= TURKIYE_OZGU_5G or (f20 is not None and f20 <= TURKIYE_OZGU_20G):
+            d = "TÜRKİYE'YE ÖZGÜ BASKI"
+        elif e5 <= -3 and abs(f5) < 3:
+            d = "GELİŞMEKTE OLAN ÜLKELER GENELİNDE BASKI"
+        elif f5 >= -TURKIYE_OZGU_5G:
+            d = "TÜRKİYE'YE ÖZGÜ GÜÇ (yabancı ilgisi)"
+        else:
+            d = "NORMAL"
+        out["turkiye_vs_gelismekte"] = {"tur_5g_pct": t5, "eem_5g_pct": e5, "fark_5g_puan": f5,
+                                        "tur_20g_pct": t20, "eem_20g_pct": e20, "fark_20g_puan": f20, "durum": d,
+                                        "okuma": "TUR: Türkiye hisseleri (dolar, ABD'de işlem görür); EEM: tüm gelişmekte olan ülkeler"}
+        if d == "TÜRKİYE'YE ÖZGÜ BASKI":
+            HEALTH["kuresel_turkiye_ozgu"] = f"NOT: Türkiye ETF'i gelişmekte olan ülkelerin 5 günde {f5} puan gerisinde — baskı Türkiye'ye özgü"
+    h20, m20 = g("hyg_etf", "aylik_degisim_pct"), g("emb_etf", "aylik_degisim_pct")
+    if h20 is not None or m20 is not None:
+        stres = (h20 is not None and h20 <= KREDI_STRES_HYG) or (m20 is not None and m20 <= KREDI_STRES_EMB)
+        out["kuresel_kredi"] = {"hyg_20g_pct": h20, "emb_20g_pct": m20, "hyg_zirveden_pct": g("hyg_etf", "zirveden_pct"),
+                                "emb_zirveden_pct": g("emb_etf", "zirveden_pct"), "durum": "STRES" if stres else "NORMAL"}
+        if stres:
+            HEALTH["kuresel_kredi_stres"] = f"NOT: küresel kredi stresi — HYG 1 ayda %{h20}, EMB %{m20} (riskten kaçış)"
+    bt = _SERI.get("Y:bitcoin")
+    if g("bitcoin", "son_fiyat") is not None:
+        b = {"son_usd": g("bitcoin", "son_fiyat"), "gunluk_pct": g("bitcoin", "gunluk_degisim_pct"),
+             "haftalik_pct": g("bitcoin", "haftalik_degisim_pct"), "zirveden_pct": g("bitcoin", "zirveden_pct")}
+        if bt is not None and len(bt):
+            c = bt["Close"].dropna()
+            cumalar = [d for d in c.index if d.weekday() == 4 and d < c.index[-1]]
+            if cumalar:
+                b["son_cumadan_beri_pct"] = pct(c.iloc[-1], c.loc[cumalar[-1]])
+                b["son_cuma"] = cumalar[-1].strftime("%Y-%m-%d")
+        out["bitcoin"] = b
+    return out
+
+def _gun_seri(df):
+    s = df["Close"].dropna().copy()
+    idx = pd.to_datetime(s.index)
+    if getattr(idx, "tz", None) is not None:
+        idx = idx.tz_localize(None)
+    s.index = idx.normalize()
+    return s[~s.index.duplicated(keep="last")]
+
+def bist_dolar():
+    """BIST 100'ün dolar bazında değeri (BIST / USDTRY) — yabancı gözüyle ucuzluk."""
+    x, u = _SERI.get("XU100"), _SERI.get("Y:usdtry_yahoo")
+    if x is None or u is None:
+        return {"not": "BIST ya da USD/TRY geçmişi yok"}
+    df = pd.concat({"x": _gun_seri(x), "u": _gun_seri(u)}, axis=1).dropna()
+    df = df[(df["u"] > 1) & (df["x"] > 100)]
+    if len(df) < 30:
+        return {"not": f"ortak gün yetersiz ({len(df)})"}
+    s = df["x"] / df["u"]; son = float(s.iloc[-1]); y = s.tail(252)
+    dipten = pct(son, y.min())
+    return {"son": round(son, 2), "tarih": s.index[-1].strftime("%Y-%m-%d"), "usdtry": round(float(df["u"].iloc[-1]), 4),
+            "52h_zirve": round(float(y.max()), 2), "52h_dip": round(float(y.min()), 2),
+            "zirveden_pct": pct(son, y.max()), "dipten_pct": dipten,
+            "yuzdelik_1y": round(float((y < son).mean() * 100), 1),
+            "20g_degisim_pct": pct(son, s.iloc[-21]) if len(s) > 21 else None,
+            "durum": ("52 HAFTANIN DİBİNE YAKIN (dolar bazında ucuz)" if dipten is not None and dipten <= 5 else
+                      ("52 HAFTANIN ZİRVESİNE YAKIN" if pct(son, y.max()) is not None and pct(son, y.max()) >= -5 else "ARADA"))}
+
+USDT_FILE = "output/usdt_prim_gecmis.json"
+USDT_ESIK = {"uyari_pct": 3.0, "artis_puan": 1.5}
+_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+
+def _usdt_btcturk():
+    import requests
+    r = requests.get("https://api.btcturk.com/api/v2/ticker", timeout=15, headers={"User-Agent": _UA})
+    if getattr(r, "status_code", 200) >= 400:
+        raise RuntimeError(f"HTTP {r.status_code}")
+    j = r.json()
+    for x in ((j.get("data") if isinstance(j, dict) else j) or []):
+        if str(x.get("pair", "")).upper() == "USDTTRY" or str(x.get("pairNormalized", "")).upper() == "USDT_TRY":
+            return float(x["last"]), "BtcTurk"
+    raise ValueError("yanıtta USDTTRY çifti yok")
+
+def _usdt_paribu():
+    import requests
+    r = requests.get("https://www.paribu.com/ticker", timeout=15, headers={"User-Agent": _UA})
+    if getattr(r, "status_code", 200) >= 400:
+        raise RuntimeError(f"HTTP {r.status_code}")
+    j = r.json()
+    x = j.get("USDT_TL") or j.get("usdt_tl") if isinstance(j, dict) else None
+    if not x:
+        raise ValueError("yanıtta USDT_TL yok")
+    return float(x["last"]), "Paribu"
+
+def usdt_prim(R):
+    """Kripto borsasında 1 USDT'nin TL fiyatı ÷ resmi dolar kuru − 1. Dövize kaçış talebinin erken uyarısı."""
+    fiyat = kaynak = None
+    for ad, fn in (("usdt_btcturk", _usdt_btcturk), ("usdt_paribu", _usdt_paribu)):
+        v = safe(ad, fn)
+        if v:
+            fiyat, kaynak = v
+            break
+    if kaynak == "Paribu" and str(HEALTH.get("usdt_btcturk", "")).startswith("HATA"):
+        HEALTH["usdt_btcturk"] = "NOT: " + HEALTH["usdt_btcturk"][6:] + " (yedek Paribu çalıştı)"
+    usd, ref = ((R.get("doviz_altin") or {}).get("USD") or {}).get("last"), "doviz.com (borsapy)"
+    if not usd:
+        usd, ref = ((R.get("kuresel") or {}).get("usdtry_yahoo") or {}).get("son_fiyat"), "Yahoo"
+    if not fiyat or not usd:
+        return {"not": "USDT fiyatı ya da resmi kur alınamadı"}
+    if not 0.8 <= fiyat / usd <= 1.25:
+        HEALTH["usdt_prim_makul"] = f"UYARI: USDT/TL {fiyat} ile dolar {usd} arasında makul olmayan fark — veri hatası olabilir"
+        return {"not": "makul olmayan değer", "usdt_try": fiyat, "usdtry": usd}
+    prim = round((fiyat / usd - 1) * 100, 2)
+    bugun = NOW.date(); bs = bugun.strftime("%Y-%m-%d")
+    try:
+        gecmis = json.load(open(USDT_FILE, encoding="utf-8")) if os.path.exists(USDT_FILE) else {}
+    except Exception:
+        gecmis = {}
+    if not isinstance(gecmis, dict):
+        gecmis = {}
+    if is_gunu(bugun):                                   # hafta sonu/tatilde resmi kur durur → kayda geçmez
+        gecmis[bs] = prim
+    alt = (bugun - timedelta(days=120)).strftime("%Y-%m-%d")
+    gecmis = {d: v for d, v in sorted(gecmis.items()) if d >= alt and isinstance(v, (int, float))}
+    os.makedirs("output", exist_ok=True)
+    json.dump(gecmis, open(USDT_FILE, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    alt30 = (bugun - timedelta(days=30)).strftime("%Y-%m-%d")
+    onceki = [v for d, v in gecmis.items() if alt30 <= d < bs]
+    med = round(float(np.median(onceki)), 2) if len(onceki) >= 5 else None
+    e = {**USDT_ESIK, **(AYAR.get("usdt_prim_esik") or {})}
+    if not is_gunu(bugun):
+        d = "BİLGİ (piyasa kapalı; resmi kur sabit)"
+    elif med is not None and prim >= e["uyari_pct"] and prim - med >= e["artis_puan"]:
+        d = "ALARM"
+        HEALTH["usdt_prim_alarm"] = (f"UYARI: USDT/TL primi %{prim} (30 günlük olağan %{med}) — kripto üzerinden dövize kaçış "
+                                     "talebi artıyor; TL'ye karşı erken uyarı, dolar makası kuralını kontrol et")
+    elif prim >= e["uyari_pct"]:
+        d = "YÜKSEK (geçmiş birikiyor)" if med is None else "YÜKSEK (olağan seviyede)"
+    else:
+        d = "NORMAL"
+    return {"usdt_try": round(fiyat, 4), "kaynak": kaynak, "usdtry": usd, "usdtry_kaynak": ref, "prim_pct": prim,
+            "olagan_30g_pct": med, "gozlem_gun": len(onceki), "esikler": e, "durum": d}
+
+KALIB_PENCERE_GUN, KALIB_MIN_GUN, KALIB_MAX_DUZELTME = 60, 25, 20.0
+BORSA_PLAN_OYNAKLIK = 27.0      # 17/24 Eki simülasyonlarında varsayılan BIST yıllık oynaklığı (%)
+
+def tasima_kalibrasyon(fiyat, kiyas, verim, sure, v2, aofm):
+    """Son ~60 günde: gerçekleşen (tahvil fonu − para piyasası) farkından süre etkisi çıkarılınca kalan = fiili taşıma farkı.
+    Model taşıma farkı (2Y − ücret) − (fiili faiz − ücret) ile karşılaştırılır; fark senaryoya düzeltme olarak eklenir."""
+    son = min(fiyat.index[-1], kiyas.index[-1])
+    hedef = son - pd.Timedelta(days=KALIB_PENCERE_GUN)
+    f, k = fiyat[(fiyat.index >= hedef) & (fiyat.index <= son)], kiyas[(kiyas.index >= hedef) & (kiyas.index <= son)]
+    if f.empty or k.empty:
+        return {"not": "pencerede fiyat yok"}
+    bas = max(f.index[0], k.index[0])
+    f, k = f[f.index >= bas], k[k.index >= bas]
+    gun = (son - bas).days
+    if gun < KALIB_MIN_GUN:
+        return {"not": f"pencere kısa ({gun} gün; en az {KALIB_MIN_GUN})"}
+    vb, vs = verim[verim.index <= bas], verim[verim.index <= son]
+    if vb.empty or vs.empty:
+        return {"not": "pencere başında verim yok"}
+    dy = float(vs.iloc[-1] - vb.iloc[-1])
+    rf, rk = pct(f.iloc[-1], f.iloc[0]), pct(k.iloc[-1], k.iloc[0])
+    gercek = rf - rk
+    sure_etkisi = -sure * dy
+    ima = (gercek - sure_etkisi) * 365.0 / gun
+    model = (v2 - TAHVIL_UCRET) - (aofm - PPF_UCRET)
+    duz = ima - model
+    uygula = abs(duz) <= KALIB_MAX_DUZELTME
+    return {"pencere": f"{bas:%Y-%m-%d} → {son:%Y-%m-%d} ({gun} gün)", "fon_getiri_pct": rf, "kiyas_getiri_pct": rk,
+            "verim_degisimi_puan": round(dy, 2), "sure_etkisi_puan": round(sure_etkisi, 2), "gerceklesen_fark_puan": round(gercek, 2),
+            "model_tasima_farki_yillik": round(model, 2), "ima_edilen_tasima_farki_yillik": round(ima, 2),
+            "duzeltme_yillik_puan": round(duz, 2), "uygulandi": uygula,
+            "okuma": (f"Faiz sabitken model fonun para piyasasını yılda {model:+.1f} puan geçmesini bekliyordu; "
+                      f"son {gun} günde gerçekleşen {ima:+.1f} puan" + ("" if uygula else " (fark çok büyük — uygulanmadı)"))}
+
+def kalibrasyon_ozet(R):
+    """Tahmin modellerinin varsayımları ile gerçekleşenin karşılaştırması (aylık kontrol için)."""
+    out = {}
+    oy = (R.get("bist100") or {}).get("oynaklik_yillik_pct") or {}
+    if oy:
+        o60 = oy.get("60g") or oy.get("20g")
+        out["bist_oynaklik"] = {"gerceklesen_20g": oy.get("20g"), "gerceklesen_60g": oy.get("60g"),
+                                "simulasyon_varsayimi": BORSA_PLAN_OYNAKLIK,
+                                "durum": ("VARSAYIMIN ÜSTÜNDE — simülasyonlar riski küçük gösteriyor" if o60 and o60 > BORSA_PLAN_OYNAKLIK * 1.25 else
+                                          ("VARSAYIMIN ALTINDA" if o60 and o60 < BORSA_PLAN_OYNAKLIK * 0.75 else "UYUMLU"))}
+    ta = (R.get("tahvil_analiz") or {}).get("fonlar") or {}
+    th = {kod: {kk: v["kalibrasyon"].get(kk) for kk in ("model_tasima_farki_yillik", "ima_edilen_tasima_farki_yillik",
+                                                        "duzeltme_yillik_puan", "uygulandi", "pencere")}
+          for kod, v in ta.items() if isinstance(v, dict) and isinstance(v.get("kalibrasyon"), dict)
+          and v["kalibrasyon"].get("duzeltme_yillik_puan") is not None}
+    if th:
+        out["tahvil_tasima"] = th
+    return out
 
 def agir_slot():
     """Bu çalışma hangi 'ağır iş' penceresinde? Hafta sonu ve gün içi: yok (önbellek)."""
@@ -2467,11 +2785,15 @@ def main():
             df = safe(f"yahoo_{k}", lambda t=t: norm_ohlc(
                 yf.download(t, period="300d", interval="1d", auto_adjust=False, progress=False)))
             R["kuresel"][k] = summarize(df, "yahoo", with_ma=False, bist=False) if df is not None else {"hata": "yok"}
+            if df is not None:
+                _SERI[f"Y:{k}"] = df
             sb = R["kuresel"][k].get("son_bar_tarihi")
             if sb:
                 yas = (NOW.date() - datetime.strptime(sb, "%Y-%m-%d").date()).days
                 if yas > 4:
                     HEALTH[f"yahoo_{k}_bayat"] = f"UYARI: {k} son verisi {sb} ({yas} gün önce) — Yahoo güncellemiyor olabilir"
+
+    R["usdt_prim"] = safe("usdt_prim_hesap", lambda: usdt_prim(R))      # 30 Eki
 
     # ---- TETİKLER ----
     T = {}
@@ -2697,6 +3019,11 @@ def main():
     T["pozisyon_takip"] = R.get("pozisyon_takip") or {}
     T["reel_getiri_yontem"] = f"NET: getiri×(1-{STOPAJ_PP}) − aylık TÜFE; ALARM <{REEL_ALARM}, ACİL ≤{REEL_ACIL}"
     T["borsa_plani"] = safe("borsa_plani_hesap", lambda: borsa_plani_kontrol(R, T))
+    # 30 Eki: piyasa takvimi, küresel para akışı, BIST dolar bazı, USDT primi, kalibrasyon
+    T["piyasa_takvimi"] = safe("piyasa_takvimi_hesap", piyasa_takvimi)
+    T["kuresel_akis"] = safe("kuresel_akis_hesap", lambda: kuresel_akis(R))
+    T["bist_dolar"] = safe("bist_dolar_hesap", bist_dolar)
+    T["usdt_prim"] = R.get("usdt_prim")
     T["ozel_tahvil"] = safe("ozel_tahvil_hesap", lambda: ozel_tahvil_kontrol(R))     # 20 Eki
     R["tetikler"] = T
     # 7 Eki: tahvil analizi (etkin süre + senaryo) — ağır çalışmada; diğerlerinde önceki sonuç
@@ -2704,6 +3031,7 @@ def main():
         R["tahvil_analiz"] = safe("tahvil_analiz", lambda: tahvil_analiz(R)) or prev.get("tahvil_analiz")
     else:
         R["tahvil_analiz"] = prev.get("tahvil_analiz")
+    R["tetikler"]["kalibrasyon"] = safe("kalibrasyon_hesap", lambda: kalibrasyon_ozet(R))    # 30 Eki
     R["arsiv"] = safe("gunluk_arsiv", lambda: gunluk_arsiv(R))
 
     # ---- SAĞLIK ----
