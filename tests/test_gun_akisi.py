@@ -16,8 +16,10 @@ MOCK = os.path.join(KOK, "tests", "mock")
 
 def son_is_gunu_bugun():
     from datetime import datetime, timezone
+    import re
     d = datetime.now(timezone(timedelta(hours=3))).date()   # 3 Eki: Türkiye saati (betikle aynı gün sınırı)
-    while d.weekday() >= 5:
+    tatil = set(re.findall(r'"(\d{4}-\d{2}-\d{2})": "tam"', open(os.path.join(KOK, "bist_radar.py"), encoding="utf-8").read()))
+    while d.weekday() >= 5 or d.strftime("%Y-%m-%d") in tatil:     # 30 Eki: resmi tatil günü de atlanır
         d -= timedelta(days=1)
     return d
 
