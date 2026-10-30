@@ -55,6 +55,18 @@ def get(url, params=None, headers=None, timeout=20):
         raise TimeoutError("HTTPSConnectionPool(host='fonoloji.com', port=443): Read timed out. (read timeout=20)")
     if "doviz.com/tahvil" in url:
         return _Resp({}, 200, {}, _DOVIZ_SAYFA.get(os.environ.get("RADAR_MOCK_DOVIZ_SAYFA") or "bot"))
+    # 30 Eki: kripto borsaları (USDT/TL primi). Gerçek biçim: BtcTurk {"data":[{pair, pairNormalized, last, ...}]},
+    # Paribu {"USDT_TL": {"last": ...}}. Resmi kur sahtesi: borsapy FX("USD") = 48,83.
+    _usdt = round(48.83 * (1 + float(os.environ.get("RADAR_MOCK_USDT_PRIM") or 0.8) / 100), 4)
+    if "api.btcturk.com" in url:
+        if os.environ.get("RADAR_MOCK_BTCTURK_HATA"):
+            raise ConnectionError("HTTPSConnectionPool(host='api.btcturk.com', port=443): Max retries exceeded")
+        return _Resp({"data": [{"pair": "BTCTRY", "pairNormalized": "BTC_TRY", "last": 4100000.0, "bid": 4099000.0, "ask": 4101000.0},
+                               {"pair": "USDTTRY", "pairNormalized": "USDT_TRY", "last": _usdt, "bid": _usdt - 0.01, "ask": _usdt + 0.01,
+                                "numeratorSymbol": "USDT", "denominatorSymbol": "TRY"}], "success": True, "message": None, "code": 0})
+    if "paribu.com/ticker" in url:
+        return _Resp({"BTC_TL": {"last": 4100000.0, "lowestAsk": 4101000.0, "highestBid": 4099000.0},
+                      "USDT_TL": {"last": _usdt, "lowestAsk": _usdt + 0.01, "highestBid": _usdt - 0.01}})
     code = url.rstrip("/").split("/funds/")[-1].split("/")[0]
     _SAYAC[0] += 1
     if _SAYAC[0] <= int(os.environ.get("RADAR_MOCK_429") or 0):            # 6 Eki: ilk N istek hız sınırı
