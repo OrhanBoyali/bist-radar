@@ -16,6 +16,8 @@
     "pay_pct": 10.0,
     "artis_puan": 5.0
   },
+  "_firsat_not": "31 Eki: Fırsat radarı her varlık için kurallı sinyal üretir (AL/ARTIR, AZALT/ÇIK, DEĞERLENDİR, İZLE). Yeni sinyal bildirim gönderir, sürerse not olarak kalır. firsat_sustur: kullanıcının karar verip kapattığı sinyaller (bildirim üretmez, raporda 'susturuldu' görünür). firsat_esikleri: istenirse eşikleri değiştirmek için (varsayılanlar kodda). rotasyon_TIE: 30 Eki kapatıldı — borsa planı satışları TIE'den yapar, TIE→AKU geçişi yok.",
+  "firsat_sustur": ["rotasyon_TIE"],
   "_seviyeler_not": "Borsa planı seviyeleri (BIST 100 puan). Plan değişirse güncellenir.",
   "seviyeler": {
     "korunan_taban": 13000,
