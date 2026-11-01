@@ -64,6 +64,48 @@ def birim_tarih_hizalama():
     out = subprocess.run([sys.executable, "-c", kod], env=env, capture_output=True, text=True, timeout=60).stdout.split()
     return [float(x) for x in out] if len(out) == 2 else [None, None]
 
+def firsat_radari_birim():
+    """31 Eki: fırsat radarının kuralları sentetik verilerle (her varlık sınıfı) + bildirim bir kez / süren not / kalkan not."""
+    kod = r"""
+import json, bist_radar as br
+def R(usdt="NORMAL", gz=-10.0, a10=-1.0, nz=-3.0, panik="YOK"):
+    return {"tetikler": {"usdt_prim": {"durum": usdt}, "dolar_makasi_puan": 17.0, "brut_rezerv_4hafta_pct": -1.0,
+                         "gram_altin_zirveden_pct": gz, "mevduat_tl_1ay_brut": 42.7, "varlik_sinifi_olgun": ["TL mevduat (1 ay, brüt)"],
+                         "reel_getiri": {"YLB": {"brut_30g_pct": 2.9, "durum": "OK"}}, "rakip_olgun_adaylar": {"TIE": [{"kod": "AKU", "fark_1y": 7, "aday_gun": 23}]},
+                         "borsa_plani": {"panik_dibi": {"durum": panik}}, "bist_dolar": {"dipten_pct": 1.0},
+                         "kuresel_akis": {"turkiye_vs_gelismekte": {"durum": "NORMAL"}, "kuresel_kredi": {"durum": "NORMAL"}}},
+            "kuresel": {"abd_10y": {"aylik_degisim_pct": a10}, "usdtry_yahoo": {"aylik_degisim_pct": 1.0},
+                        "nasdaq": {"zirveden_pct": nz}, "sp500": {"zirveden_pct": -2.0}},
+            "bist100": {"rsi14_tamamlanmis": 25.0},
+            "tahvil_analiz": {"fonlar": {"YOT": {"kalibrasyon": {"uygulandi": True}, "senaryo": {"basabas_verim_degisimi_puan": -3.8,
+                              "senaryolar": [{"verim_degisimi_puan": 0, "fark_puan": -3.6}]}},
+                                         "GUX": {"kalibrasyon": {"uygulandi": True}, "senaryo": {"senaryolar": [{"verim_degisimi_puan": 0, "fark_puan": 1.2}]}}}}}
+o1 = br.firsat_radari(R(usdt="ALARM", gz=-20.0, a10=-8.0, nz=-20.0, panik="ALARM"))
+h1 = dict(br.HEALTH)
+br.HEALTH.clear()
+o2 = br.firsat_radari(R(usdt="ALARM", gz=-20.0, a10=-8.0, nz=-20.0, panik="ALARM"))
+h2 = dict(br.HEALTH)
+br.HEALTH.clear()
+o3 = br.firsat_radari(R())
+h3 = dict(br.HEALTH)
+an = lambda o, v: [x["anahtar"] for x in o["varliklar"].get(v, {}).get("sinyaller", []) if x["yon"] != "SUSTURULDU"]
+print(json.dumps({"ozet1": o1["ozet"], "altin1": an(o1, "altin"), "tahvil1": an(o1, "tahvil"), "borsa1": an(o1, "borsa"),
+   "mevduat1": an(o1, "mevduat"), "yurtdisi1": [x["yon"] for x in o1["varliklar"]["yurtdisi"]["sinyaller"]],
+   "uyari1": sorted(k for k, v in h1.items() if k.startswith("firsat_") and str(v).startswith("UYARI")),
+   "not2": sorted(k for k, v in h2.items() if k.startswith("firsat_") and str(v).startswith("NOT")),
+   "uyari2": sorted(k for k, v in h2.items() if k.startswith("firsat_") and str(v).startswith("UYARI")),
+   "kalkti3": sorted(k for k in h3 if k.endswith("_kalkti")), "altin3": o3["ozet"]["altin"]}, ensure_ascii=False))
+"""
+    tmp = tempfile.mkdtemp()
+    open(os.path.join(tmp, "ayarlar.json"), "w", encoding="utf-8").write(json.dumps(
+        {"fonlar": {"YLB": "cephane", "BGP": "cephane", "YOT": "tahvil", "TIE": "borsa"}, "firsat_sustur": ["rotasyon_TIE", "yurtdisi_hisse"]}))
+    env = dict(os.environ, PYTHONPATH=MOCK + os.pathsep + KOK, RADAR_TEST_NOW="2026-10-30 18:52")
+    out = subprocess.run([sys.executable, "-c", kod], env=env, capture_output=True, text=True, timeout=60, cwd=tmp).stdout
+    try:
+        return json.loads(out.strip().splitlines()[-1])
+    except Exception:
+        return {}
+
 def piyasa_takvimi_birim():
     """30 Eki: tatil/yarım gün, sonraki iş günü, TÜFE ve PPK tarihleri (gerçek takvimle sabit tarihlerde)."""
     kod = ("import json, bist_radar as br\n"
@@ -274,6 +316,7 @@ def main():
     _hafta_birim = haftalik_kapanis_birim()
     # 30 Eki: küresel para akışı, USDT primi, piyasa takvimi, kalibrasyon
     _takvim = piyasa_takvimi_birim()
+    _fr = firsat_radari_birim()
     d_tur = calistir(ek_env={"RADAR_MOCK_TUR_DUSUS": "1", "RADAR_MOCK_KREDI_STRES": "1"})
     d_usdt_yedek = calistir(ek_env={"RADAR_MOCK_BTCTURK_HATA": "1"})
     _an_gun = _pd.Timestamp(_AN[:10])
@@ -469,6 +512,22 @@ def main():
                                                                     "Pozisyon: bankadan teyitli giriş fiyatı esas alınır"),
         ("pozisyon_YOT_yakin" in d_poz_yakin["saglik"]["tum_moduller"] and "pozisyon_YOT_yakin" not in d_poz_yakin["saglik"].get("issue_tetikleyen", []),
                                                                     "Pozisyon: zarar sınırına yaklaşınca bildirimsiz erken not düşer"),
+        # --- 31 Eki: fırsat radarı (otopilot) ---
+        (set(_fr.get("altin1", [])) >= {"altin_tl_sigorta", "altin_fiyat"} and _fr.get("ozet1", {}).get("altin") == "AL/ARTIR",
+                                                                    "Fırsat radarı: TL stresinde ve 'ucuz altın + Fed gevşemesi'nde altın sinyali verir"),
+        (_fr.get("tahvil1") == ["tahvil_cik_YOT", "tahvil_gir_GUX"] or set(_fr.get("tahvil1", [])) == {"tahvil_cik_YOT", "tahvil_gir_GUX"},
+                                                                    "Fırsat radarı: kalibre modele göre geride kalan tahvil fonu için ÇIK, öne geçen aday için AL sinyali"),
+        ("borsa_panik_dibi" in _fr.get("borsa1", []) and "rotasyon_TIE" not in _fr.get("borsa1", []) and "mevduat_teklif" in _fr.get("mevduat1", []),
+                                                                    "Fırsat radarı: panik dibinde borsa, kalıcı farkta mevduat sinyali; kullanıcının kapattığı geçiş susturulur"),
+        (_fr.get("yurtdisi1") == ["SUSTURULDU"] and "firsat_yurtdisi_hisse" not in _fr.get("uyari1", []),
+                                                                    "Fırsat radarı: susturulan sinyal raporda görünür ama bildirim üretmez"),
+        ("firsat_altin_tl_sigorta" in _fr.get("uyari1", []) and not _fr.get("uyari2") and "firsat_altin_tl_sigorta" in _fr.get("not2", []),
+                                                                    "Fırsat radarı: yeni sinyal bir kez bildirilir, sürdükçe sadece not düşer (bildirim yağmuru yok)"),
+        ("firsat_altin_tl_sigorta_kalkti" in _fr.get("kalkti3", []) and _fr.get("altin3") == "BEKLE",
+                                                                    "Fırsat radarı: koşul ortadan kalkınca sinyal kapanır ve not düşer"),
+        (isinstance((d["tetikler"].get("firsat_radari") or {}).get("ozet"), dict)
+         and set((d["tetikler"].get("firsat_radari") or {}).get("ozet", {})) >= {"altin", "doviz", "mevduat", "borsa", "tahvil", "yurtdisi"},
+                                                                    "Fırsat radarı: her çalışmada tüm varlık sınıfları için durum üretilir"),
         # --- 30 Eki: küresel para akışı, USDT primi, piyasa takvimi, kalibrasyon ---
         (((d["tetikler"].get("kuresel_akis")) or {}).get("turkiye_vs_gelismekte", {}).get("durum") == "NORMAL"
          and ((d_tur["tetikler"].get("kuresel_akis")) or {}).get("turkiye_vs_gelismekte", {}).get("durum") == "TÜRKİYE'YE ÖZGÜ BASKI",
