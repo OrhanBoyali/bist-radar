@@ -237,6 +237,9 @@ def ayarlari_yukle():
         "tatiller": lambda v: isinstance(v, list) and all(isinstance(x, dict) and isinstance(x.get("tarih"), str)
                                                           and len(x["tarih"]) == 10 and x.get("tur") in ("tam", "yarim") for x in v),
         "ppk_takvimi": lambda v: isinstance(v, list) and all(isinstance(x, str) and len(x) == 10 for x in v),
+        # 31 Eki: fırsat radarı eşikleri ve kullanıcının kapattığı sinyaller
+        "firsat_esikleri": lambda v: isinstance(v, dict) and all(num(x, -1000, 1000) for x in v.values()),
+        "firsat_sustur": lambda v: isinstance(v, list) and all(isinstance(x, str) and x for x in v),
         "usdt_prim_esik": lambda v: isinstance(v, dict) and all(num(v.get(n, 1), 0.1, 50) for n in ("uyari_pct", "artis_puan")),
         "verim_evds_kodu": lambda v: isinstance(v, str) and v.startswith("TP.") and len(v) < 60,   # 9 Eki: EVDS seri kodu elle
         # 7 Eki: pozisyon kuralları — {"YOT": {"giris_tarihi": "YYYY-AA-GG", "kiyas": "YLB", "kar_sarti_puan": 2,
@@ -2492,6 +2495,165 @@ def kalibrasyon_ozet(R):
         out["tahvil_tasima"] = th
     return out
 
+
+# ---- 31 EKİM: FIRSAT RADARI (kullanıcı talebi: "otopilot") --------------------------------
+# Her varlık için kurallı sinyal: AL/ARTIR, AZALT/ÇIK, DEĞERLENDİR, İZLE, BEKLE. Yeni çıkan sinyal bildirim (UYARI)
+# üretir; sürerse not (NOT) olarak kalır; kalkınca not düşer. Kullanıcının kapattığı sinyaller: ayarlar "firsat_sustur".
+FIRSAT_FILE = "output/firsat_durum.json"
+FIRSAT_ESIK = {
+    "altin_zirveden_al": -18.0,          # gram altın 1 yıllık zirvesinden en az bu kadar aşağıda (%)
+    "altin_zirve_azalt": -2.0,           # zirveye bu kadar yakın (%) → kâr al değerlendirmesi
+    "faiz_yeniden_degerlendir": 30.0,    # politika faizi bunun altına inince para piyasası avantajı daralır
+    "fed_gevseme_abd10y_aylik": -6.0,    # ABD 10 yıllık faiz 1 ayda %6+ düşerse (~0,3 puan) gevşeme beklentisi
+    "tl_stres_makas": 10.0,              # TL faizi − beklenen kur artışı (puan) bunun altına inerse
+    "tl_stres_rezerv_4h": -5.0,          # brüt rezerv 4 haftada (%)
+    "tl_stres_kur_20g": 4.0,             # USD/TL 1 ayda (%)
+    "mevduat_fark_yillik": 3.0,          # mevduat (EVDS ortalama, brüt) − para piyasası (brüt, yıllık) puan
+    "tahvil_cik_fark_3a": -2.0,          # kalibre senaryo: faiz sabitse 3 ayda para piyasasına fark (puan)
+    "tahvil_gir_fark_3a": 0.5,
+    "borsa_rsi": 30.0, "borsa_dolar_dipten": 3.0,
+    "yurtdisi_nasdaq_zirveden": -15.0, "yurtdisi_sp500_zirveden": -12.0,
+}
+
+def _ppf_brut_yillik(T):
+    v = [x.get("brut_30g_pct") for x in (T.get("reel_getiri") or {}).values() if x.get("brut_30g_pct") is not None]
+    return round(float(np.median(v)) * 365 / 30, 2) if v else None
+
+def firsat_radari(R):
+    T = R.get("tetikler") or {}
+    e = {**FIRSAT_ESIK, **(AYAR.get("firsat_esikleri") or {})}
+    sustur = set(AYAR.get("firsat_sustur") or [])
+    k = R.get("kuresel") or {}
+    kg = lambda n, f: (k.get(n) or {}).get(f)
+    ka = (T.get("kuresel_akis") or {})
+    # ortak göstergeler
+    makas, rez, kur20 = T.get("dolar_makasi_puan"), T.get("brut_rezerv_4hafta_pct"), kg("usdtry_yahoo", "aylik_degisim_pct")
+    tl = {"usdt_primi_alarm": (T.get("usdt_prim") or {}).get("durum") == "ALARM",
+          "dolar_makasi_dar": makas is not None and makas < e["tl_stres_makas"],
+          "rezerv_dususu": rez is not None and rez <= e["tl_stres_rezerv_4h"],
+          "kur_sicramasi": kur20 is not None and kur20 >= e["tl_stres_kur_20g"]}
+    tl_n = sum(tl.values())
+    a10 = kg("abd_10y", "aylik_degisim_pct")
+    fed_gevseme = a10 is not None and a10 <= e["fed_gevseme_abd10y_aylik"]
+    ortak = {"tl_stres": {"kosullar": tl, "sayi": tl_n, "durum": "GÜÇLÜ" if tl_n >= 2 else ("VAR" if tl_n else "YOK")},
+             "fed_gevseme_beklentisi": {"abd10y_1a_pct": a10, "durum": fed_gevseme}}
+    V = {}
+    def koy(varlik, anahtar, yon, sinyal, kosullar, oneri):
+        if anahtar in sustur:
+            V.setdefault(varlik, {"sinyaller": []})["sinyaller"].append({"anahtar": anahtar, "yon": "SUSTURULDU", "sinyal": sinyal})
+            return
+        V.setdefault(varlik, {"sinyaller": []})["sinyaller"].append(
+            {"anahtar": anahtar, "yon": yon, "sinyal": sinyal, "kosullar": kosullar, "oneri": oneri})
+    # ALTIN
+    gz = T.get("gram_altin_zirveden_pct"); pf = POLITIKA_FAIZI.get("oran")
+    if tl_n:
+        koy("altin", "altin_tl_sigorta", "AL/ARTIR", "TL stresi var — altın sigortasını büyütme zamanı", tl,
+            "Altın payını %25-30'a çıkarmayı değerlendir (kademeli; banka altın hesabı ya da fiziki)")
+    if gz is not None and gz <= e["altin_zirveden_al"] and fed_gevseme:
+        koy("altin", "altin_fiyat", "AL/ARTIR", f"Gram altın zirveden %{gz} ve Fed gevşeme beklentisi", {"gram_zirveden": gz, "fed_gevseme": True},
+            "~50 bin TL kademeli alım değerlendir")
+    if pf is not None and pf <= e["faiz_yeniden_degerlendir"]:
+        koy("altin", "altin_faiz", "DEĞERLENDİR", f"Politika faizi %{pf} — para piyasasının altına üstünlüğü daralıyor", {"politika_faizi": pf},
+            "Altın payını yeniden değerlendir")
+    if gz is not None and gz >= e["altin_zirve_azalt"] and not tl_n:
+        koy("altin", "altin_zirve", "AZALT/ÇIK", f"Gram altın 1 yıllık zirvesine yakın (%{gz}), TL stresi yok",
+            {"gram_zirveden": gz}, "Altın payı %20'nin üstündeyse bir kısmında kâr almayı değerlendir")
+    V.setdefault("altin", {"sinyaller": []})["bekle"] = {"gram_zirveden_pct": gz, "fed_gevseme": fed_gevseme, "tl_stres": tl_n,
+        "ne_olursa": f"TL stresi; ya da gram zirveden ≤%{e['altin_zirveden_al']} VE Fed gevşemesi; ya da politika faizi ≤%{e['faiz_yeniden_degerlendir']}"}
+    # DÖVİZ
+    if T.get("dolar_gecis_tetik") or tl_n >= 2:
+        koy("doviz", "doviz_gecis", "AL/ARTIR", "TL'nin dövize karşı avantajı kapanıyor ya da güçlü TL stresi",
+            {"dolar_makasi": makas, **tl}, "Kalıcı paranın bir kısmını döviz/eurobond fonuna geçirmeyi değerlendir")
+    V.setdefault("doviz", {"sinyaller": []})["bekle"] = {"dolar_makasi_puan": makas, "ne_olursa": "makas < 8 puan ya da TL stresi ≥ 2 koşul"}
+    # MEVDUAT
+    mv, ppf = T.get("mevduat_tl_1ay_brut"), _ppf_brut_yillik(T)
+    olgun_mv = any("mevduat" in str(x).lower() for x in (T.get("varlik_sinifi_olgun") or []))
+    if mv is not None and ppf is not None and olgun_mv and mv - ppf >= e["mevduat_fark_yillik"]:
+        koy("mevduat", "mevduat_teklif", "DEĞERLENDİR",
+            f"TL mevduat ortalaması (brüt %{mv}) para piyasasını (brüt ~%{ppf}) {round(mv - ppf, 1)} puan geçiyor ve bu kalıcı",
+            {"mevduat_brut": mv, "ppf_brut_yillik": ppf}, "Bankalarından 32 günlük teklif al: teklif para piyasasının ~3 puan üstündeyse KALICI paranın bir kısmı için değerlendir (geçici para fonda kalır)")
+    V.setdefault("mevduat", {"sinyaller": []})["bekle"] = {"mevduat_brut": mv, "ppf_brut_yillik": ppf}
+    # PARA PİYASASI: reel getiri + rakip fon rotasyonu
+    reel = T.get("reel_getiri") or {}
+    kotu = {c: x["durum"] for c, x in reel.items() if x.get("durum") in ("ALARM", "ACIL")}
+    if kotu:
+        koy("para_piyasasi", "ppf_reel", "DEĞERLENDİR", f"Para piyasası enflasyonu yeterince geçmiyor: {kotu}", kotu,
+            "Alternatiflere bak: mevduat teklifi, tahvil (kalibre senaryo), altın")
+    for fon, adaylar in (T.get("rakip_olgun_adaylar") or {}).items():
+        if adaylar:
+            a = adaylar[0]
+            koy("para_piyasasi" if fon in CEPHANE else "borsa", f"rotasyon_{fon}", "DEĞERLENDİR",
+                f"{fon} yerine {a.get('kod')} — 1 yılda {a.get('fark_1y')} puan önde, {a.get('aday_gun')} gündür aday",
+                {"adaylar": adaylar}, f"{a.get('kod')} künyesini (kurucu, büyüklük, portföy) incele; geçişi değerlendir")
+    # TAHVİL
+    ta = (R.get("tahvil_analiz") or {}).get("fonlar") or {}
+    def fark0(v):
+        return next((x.get("fark_puan") for x in ((v.get("senaryo") or {}).get("senaryolar") or []) if x.get("verim_degisimi_puan") == 0), None)
+    for kod, v in ta.items():
+        if not isinstance(v, dict) or fark0(v) is None:
+            continue
+        f0, kal = fark0(v), (v.get("kalibrasyon") or {}).get("uygulandi")
+        if kod in TAHVIL and f0 <= e["tahvil_cik_fark_3a"]:
+            koy("tahvil", f"tahvil_cik_{kod}", "AZALT/ÇIK", f"{kod}: faiz sabit kalırsa 3 ayda para piyasasının {f0} puan gerisinde (kalibre model)",
+                {"fark_3a_faiz_sabit": f0, "kalibre": kal, "basabas": (v.get("senaryo") or {}).get("basabas_verim_degisimi_puan")},
+                f"{kod}'u satıp para piyasasına dönmeyi değerlendir")
+        elif kod not in TAHVIL and kal and f0 >= e["tahvil_gir_fark_3a"]:
+            koy("tahvil", f"tahvil_gir_{kod}", "AL/ARTIR", f"{kod}: faiz sabit kalsa bile 3 ayda para piyasasını {f0} puan geçiyor (kalibre model)",
+                {"fark_3a_faiz_sabit": f0}, f"{kod} künyesini incele; kademeli giriş değerlendir")
+    V.setdefault("tahvil", {"sinyaller": []})
+    # BORSA
+    b = R.get("bist100") or {}; bd = T.get("bist_dolar") or {}
+    pnk = ((T.get("borsa_plani") or {}).get("panik_dibi") or {}).get("durum")
+    rsi_ = b.get("rsi14_tamamlanmis")
+    bk = {"panik_dibi": pnk == "ALARM", "rsi_asiri_satim": rsi_ is not None and rsi_ < e["borsa_rsi"],
+          "dolar_bazinda_dip": bd.get("dipten_pct") is not None and bd["dipten_pct"] <= e["borsa_dolar_dipten"],
+          "tl_stres_yok": not tl_n,
+          "turkiye_ozgu_baski_yok": (ka.get("turkiye_vs_gelismekte") or {}).get("durum") != "TÜRKİYE'YE ÖZGÜ BASKI",
+          "kuresel_kredi_normal": (ka.get("kuresel_kredi") or {}).get("durum") != "STRES"}
+    if bk["panik_dibi"] and (bk["rsi_asiri_satim"] or bk["dolar_bazinda_dip"]):
+        koy("borsa", "borsa_panik_dibi", "DEĞERLENDİR", "Panik dibi + aşırı satım/dolar bazında dip", bk,
+            "Plan B gereği küçük ve kurala bağlı ek alımı konuş (otomatik alım yok)")
+    elif bk["rsi_asiri_satim"] and bk["dolar_bazinda_dip"] and bk["tl_stres_yok"] and bk["turkiye_ozgu_baski_yok"] and bk["kuresel_kredi_normal"]:
+        koy("borsa", "borsa_ucuz", "İZLE", "Aşırı satım + dolar bazında 1 yılın dibi; TL ve küresel stres yok", bk,
+            "Ön sinyal: alım ancak panik dibi teyidiyle (plan B) — yakından izle")
+    V.setdefault("borsa", {"sinyaller": []})["bekle"] = bk
+    # YURT DIŞI HİSSE
+    nz, sz = kg("nasdaq", "zirveden_pct"), kg("sp500", "zirveden_pct")
+    if (nz is not None and nz <= e["yurtdisi_nasdaq_zirveden"]) or (sz is not None and sz <= e["yurtdisi_sp500_zirveden"]):
+        koy("yurtdisi", "yurtdisi_hisse", "AL/ARTIR" if fed_gevseme else "DEĞERLENDİR",
+            f"ABD borsaları düzeltmede (Nasdaq zirveden %{nz}, S&P %{sz})" + (" + Fed gevşeme beklentisi" if fed_gevseme else ""),
+            {"nasdaq_zirveden": nz, "sp500_zirveden": sz, "fed_gevseme": fed_gevseme},
+            "TEFAS yurt dışı hisse fonuyla %5-10'luk başlangıç payını değerlendir (Türkiye riskini dağıtır)")
+    V.setdefault("yurtdisi", {"sinyaller": []})["bekle"] = {"nasdaq_zirveden": nz, "sp500_zirveden": sz, "fed_gevseme": fed_gevseme}
+    # durum + bildirim (yeni sinyal → UYARI bir kez; süren → NOT; kalkan → NOT)
+    try:
+        once = json.load(open(FIRSAT_FILE, encoding="utf-8")) if os.path.exists(FIRSAT_FILE) else {}
+    except Exception:
+        once = {}
+    simdi, bs = {}, NOW.strftime("%Y-%m-%d")
+    for varlik, v in V.items():
+        aktif = [x for x in v["sinyaller"] if x["yon"] not in ("SUSTURULDU",)]
+        oncelik = {"AL/ARTIR": 0, "AZALT/ÇIK": 0, "DEĞERLENDİR": 1, "İZLE": 2}
+        aktif.sort(key=lambda x: oncelik.get(x["yon"], 9))
+        v["durum"] = aktif[0]["yon"] if aktif else "BEKLE"
+        for x in aktif:
+            a = x["anahtar"]
+            simdi[a] = {"sinyal": x["sinyal"], "yon": x["yon"], "ilk": (once.get(a) or {}).get("ilk", bs), "son": bs}
+            x["ilk_gorulme"] = simdi[a]["ilk"]
+            if x["yon"] == "İZLE":
+                continue
+            if a not in once:
+                HEALTH[f"firsat_{a}"] = f"UYARI: FIRSAT RADARI — {x['yon']}: {x['sinyal']} → {x['oneri']}"
+            else:
+                HEALTH[f"firsat_{a}"] = f"NOT: fırsat radarı sinyali sürüyor ({simdi[a]['ilk']}'den beri): {x['sinyal']}"
+    for a, x in once.items():
+        if a not in simdi and x.get("yon") != "İZLE":
+            HEALTH[f"firsat_{a}_kalkti"] = f"NOT: fırsat radarı sinyali kalktı: {x.get('sinyal')}"
+    os.makedirs("output", exist_ok=True)
+    json.dump(simdi, open(FIRSAT_FILE, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    ozet = {varlik: v["durum"] for varlik, v in V.items()}
+    return {"ozet": ozet, "varliklar": V, "ortak": ortak, "esikler": e, "susturulan": sorted(sustur)}
+
 def agir_slot():
     """Bu çalışma hangi 'ağır iş' penceresinde? Hafta sonu ve gün içi: yok (önbellek)."""
     if NOW.weekday() >= 5:
@@ -3032,6 +3194,7 @@ def main():
     else:
         R["tahvil_analiz"] = prev.get("tahvil_analiz")
     R["tetikler"]["kalibrasyon"] = safe("kalibrasyon_hesap", lambda: kalibrasyon_ozet(R))    # 30 Eki
+    R["tetikler"]["firsat_radari"] = safe("firsat_radari_hesap", lambda: firsat_radari(R))  # 31 Eki
     R["arsiv"] = safe("gunluk_arsiv", lambda: gunluk_arsiv(R))
 
     # ---- SAĞLIK ----
