@@ -81,8 +81,8 @@ def get(url, params=None, headers=None, timeout=20):
         if os.environ.get("RADAR_MOCK_HISTORY_HATA") and code not in ("YLB", "IJV", "ZBJ", "BGP", "TIE", "AKU"):   # portföy fonları (DLY artık izlemede)
             raise ValueError("500 Server Error: history")
         idx = pd.bdate_range(end=son, periods=250)
-        if code == "TIE":                      # TEST: 3 iş günü bayat fiyat
-            idx = idx[:-3]
+        if code == "TIE":                      # TEST: 4 iş günü bayat fiyat (31 Eki: tatil sonrası günlerde de bayat sayılsın)
+            idx = idx[:-4]
         n = len(idx)
         katsayi = 1.003 if code == "IJV" else 1.0   # TEST: IJV iki kaynakta farklı → çapraz uyarı
         pts = []
