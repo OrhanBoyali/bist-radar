@@ -212,6 +212,8 @@ def screen_funds(fund_type="YAT", limit=50, **k):
     rows += [(f"OS{i}", f"ÖRNEK{i} PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU", 3.0, 10.3, 48.0) for i in range(3)]
     rows += [("PB1", "SADE PORTFÖY BORÇLANMA ARAÇLARI FONU", 2.7, 9.5, 43.0)]          # portföy: %85 devlet → kamu
     rows += [("KNJ", "KUVEYT TÜRK PORTFÖY ENERJİ KATILIM FONU", -5.3, 10.2, 55.0)]     # portföy: %90 hisse → hisse
+    if os.environ.get("RADAR_MOCK_BIZIM_SIFIR"):     # 2 Kas: TEFAS kesintisinde bizim fonun getirisi 0 geldi
+        rows = [(c, n, 0.0, 0.0, 0.0) if c == os.environ["RADAR_MOCK_BIZIM_SIFIR"] else (c, n, a1, b1, y1) for c, n, a1, b1, y1 in rows]
     def kat(n):
         if "PARA PİYASASI" in n: return "Para Piyasası Fonu"
         if "HİSSE" in n: return "Hisse Senedi Fonu"
