@@ -71,7 +71,8 @@ import json, bist_radar as br
 def R(usdt="NORMAL", gz=-10.0, a10=-1.0, nz=-3.0, panik="YOK"):
     return {"tetikler": {"usdt_prim": {"durum": usdt}, "dolar_makasi_puan": 17.0, "brut_rezerv_4hafta_pct": -1.0,
                          "gram_altin_zirveden_pct": gz, "mevduat_tl_1ay_brut": 42.7, "varlik_sinifi_olgun": ["TL mevduat (1 ay, brüt)"],
-                         "reel_getiri": {"YLB": {"brut_30g_pct": 2.9, "durum": "OK"}}, "rakip_olgun_adaylar": {"TIE": [{"kod": "AKU", "fark_1y": 7, "aday_gun": 23}]},
+                         "reel_getiri": {"YLB": {"brut_30g_pct": 2.9, "durum": "OK"}}, "rakip_olgun_adaylar": {"TIE": [{"kod": "AKU", "fark_1y": 7, "aday_gun": 23}],
+                         "YLB": [{"kod": "EIL", "fark_1y": 47.6, "aday_gun": 20}], "BGP": [{"kod": "ZZA", "fark_1y": 2.0, "aday_gun": 21}, {"kod": "ZZB", "fark_1y": 1.5, "aday_gun": 21}]},
                          "borsa_plani": {"panik_dibi": {"durum": panik}}, "bist_dolar": {"dipten_pct": 1.0},
                          "kuresel_akis": {"turkiye_vs_gelismekte": {"durum": "NORMAL"}, "kuresel_kredi": {"durum": "NORMAL"}}},
             "kuresel": {"abd_10y": {"aylik_degisim_pct": a10}, "usdtry_yahoo": {"aylik_degisim_pct": 1.0},
@@ -90,7 +91,9 @@ o3 = br.firsat_radari(R())
 h3 = dict(br.HEALTH)
 an = lambda o, v: [x["anahtar"] for x in o["varliklar"].get(v, {}).get("sinyaller", []) if x["yon"] != "SUSTURULDU"]
 print(json.dumps({"ozet1": o1["ozet"], "altin1": an(o1, "altin"), "tahvil1": an(o1, "tahvil"), "borsa1": an(o1, "borsa"),
-   "mevduat1": an(o1, "mevduat"), "yurtdisi1": [x["yon"] for x in o1["varliklar"]["yurtdisi"]["sinyaller"]],
+   "mevduat1": an(o1, "mevduat"), "ppf1": an(o1, "para_piyasasi"),
+   "ppf_sinyal1": [x["sinyal"] for x in o1["varliklar"].get("para_piyasasi", {}).get("sinyaller", [])],
+   "suphe1": sorted(k for k in h1 if k.endswith("_suphe")), "yurtdisi1": [x["yon"] for x in o1["varliklar"]["yurtdisi"]["sinyaller"]],
    "uyari1": sorted(k for k, v in h1.items() if k.startswith("firsat_") and str(v).startswith("UYARI")),
    "not2": sorted(k for k, v in h2.items() if k.startswith("firsat_") and str(v).startswith("NOT")),
    "uyari2": sorted(k for k, v in h2.items() if k.startswith("firsat_") and str(v).startswith("UYARI")),
@@ -98,7 +101,7 @@ print(json.dumps({"ozet1": o1["ozet"], "altin1": an(o1, "altin"), "tahvil1": an(
 """
     tmp = tempfile.mkdtemp()
     open(os.path.join(tmp, "ayarlar.json"), "w", encoding="utf-8").write(json.dumps(
-        {"fonlar": {"YLB": "cephane", "BGP": "cephane", "YOT": "tahvil", "TIE": "borsa"}, "firsat_sustur": ["rotasyon_TIE", "yurtdisi_hisse"]}))
+        {"fonlar": {"YLB": "cephane", "BGP": "cephane", "YOT": "tahvil", "TIE": "borsa"}, "firsat_sustur": ["rotasyon_TIE", "yurtdisi_hisse", "rotasyon_BGP_ZZA"]}))
     env = dict(os.environ, PYTHONPATH=MOCK + os.pathsep + KOK, RADAR_TEST_NOW="2026-10-30 18:52")
     out = subprocess.run([sys.executable, "-c", kod], env=env, capture_output=True, text=True, timeout=60, cwd=tmp).stdout
     try:
@@ -325,6 +328,7 @@ def main():
     d_usdt_yeni = calistir(ek_env={"RADAR_MOCK_USDT_PRIM": "4.0"})
     d_tatil_aksam = calistir(ek_env={"RADAR_TEST_NOW": "2026-10-29 18:17"})
     d_kalib = calistir(kok={"ayarlar.json": _poz()}, ek_env={"RADAR_AGIR": "true"})
+    d_bizim_sifir = calistir(ek_env={"RADAR_MOCK_BIZIM_SIFIR": "YLB", "RADAR_AGIR": "true"})
     d_tatil_ayar = calistir(kok={"ayarlar.json": _aj({"tatiller": [{"tarih": "2026-11-02", "tur": "yanlis"}]})})
     d_plan_bozuk = calistir(kok={"ayarlar.json": _aj({"borsa_plani": {"kurallar": [{"ad": "x", "tip": "yanlis", "seviye": 12000, "islem": "?"}]}})})
     d_fz1 = calistir(ek_env={"RADAR_MOCK_FONO_TIMEOUT": "YLB"})
@@ -512,6 +516,14 @@ def main():
                                                                     "Pozisyon: bankadan teyitli giriş fiyatı esas alınır"),
         ("pozisyon_YOT_yakin" in d_poz_yakin["saglik"]["tum_moduller"] and "pozisyon_YOT_yakin" not in d_poz_yakin["saglik"].get("issue_tetikleyen", []),
                                                                     "Pozisyon: zarar sınırına yaklaşınca bildirimsiz erken not düşer"),
+        # --- 2 Kas: yanlış rotasyon sinyali (hata #28) ---
+        ("rotasyon_YLB" not in _fr.get("ppf1", []) and "firsat_rotasyon_YLB_EIL_suphe" in _fr.get("suphe1", []),
+                                                                    "Fırsat radarı: gerçekçi olmayan fark (para piyasasında 47 puan) sinyal üretmez, şüphe notu düşer"),
+        ("rotasyon_BGP" in _fr.get("ppf1", []) and any("ZZB" in x for x in _fr.get("ppf_sinyal1", [])),
+                                                                    "Fırsat radarı: aday bazında susturma — susturulan aday atlanır, sıradaki aday önerilir"),
+        ("getiri" in str((((d_bizim_sifir.get("rakip_tarama") or {}).get("para_piyasasi") or {}).get("bizim") or {}).get("YLB", {}).get("hata", ""))
+         and "rakip_YLB_getiri_yok" in d_bizim_sifir["saglik"]["tum_moduller"],
+                                                                    "Rakip tarama: bizim fonun getirisi 0/eksik gelirse karşılaştırma yapılmaz (sahte adaylar oluşmaz)"),
         # --- 31 Eki: fırsat radarı (otopilot) ---
         (set(_fr.get("altin1", [])) >= {"altin_tl_sigorta", "altin_fiyat"} and _fr.get("ozet1", {}).get("altin") == "AL/ARTIR",
                                                                     "Fırsat radarı: TL stresinde ve 'ucuz altın + Fed gevşemesi'nde altın sinyali verir"),
