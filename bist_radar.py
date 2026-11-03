@@ -1206,6 +1206,12 @@ def rakip_tarama():
                 res["bizim"][kod] = {"hata": "grupta bulunamadı"}
                 continue
             r = r.iloc[0]
+            # 2 Kas (hata #28): TEFAS sabah kesintisinde bizim fonun getirisi 0/eksik geldi → tüm rakipler sahte biçimde
+            # "47 puan önde" göründü ve yanlış rotasyon sinyali çıktı. Bizim getiri yoksa karşılaştırma yapılmaz.
+            if all(pd.isna(r[c]) or abs(float(r[c])) < 1e-9 for c in ("return_1m", "return_3m", "return_1y")):
+                res["bizim"][kod] = {"hata": f"{kod} getirisi 0/eksik geldi — bu turda rakip karşılaştırması yapılmadı (veri hatası)"}
+                HEALTH[f"rakip_{kod}_getiri_yok"] = f"NOT: {kod} fon evreninde getirisi 0/eksik — rakip karşılaştırması atlandı"
+                continue
             e = g["esik"]
             def gecer(x):
                 ok = True
@@ -2580,6 +2586,15 @@ def firsat_radari(R):
         koy("para_piyasasi", "ppf_reel", "DEĞERLENDİR", f"Para piyasası enflasyonu yeterince geçmiyor: {kotu}", kotu,
             "Alternatiflere bak: mevduat teklifi, tahvil (kalibre senaryo), altın")
     for fon, adaylar in (T.get("rakip_olgun_adaylar") or {}).items():
+        # 2 Kas: veri hatası koruması (para piyasasında yılda >15 puan fark gerçekçi değil) + aday bazında susturma
+        tavan = 15.0 if fon in CEPHANE else 40.0
+        temiz = [a for a in (adaylar or []) if f"rotasyon_{fon}_{a.get('kod')}" not in sustur
+                 and (a.get("fark_1y") is None or abs(a["fark_1y"]) <= tavan)]
+        for a in adaylar or []:
+            if a.get("fark_1y") is not None and abs(a["fark_1y"]) > tavan:
+                HEALTH[f"firsat_rotasyon_{fon}_{a.get('kod')}_suphe"] = (f"NOT: {fon}→{a.get('kod')} farkı {a['fark_1y']} puan — "
+                                                                       "gerçekçi değil (veri hatası olabilir), sinyal üretilmedi")
+        adaylar = temiz
         if adaylar:
             a = adaylar[0]
             koy("para_piyasasi" if fon in CEPHANE else "borsa", f"rotasyon_{fon}", "DEĞERLENDİR",
