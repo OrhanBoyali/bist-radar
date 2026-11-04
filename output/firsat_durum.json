@@ -1,20 +1,14 @@
 {
  "mevduat_teklif": {
-  "sinyal": "TL mevduat ortalaması (brüt %42.23) para piyasasını (brüt ~%38.57) 3.7 puan geçiyor ve bu kalıcı",
+  "sinyal": "TL mevduat ortalaması (brüt %42.23) para piyasasını (brüt ~%36.26) 6.0 puan geçiyor ve bu kalıcı",
   "yon": "DEĞERLENDİR",
   "ilk": "2026-11-02",
-  "son": "2026-11-03"
+  "son": "2026-11-04"
  },
  "ppf_reel": {
-  "sinyal": "Para piyasası enflasyonu yeterince geçmiyor: {'YLB': 'ACIL', 'ZBJ': 'ALARM', 'BGP': 'ALARM'}",
+  "sinyal": "Para piyasası enflasyonu yeterince geçmiyor: {'YLB': 'ACIL', 'ZBJ': 'ACIL', 'BGP': 'ACIL'}",
   "yon": "DEĞERLENDİR",
   "ilk": "2026-11-03",
-  "son": "2026-11-03"
- },
- "tahvil_cik_YOT": {
-  "sinyal": "YOT: faiz sabit kalırsa 3 ayda para piyasasının -3.41 puan gerisinde (kalibre model)",
-  "yon": "AZALT/ÇIK",
-  "ilk": "2026-11-02",
-  "son": "2026-11-03"
+  "son": "2026-11-04"
  }
 }
