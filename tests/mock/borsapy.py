@@ -130,7 +130,11 @@ class EconomicCalendar:
 def evds_series(code, start=None, frequency=None, period=None):
     if code == "TP.DIBS.G2Y":                                    # 7 Eki: gösterge faiz geçmişi
         idx = pd.bdate_range(start=start or "2025-01-01", end=datetime.now().date())
-        return pd.DataFrame({code: [_sahte_verim(d.date()) for d in idx]}, index=idx)
+        # 3 Kas: TradingView sahtesiyle aynı sabit kayma → son gün bonds()/arşiv (39,7) ile aynı seviyede biter.
+        # Eskiden arşivin son günü EVDS serisine göre tarihe bağlı bir sıçrama yaratıyor, bazı günler etkin süre
+        # tahminini bozuyordu (testin tarihe bağlı kırılganlığı; fon fiyatı sahtesi aynı dy'yi kullandığı için sonuç değişmez).
+        kayma = 39.7 - _sahte_verim(idx[-1].date())
+        return pd.DataFrame({code: [_sahte_verim(d.date()) + kayma for d in idx]}, index=idx)
     freq = {"weekly": "W-FRI", "daily": "B"}.get(frequency, "MS")
     idx = pd.date_range(end=datetime.now(), periods=60, freq=freq); n = len(idx)
     val = {"TP.APIFON4": 37.0, "TP.MKNETHAR.M7": 277.67, "TP.TUKFIY2025.GENEL": None,
