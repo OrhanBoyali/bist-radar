@@ -45,6 +45,9 @@ KURESEL = {"brent_yahoo": "BZ=F",   # 3 Eki: sadece borsapy BRENT ile çapraz ko
            "hyg_etf": "HYG",          # ABD yüksek getirili şirket tahvilleri — risk iştahı
            "bitcoin": "BTC-USD",      # 7/24 risk iştahı (hafta sonu dahil)
            "usdtry_yahoo": "TRY=X"}   # BIST'in dolar bazında değeri + USDT primi için yedek kur
+# 5 Kas (hata #29): New York borsasında işlem görenler — NY seansı açıkken (TR ~16:30/17:30–23:00/00:00) son bar KISMİ
+ABD_SEANS = {"sp500", "nasdaq", "vix", "tur_etf", "eem_etf", "emb_etf", "hyg_etf"}
+ONS_GRAM = 31.1034768          # 1 troy ons = 31,1035 gram
 # Brent Yahoo'dan ALINMAZ: vade geçişinde sahte düşüş gösterdi (21 Eyl). borsapy BRENT kullanılır.
 FX_LIST = ["USD", "EUR", "gram-altin", "ceyrek-altin", "yarim-altin", "tam-altin", "BRENT"]  # ons-altin çıkarıldı: borsapy anlamsız değer veriyordu
 
@@ -239,6 +242,8 @@ def ayarlari_yukle():
         "ppk_takvimi": lambda v: isinstance(v, list) and all(isinstance(x, str) and len(x) == 10 for x in v),
         # 31 Eki: fırsat radarı eşikleri ve kullanıcının kapattığı sinyaller
         "firsat_esikleri": lambda v: isinstance(v, dict) and all(num(x, -1000, 1000) for x in v.values()),
+        "mevduat_gercek_teklif": lambda v: isinstance(v, dict) and num(v.get("oran"), 1, 100) and isinstance(v.get("tarih"), str)
+                                           and len(v["tarih"]) == 10,   # 3 Kas: kullanıcının bankalarından alınan en iyi teklif
         "firsat_sustur": lambda v: isinstance(v, list) and all(isinstance(x, str) and x for x in v),
         "usdt_prim_esik": lambda v: isinstance(v, dict) and all(num(v.get(n, 1), 0.1, 50) for n in ("uyari_pct", "artis_puan")),
         "verim_evds_kodu": lambda v: isinstance(v, str) and v.startswith("TP.") and len(v) < 60,   # 9 Eki: EVDS seri kodu elle
@@ -389,15 +394,32 @@ def atr(df, p=14):
     tr = pd.concat([df["High"]-df["Low"], (df["High"]-pc).abs(), (df["Low"]-pc).abs()], axis=1).max(axis=1)
     return J(tr.ewm(alpha=1/p, adjust=False).mean().iloc[-1])
 
-def split_partial(df, bist=True):
+def _ny_simdi():
+    """5 Kas: New York saati (yaz saati dahil). zoneinfo yoksa yaklaşık kural: Mart 2. pazar – Kasım 1. pazar UTC−4."""
+    try:
+        from zoneinfo import ZoneInfo
+        return NOW.astimezone(ZoneInfo("America/New_York"))
+    except Exception:
+        u = NOW.astimezone(timezone.utc)
+        mart2 = 8 + (6 - date(u.year, 3, 8).weekday()) % 7          # Mart'ın 2. pazarı
+        kas1 = 1 + (6 - date(u.year, 11, 1).weekday()) % 7          # Kasım'ın 1. pazarı
+        yaz = date(u.year, 3, mart2) <= u.date() < date(u.year, 11, kas1)
+        return u.astimezone(timezone(timedelta(hours=-4 if yaz else -5)))
+
+def split_partial(df, bist=True, abd=False):
+    if abd:     # 5 Kas (hata #29): ABD verisi seans içindeyse son bar kısmi (eskiden hep "tamamlanmış" sayılıyordu)
+        ny = _ny_simdi()
+        acik = ny.weekday() < 5 and (9, 30) <= (ny.hour, ny.minute) < (16, 0)
+        partial = acik and df.index[-1].date() == ny.date()
+        return (df.iloc[:-1] if partial else df), partial
     if not bist:
         return df, False
     open_now = NOW.weekday() < 5 and 10 <= NOW.hour and (NOW.hour < 18 or (NOW.hour == 18 and NOW.minute < 15))
     partial = df.index[-1].date() == NOW.date() and open_now
     return (df.iloc[:-1] if partial else df), partial
 
-def summarize(df, src, with_ma=True, bist=True):
-    comp, partial = split_partial(df, bist)
+def summarize(df, src, with_ma=True, bist=True, abd=False):
+    comp, partial = split_partial(df, bist, abd)
     c, cc = df["Close"], comp["Close"]
     out = {"kaynak": src, "son_bar_tarihi": df.index[-1].strftime("%Y-%m-%d"),
            "son_bar_kismi_mi": partial, "son_fiyat": J(c.iloc[-1]),
@@ -1713,6 +1735,7 @@ def gunluk_arsiv(R):
         "brut_rezerv_4h_pct": T.get("brut_rezerv_4hafta_pct"),
         "tufe_aylik": T.get("tufe_aylik"), "dolar_makasi": T.get("dolar_makasi_puan"),
         "usd": fxl("USD"), "gram_altin": fxl("gram-altin"), "brent": fxl("BRENT"),
+        "gram_altin_canli": (R.get("gram_altin_canli") or {}).get("canli"),   # 5 Kas: gram_altin bir gün geriden gelir
         "vix": T.get("vix"), "nasdaq_zirveden": T.get("nasdaq_zirveden_pct"),
         **{f"sinif_{k}": v for k, v in _sinif_arsiv(R).items()},
     }
@@ -2323,6 +2346,8 @@ def kuresel_akis(R):
             d = "NORMAL"
         out["turkiye_vs_gelismekte"] = {"tur_5g_pct": t5, "eem_5g_pct": e5, "fark_5g_puan": f5,
                                         "tur_20g_pct": t20, "eem_20g_pct": e20, "fark_20g_puan": f20, "durum": d,
+                                        # 5 Kas: ABD seansı sürüyorsa rakamlar gün içi (kapanışta değişebilir)
+                                        "seans_ici": bool(g("tur_etf", "son_bar_kismi_mi") or g("eem_etf", "son_bar_kismi_mi")),
                                         "okuma": "TUR: Türkiye hisseleri (dolar, ABD'de işlem görür); EEM: tüm gelişmekte olan ülkeler"}
         if d == "TÜRKİYE'YE ÖZGÜ BASKI":
             HEALTH["kuresel_turkiye_ozgu"] = f"NOT: Türkiye ETF'i gelişmekte olan ülkelerin 5 günde {f5} puan gerisinde — baskı Türkiye'ye özgü"
@@ -2353,6 +2378,42 @@ def _gun_seri(df):
         idx = idx.tz_localize(None)
     s.index = idx.normalize()
     return s[~s.index.duplicated(keep="last")]
+
+def gram_altin_canli(R):
+    """5 Kas (hata #29): borsapy/doviz.com gram altın değeri ÖNCEKİ günün kapanışı (update_time D−1) ve gün boyu
+    değişmiyor → altın alım tetiği hızlı bir düşüşte 1 gün geç görülebilirdi.
+    Canlı gram = ons (Yahoo GC=F) × USD/TRY (Yahoo TRY=X) / 31,1035 × kalibrasyon oranı.
+    Kalibrasyon: son 20 ortak günde borsapy gram kapanışı ÷ (ons × kur / 31,1035) oranının medyanı (vadeli-spot farkını
+    ve piyasa primini içerir). Makullük (C8): oran 0,90–1,10 dışında ya da canlı değer borsapy'den %8'den fazla
+    farklıysa canlı değer KULLANILMAZ (borsapy'ye dönülür, sağlıkta not)."""
+    g, o, u = _SERI.get("gram"), _SERI.get("Y:ons_altin"), _SERI.get("Y:usdtry_yahoo")
+    if g is None or o is None or u is None:
+        return {"durum": "SERİ EKSİK", "eksik": [a for a, s in (("gram", g), ("ons", o), ("kur", u)) if s is None]}
+    gs, os_, us = _gun_seri(g), _gun_seri(o), _gun_seri(u)
+    ort = pd.concat([gs.rename("g"), (os_ * us / ONS_GRAM).rename("h")], axis=1).dropna().tail(20)
+    if len(ort) < 5:
+        return {"durum": "YETERSİZ GÖZLEM", "gozlem": len(ort)}
+    oran = float((ort["g"] / ort["h"]).median())
+    if not 0.90 <= oran <= 1.10:
+        HEALTH["gram_altin_canli"] = f"NOT: canlı gram kalibrasyonu makul değil (oran {oran:.3f}) — borsapy gram kullanılıyor"
+        return {"durum": "KALİBRASYON ŞÜPHELİ", "kalibrasyon_orani": round(oran, 4), "gozlem": len(ort)}
+    ons, kur = float(os_.iloc[-1]), float(us.iloc[-1])
+    canli = ons * kur / ONS_GRAM * oran
+    bp_son = float(gs.iloc[-1])
+    fark = pct(canli, bp_son)
+    fx = (R.get("doviz_altin") or {}).get("gram-altin")
+    out = {"canli": J(round(canli, 2)), "ons_usd": J(round(ons, 2)), "ons_tarih": os_.index[-1].strftime("%Y-%m-%d"),
+           "usdtry": J(round(kur, 4)), "kalibrasyon_orani": round(oran, 4), "gozlem": len(ort),
+           "borsapy_son": J(round(bp_son, 2)), "borsapy_tarih": gs.index[-1].strftime("%Y-%m-%d"),
+           "borsapy_update_time": fx.get("update_time") if isinstance(fx, dict) else None, "fark_pct": fark,
+           "yontem": "ons × USD/TRY / 31,1035 × kalibrasyon (son 20 gün, borsapy gram kapanışlarına göre)"}
+    if fark is None or abs(fark) > 8:
+        HEALTH["gram_altin_canli"] = f"NOT: canlı gram {canli:.0f} borsapy {bp_son:.0f}'den %{fark} farklı — şüpheli, borsapy kullanılıyor"
+        out["durum"] = "ŞÜPHELİ"
+        return out
+    zirve = max(float(gs.max()), canli)
+    out.update({"zirve_1y": J(round(zirve, 2)), "zirveden_pct": pct(canli, zirve), "durum": "OK"})
+    return out
 
 def bist_dolar():
     """BIST 100'ün dolar bazında değeri (BIST / USDTRY) — yabancı gözüyle ucuzluk."""
@@ -2564,7 +2625,7 @@ def firsat_radari(R):
     if gz is not None and gz >= e["altin_zirve_azalt"] and not tl_n:
         koy("altin", "altin_zirve", "AZALT/ÇIK", f"Gram altın 1 yıllık zirvesine yakın (%{gz}), TL stresi yok",
             {"gram_zirveden": gz}, "Altın payı %20'nin üstündeyse bir kısmında kâr almayı değerlendir")
-    V.setdefault("altin", {"sinyaller": []})["bekle"] = {"gram_zirveden_pct": gz, "fed_gevseme": fed_gevseme, "tl_stres": tl_n,
+    V.setdefault("altin", {"sinyaller": []})["bekle"] = {"gram_zirveden_pct": gz, "gram_kaynak": T.get("gram_altin_kaynak"), "fed_gevseme": fed_gevseme, "tl_stres": tl_n,
         "ne_olursa": f"TL stresi; ya da gram zirveden ≤%{e['altin_zirveden_al']} VE Fed gevşemesi; ya da politika faizi ≤%{e['faiz_yeniden_degerlendir']}"}
     # DÖVİZ
     if T.get("dolar_gecis_tetik") or tl_n >= 2:
@@ -2574,11 +2635,26 @@ def firsat_radari(R):
     # MEVDUAT
     mv, ppf = T.get("mevduat_tl_1ay_brut"), _ppf_brut_yillik(T)
     olgun_mv = any("mevduat" in str(x).lower() for x in (T.get("varlik_sinifi_olgun") or []))
+    # 3 Kas (kalibrasyon): EVDS ortalaması kullanıcının bankalarının gerçek teklifini yansıtmadı (%42 vs %38). Son 30 günde
+    # alınmış gerçek teklif varsa karşılaştırma onunla yapılır; 30 gün geçince EVDS'ye döner → aylık yeniden teklif hatırlatması.
+    gt = AYAR.get("mevduat_gercek_teklif") or {}
+    gt_gecerli = False
+    if gt.get("oran") is not None and gt.get("tarih"):
+        try:
+            gt_gecerli = (NOW.date() - datetime.strptime(gt["tarih"], "%Y-%m-%d").date()).days <= 30
+        except Exception:
+            gt_gecerli = False
+    if gt_gecerli:
+        mv_kaynak, mv_eski = f"gerçek teklif ({gt['tarih']}, {gt.get('banka', 'bankalar')})", mv
+        mv, olgun_mv = gt["oran"], True
+    else:
+        mv_kaynak, mv_eski = "EVDS ortalaması (bankaların gerçek teklifi farklı olabilir)", None
     if mv is not None and ppf is not None and olgun_mv and mv - ppf >= e["mevduat_fark_yillik"]:
         koy("mevduat", "mevduat_teklif", "DEĞERLENDİR",
             f"TL mevduat ortalaması (brüt %{mv}) para piyasasını (brüt ~%{ppf}) {round(mv - ppf, 1)} puan geçiyor ve bu kalıcı",
             {"mevduat_brut": mv, "ppf_brut_yillik": ppf}, "Bankalarından 32 günlük teklif al: teklif para piyasasının ~3 puan üstündeyse KALICI paranın bir kısmı için değerlendir (geçici para fonda kalır)")
-    V.setdefault("mevduat", {"sinyaller": []})["bekle"] = {"mevduat_brut": mv, "ppf_brut_yillik": ppf}
+    V.setdefault("mevduat", {"sinyaller": []})["bekle"] = {"mevduat_brut": mv, "kaynak": mv_kaynak, "evds_ortalama": mv_eski,
+                                                           "ppf_brut_yillik": ppf, "fark": round(mv - ppf, 2) if mv is not None and ppf is not None else None}
     # PARA PİYASASI: reel getiri + rakip fon rotasyonu
     reel = T.get("reel_getiri") or {}
     kotu = {c: x["durum"] for c, x in reel.items() if x.get("durum") in ("ALARM", "ACIL")}
@@ -2636,7 +2712,8 @@ def firsat_radari(R):
     nz, sz = kg("nasdaq", "zirveden_pct"), kg("sp500", "zirveden_pct")
     if (nz is not None and nz <= e["yurtdisi_nasdaq_zirveden"]) or (sz is not None and sz <= e["yurtdisi_sp500_zirveden"]):
         koy("yurtdisi", "yurtdisi_hisse", "AL/ARTIR" if fed_gevseme else "DEĞERLENDİR",
-            f"ABD borsaları düzeltmede (Nasdaq zirveden %{nz}, S&P %{sz})" + (" + Fed gevşeme beklentisi" if fed_gevseme else ""),
+            f"ABD borsaları düzeltmede (Nasdaq zirveden %{nz}, S&P %{sz})" + (" + Fed gevşeme beklentisi" if fed_gevseme else "")
+            + (" — ABD seansı sürüyor, kapanışta teyit edilecek" if (kg("nasdaq", "son_bar_kismi_mi") or kg("sp500", "son_bar_kismi_mi")) else ""),
             {"nasdaq_zirveden": nz, "sp500_zirveden": sz, "fed_gevseme": fed_gevseme},
             "TEFAS yurt dışı hisse fonuyla %5-10'luk başlangıç payını değerlendir (Türkiye riskini dağıtır)")
     V.setdefault("yurtdisi", {"sinyaller": []})["bekle"] = {"nasdaq_zirveden": nz, "sp500_zirveden": sz, "fed_gevseme": fed_gevseme}
@@ -2952,7 +3029,9 @@ def main():
             try:
                 gdf = norm_ohlc(gdf)
                 R["gram_altin_1y"] = {"son": J(gdf["Close"].iloc[-1]), "zirve_1y": J(gdf["Close"].max()),
-                                      "zirveden_pct": pct(gdf["Close"].iloc[-1], gdf["Close"].max())}
+                                      "zirveden_pct": pct(gdf["Close"].iloc[-1], gdf["Close"].max()),
+                                      "son_tarih": gdf.index[-1].strftime("%Y-%m-%d")}
+                _SERI["gram"] = gdf                                   # 5 Kas: canlı gram kalibrasyonu için
             except Exception as e:
                 HEALTH["gram_altin_gecmis"] = f"HATA: {e}"
 
@@ -2961,7 +3040,8 @@ def main():
         for k, t in KURESEL.items():
             df = safe(f"yahoo_{k}", lambda t=t: norm_ohlc(
                 yf.download(t, period="300d", interval="1d", auto_adjust=False, progress=False)))
-            R["kuresel"][k] = summarize(df, "yahoo", with_ma=False, bist=False) if df is not None else {"hata": "yok"}
+            R["kuresel"][k] = (summarize(df, "yahoo", with_ma=False, bist=False, abd=(k in ABD_SEANS))
+                               if df is not None else {"hata": "yok"})
             if df is not None:
                 _SERI[f"Y:{k}"] = df
             sb = R["kuresel"][k].get("son_bar_tarihi")
@@ -2971,6 +3051,7 @@ def main():
                     HEALTH[f"yahoo_{k}_bayat"] = f"UYARI: {k} son verisi {sb} ({yas} gün önce) — Yahoo güncellemiyor olabilir"
 
     R["usdt_prim"] = safe("usdt_prim_hesap", lambda: usdt_prim(R))      # 30 Eki
+    R["gram_altin_canli"] = safe("gram_altin_canli", lambda: gram_altin_canli(R))   # 5 Kas (hata #29)
 
     # ---- TETİKLER ----
     T = {}
@@ -3031,7 +3112,16 @@ def main():
             if abs(fark) > 3:
                 HEALTH["brent_kaynak_celiskisi"] = (f"UYARI: Brent borsapy {T['brent']} / Yahoo {by} (%{fark} fark) — "
                                                    "biri bayat ya da vade geçişi; haberle teyit et")
-        T["gram_altin_zirveden_pct"] = (R.get("gram_altin_1y") or {}).get("zirveden_pct")
+        # 5 Kas (hata #29): borsapy gram altın önceki günün kapanışı → canlı (ons × kur) değer birincil
+        T["gram_altin_zirveden_pct_borsapy"] = (R.get("gram_altin_1y") or {}).get("zirveden_pct")
+        gc = R.get("gram_altin_canli") or {}
+        if gc.get("durum") == "OK":
+            T["gram_altin"], T["gram_altin_zirveden_pct"] = gc["canli"], gc["zirveden_pct"]
+            T["gram_altin_kaynak"] = "canlı (ons × USD/TRY, kalibre)"
+        else:
+            T["gram_altin"] = (R.get("gram_altin_1y") or {}).get("son")
+            T["gram_altin_zirveden_pct"] = T["gram_altin_zirveden_pct_borsapy"]
+            T["gram_altin_kaynak"] = "borsapy (önceki günün kapanışı)"
     except Exception as e:
         T["kuresel_tetik_hata"] = str(e)[:150]
     try:
