@@ -17,6 +17,8 @@
     "artis_puan": 5.0
   },
   "_firsat_not": "31 Eki: Fırsat radarı her varlık için kurallı sinyal üretir (AL/ARTIR, AZALT/ÇIK, DEĞERLENDİR, İZLE). Yeni sinyal bildirim gönderir, sürerse not olarak kalır. firsat_sustur: kullanıcının karar verip kapattığı sinyaller (bildirim üretmez, raporda 'susturuldu' görünür). firsat_esikleri: istenirse eşikleri değiştirmek için (varsayılanlar kodda). rotasyon_TIE: 30 Eki kapatıldı — borsa planı satışları TIE'den yapar, TIE→AKU geçişi yok. rotasyon_YLB_EIL: 30 Eki elendi — fon krizi sonrası küçük/bağımsız kuruculara (Astra) geçilmiyor. Aday bazında susturma: rotasyon_<fon>_<aday>.",
+  "_mevduat_teklif_not": "3 Kas: kullanıcının bankalarından alınan gerçek 32 günlük brüt teklifler (Yapı Kredi %38, Denizbank %38, Odea %37,5). Radar 30 gün boyunca EVDS ortalaması yerine en iyi gerçek teklifi kullanır; 30 gün dolunca yeniden teklif alınması için sinyal verir.",
+  "mevduat_gercek_teklif": {"oran": 38.0, "tarih": "2026-11-03", "banka": "Yapı Kredi / Denizbank (Odea 37,5)"},
   "firsat_sustur": ["rotasyon_TIE", "rotasyon_YLB_EIL"],
   "_seviyeler_not": "Borsa planı seviyeleri (BIST 100 puan). Plan değişirse güncellenir.",
   "seviyeler": {
