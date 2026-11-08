@@ -89,6 +89,10 @@ h2 = dict(br.HEALTH)
 br.HEALTH.clear()
 o3 = br.firsat_radari(R())
 h3 = dict(br.HEALTH)
+br.AYAR["mevduat_gercek_teklif"] = {"oran": 38.0, "tarih": "2026-10-30", "banka": "test"}
+o4 = br.firsat_radari(R())
+br.AYAR["mevduat_gercek_teklif"] = {"oran": 38.0, "tarih": "2026-09-01", "banka": "test"}
+o5 = br.firsat_radari(R())
 an = lambda o, v: [x["anahtar"] for x in o["varliklar"].get(v, {}).get("sinyaller", []) if x["yon"] != "SUSTURULDU"]
 print(json.dumps({"ozet1": o1["ozet"], "altin1": an(o1, "altin"), "tahvil1": an(o1, "tahvil"), "borsa1": an(o1, "borsa"),
    "mevduat1": an(o1, "mevduat"), "ppf1": an(o1, "para_piyasasi"),
@@ -97,7 +101,8 @@ print(json.dumps({"ozet1": o1["ozet"], "altin1": an(o1, "altin"), "tahvil1": an(
    "uyari1": sorted(k for k, v in h1.items() if k.startswith("firsat_") and str(v).startswith("UYARI")),
    "not2": sorted(k for k, v in h2.items() if k.startswith("firsat_") and str(v).startswith("NOT")),
    "uyari2": sorted(k for k, v in h2.items() if k.startswith("firsat_") and str(v).startswith("UYARI")),
-   "kalkti3": sorted(k for k in h3 if k.endswith("_kalkti")), "altin3": o3["ozet"]["altin"]}, ensure_ascii=False))
+   "kalkti3": sorted(k for k in h3 if k.endswith("_kalkti")), "altin3": o3["ozet"]["altin"],
+   "mevduat4": o4["ozet"]["mevduat"], "mvkaynak4": o4["varliklar"]["mevduat"]["bekle"]["kaynak"], "mevduat5": o5["ozet"]["mevduat"]}, ensure_ascii=False))
 """
     tmp = tempfile.mkdtemp()
     open(os.path.join(tmp, "ayarlar.json"), "w", encoding="utf-8").write(json.dumps(
@@ -136,6 +141,53 @@ def haftalik_kapanis_birim():
            "print(o['son_bar_kismi_mi'], h['k'], h['onceki_k'], h['hafta_sonu'])")
     env = dict(os.environ, PYTHONPATH=MOCK + os.pathsep + KOK, RADAR_TEST_NOW="2026-10-26 11:17")
     return subprocess.run([sys.executable, "-c", kod], env=env, capture_output=True, text=True, timeout=60, cwd=tempfile.mkdtemp()).stdout.split()
+
+def abd_seans_birim():
+    """5 Kas (hata #29): ABD verisi NY seansı açıkken kısmi sayılır (yaz/kış saati dahil); zoneinfo yoksa yedek kural aynı sonucu verir."""
+    vakalar = [("2026-11-05 18:52", "2026-11-05"),   # NY 10:52 (EST) seans içi → kısmi
+               ("2026-11-06 08:17", "2026-11-05"),   # NY gece yarısı sonrası, bar dünün → tamam
+               ("2026-11-05 17:00", "2026-11-05"),   # NY 09:00 açılış öncesi → tamam
+               ("2026-10-30 16:45", "2026-10-30"),   # yaz saati (EDT): NY 09:45 → kısmi
+               ("2026-11-05 18:52", "2026-11-04")]   # bugün bar yok (ABD tatili gibi) → tamam
+    sonuc = []
+    for an, son in vakalar:
+        kod = ("import sys, pandas as pd, bist_radar as br\n"
+               f"idx=pd.bdate_range(end='{son}', periods=30); c=[100.0]*30\n"
+               "df=pd.DataFrame({'Open':c,'High':c,'Low':c,'Close':c,'Volume':[1e6]*30},index=idx)\n"
+               "a=br.summarize(df,'t',with_ma=False,bist=False,abd=True)['son_bar_kismi_mi']\n"
+               "b=br.summarize(df,'t',with_ma=False,bist=False)['son_bar_kismi_mi']\n"
+               "o1=br._ny_simdi().utcoffset()\n"
+               "sys.modules['zoneinfo']=None\n"
+               "o2=br._ny_simdi().utcoffset()\n"
+               "print(a, b, o1==o2)")
+        env = dict(os.environ, PYTHONPATH=MOCK + os.pathsep + KOK, RADAR_TEST_NOW=an)
+        sonuc.append(subprocess.run([sys.executable, "-c", kod], env=env, capture_output=True, text=True,
+                                    timeout=60, cwd=tempfile.mkdtemp()).stdout.split())
+    return sonuc
+
+def gram_canli_birim():
+    """5 Kas (hata #29): canlı gram = ons × kur / 31,1035 × kalibrasyon; zirve eski tepeden; saçma değerde borsapy'ye dönülür."""
+    kod = r"""
+import json, pandas as pd, bist_radar as br
+idx = pd.bdate_range(end="2026-11-05", periods=40)
+g = pd.Series(6500.0, index=idx); g.iloc[2] = 7549.0           # eski zirve (kalibrasyon penceresinin dışında)
+g = g.iloc[:-1]                                                 # borsapy bir gün geride (bugünün kapanışı yok)
+kur = pd.Series(50.0, index=idx)
+ons = pd.Series(6500.0 * 31.1034768 / 50.0 / 1.01, index=idx); ons.iloc[-1] *= 1.02   # piyasa primi %1; bugün ons +%2
+br._SERI.update({"gram": pd.DataFrame({"Close": g}), "Y:ons_altin": pd.DataFrame({"Close": ons}), "Y:usdtry_yahoo": pd.DataFrame({"Close": kur})})
+a = br.gram_altin_canli({})
+br._SERI["Y:ons_altin"] = pd.DataFrame({"Close": ons * 1.15})   # %15 sapma → şüpheli (kalibrasyon da bozulur)
+b = br.gram_altin_canli({})
+br._SERI.pop("Y:usdtry_yahoo")
+c = br.gram_altin_canli({})
+print(json.dumps({"a": a, "b": b.get("durum"), "c": c.get("durum"), "not": "gram_altin_canli" in br.HEALTH}, ensure_ascii=False))
+"""
+    env = dict(os.environ, PYTHONPATH=MOCK + os.pathsep + KOK, RADAR_TEST_NOW="2026-11-05 18:52")
+    out = subprocess.run([sys.executable, "-c", kod], env=env, capture_output=True, text=True, timeout=60, cwd=tempfile.mkdtemp()).stdout
+    try:
+        return json.loads(out.strip().splitlines()[-1])
+    except Exception:
+        return {}
 
 def sozlesme_kontrol():
     """9 Eki (hata #22): Sahte kütüphane gerçeğinden farklıysa testler geçer ama canlı kırılır.
@@ -321,6 +373,11 @@ def main():
     _takvim = piyasa_takvimi_birim()
     _fr = firsat_radari_birim()
     d_tur = calistir(ek_env={"RADAR_MOCK_TUR_DUSUS": "1", "RADAR_MOCK_KREDI_STRES": "1"})
+    # 5 Kas (hata #29): canlı gram altın + ABD seans içi işareti
+    _abd = abd_seans_birim()
+    _gram = gram_canli_birim()
+    d_ons = calistir(ek_env={"RADAR_MOCK_ONS_SICRAMA": "1"})
+    d_ons_bozuk = calistir(ek_env={"RADAR_MOCK_ONS_BOZUK": "1"})
     d_usdt_yedek = calistir(ek_env={"RADAR_MOCK_BTCTURK_HATA": "1"})
     _an_gun = _pd.Timestamp(_AN[:10])
     _usdt_gecmis = {(_an_gun - _pd.offsets.BDay(i)).strftime("%Y-%m-%d"): 0.8 for i in range(1, 8)}
@@ -516,6 +573,9 @@ def main():
                                                                     "Pozisyon: bankadan teyitli giriş fiyatı esas alınır"),
         ("pozisyon_YOT_yakin" in d_poz_yakin["saglik"]["tum_moduller"] and "pozisyon_YOT_yakin" not in d_poz_yakin["saglik"].get("issue_tetikleyen", []),
                                                                     "Pozisyon: zarar sınırına yaklaşınca bildirimsiz erken not düşer"),
+        # --- 3 Kas: mevduat sinyali gerçek teklifle kalibre ---
+        (_fr.get("mevduat4") == "BEKLE" and "gerçek teklif" in _fr.get("mvkaynak4", "") and _fr.get("mevduat5") == "DEĞERLENDİR",
+                                                                    "Fırsat radarı: son 30 günde alınmış gerçek banka teklifi varsa onunla kıyaslar; 30 gün geçince yeniden teklif ister"),
         # --- 2 Kas: yanlış rotasyon sinyali (hata #28) ---
         ("rotasyon_YLB" not in _fr.get("ppf1", []) and "firsat_rotasyon_YLB_EIL_suphe" in _fr.get("suphe1", []),
                                                                     "Fırsat radarı: gerçekçi olmayan fark (para piyasasında 47 puan) sinyal üretmez, şüphe notu düşer"),
@@ -540,6 +600,29 @@ def main():
         (isinstance((d["tetikler"].get("firsat_radari") or {}).get("ozet"), dict)
          and set((d["tetikler"].get("firsat_radari") or {}).get("ozet", {})) >= {"altin", "doviz", "mevduat", "borsa", "tahvil", "yurtdisi"},
                                                                     "Fırsat radarı: her çalışmada tüm varlık sınıfları için durum üretilir"),
+        # --- 5 Kas (hata #29): canlı gram altın, ABD seans içi ---
+        ([x[:2] for x in _abd] == [["True", "False"], ["False", "False"], ["False", "False"], ["True", "False"], ["False", "False"]],
+                                                                    "ABD seansı: NY seansı açıkken son bar kısmi (yaz/kış saati, açılış öncesi, tatil); BIST dışı eski davranış korunur"),
+        (all(len(x) == 3 and x[2] == "True" for x in _abd),         "ABD seansı: zoneinfo yoksa yedek yaz saati kuralı aynı NY saatini verir"),
+        ((_gram.get("a") or {}).get("durum") == "OK" and abs(((_gram.get("a") or {}).get("canli") or 0) - 6630.0) < 1
+         and abs(((_gram.get("a") or {}).get("kalibrasyon_orani") or 0) - 1.01) < 0.001
+         and abs(((_gram.get("a") or {}).get("zirveden_pct") or 0) - (-12.17)) < 0.05,
+                                                                    "Canlı gram: ons × kur × kalibrasyon (6.630), zirve eski tepeden (−%12,2)"),
+        (_gram.get("b") in ("ŞÜPHELİ", "KALİBRASYON ŞÜPHELİ") and _gram.get("c") == "SERİ EKSİK" and _gram.get("not") is True,
+                                                                    "Canlı gram: saçma değer ya da eksik seride kullanılmaz, sağlıkta not"),
+        ((d.get("gram_altin_canli") or {}).get("durum") == "OK" and abs(((d.get("gram_altin_canli") or {}).get("kalibrasyon_orani") or 0) - 1) < 0.02
+         and str(T.get("gram_altin_kaynak", "")).startswith("canlı")
+         and ((T.get("firsat_radari") or {}).get("varliklar", {}).get("altin", {}).get("bekle") or {}).get("gram_kaynak") == T.get("gram_altin_kaynak"),
+                                                                    "Canlı gram: tam çalışmada birincil kaynak; fırsat radarı kaynağı gösterir"),
+        ((d_ons["tetikler"].get("gram_altin_zirveden_pct") or -99) - (d_ons["tetikler"].get("gram_altin_zirveden_pct_borsapy") or 0) > 1.5,
+                                                                    "Canlı gram: ons bugün yükselince altın tetiği dünkü borsapy değerini değil bugünkünü kullanır"),
+        (str(d_ons_bozuk["tetikler"].get("gram_altin_kaynak", "")).startswith("borsapy")
+         and d_ons_bozuk["tetikler"].get("gram_altin_zirveden_pct") == d_ons_bozuk["tetikler"].get("gram_altin_zirveden_pct_borsapy")
+         and "gram_altin_canli" not in d_ons_bozuk["saglik"].get("issue_tetikleyen", []),
+                                                                    "Canlı gram: bozuk ons verisinde borsapy'ye döner, bildirim açmaz"),
+        (d["kuresel"]["nasdaq"].get("son_bar_kismi_mi") is False
+         and "seans_ici" in ((T.get("kuresel_akis") or {}).get("turkiye_vs_gelismekte") or {}),
+                                                                    "ABD seansı: sabah çalışmasında ABD barı tamam; Türkiye-gelişmekte karşılaştırması seans bilgisini taşır"),
         # --- 30 Eki: küresel para akışı, USDT primi, piyasa takvimi, kalibrasyon ---
         (((d["tetikler"].get("kuresel_akis")) or {}).get("turkiye_vs_gelismekte", {}).get("durum") == "NORMAL"
          and ((d_tur["tetikler"].get("kuresel_akis")) or {}).get("turkiye_vs_gelismekte", {}).get("durum") == "TÜRKİYE'YE ÖZGÜ BASKI",
