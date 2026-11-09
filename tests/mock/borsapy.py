@@ -122,7 +122,15 @@ _TEST_TV = _SahteTV()
 class FX:
     def __init__(self, k): self.k = k
     @property
-    def current(self): return {"last": {"USD": 48.83, "EUR": 57.0, "BRENT": 108.0}.get(self.k, 6800.0)}
+    def current(self):
+        d = {"last": {"USD": 48.83, "EUR": 57.0, "BRENT": 108.0}.get(self.k, 6800.0)}
+        import os
+        if self.k == "BRENT" and (os.environ.get("RADAR_MOCK_BRENT_GUNICI") or os.environ.get("RADAR_MOCK_BRENT_CELISKI")):
+            # 9 Kas: gerçekteki gibi borsapy Brent bir önceki günün kapanışı (Yahoo sahtesinin sondan ikinci barı)
+            d["update_time"] = (pd.Timestamp.today().normalize() - pd.offsets.BDay(2)).strftime("%Y-%m-%dT00:00:00")
+            if os.environ.get("RADAR_MOCK_BRENT_CELISKI"):
+                d["last"] = 125.0                                    # aynı gün kapanışında gerçek çelişki
+        return d
     def history(self, period="1y"): return _ohlc(250, 7500, 6800)
 def economic_calendar(**k): return pd.DataFrame({"Date": ["2026-09-24"], "Event": ["test"]})
 class EconomicCalendar:
