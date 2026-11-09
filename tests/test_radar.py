@@ -189,6 +189,22 @@ print(json.dumps({"a": a, "b": b.get("durum"), "c": c.get("durum"), "not": "gram
     except Exception:
         return {}
 
+def fon_geride_birim():
+    """9 Kas: diğer fonlar bugünün fiyatındayken bir fon dünkünde kalırsa NOT (bildirim yok); 2+ gün → eski bayat UYARI."""
+    kod = r"""
+import json, bist_radar as br
+R = {"bist30": {}, "fonlar": {"YLB": {"fiyat_tarihi": "2026-11-09"}, "AKU": {"fiyat_tarihi": "2026-11-09"},
+                               "TIE": {"fiyat_tarihi": "2026-11-06"}, "BGP": {"fiyat_tarihi": "2026-11-04"}}}
+o = br.fon_tutarlilik(R)
+print(json.dumps({"h": br.HEALTH, "tie": o.get("TIE"), "ylb": o.get("YLB")}, ensure_ascii=False))
+"""
+    env = dict(os.environ, PYTHONPATH=MOCK + os.pathsep + KOK, RADAR_TEST_NOW="2026-11-09 17:17")
+    out = subprocess.run([sys.executable, "-c", kod], env=env, capture_output=True, text=True, timeout=60, cwd=tempfile.mkdtemp()).stdout
+    try:
+        return json.loads(out.strip().splitlines()[-1])
+    except Exception:
+        return {}
+
 def sozlesme_kontrol():
     """9 Eki (hata #22): Sahte kütüphane gerçeğinden farklıysa testler geçer ama canlı kırılır.
     (1) Betiğin bp.<fonksiyon>(...) çağrılarında kullandığı anahtar kelimeler GERÇEK borsapy imzasında var mı?
@@ -378,6 +394,10 @@ def main():
     _gram = gram_canli_birim()
     d_ons = calistir(ek_env={"RADAR_MOCK_ONS_SICRAMA": "1"})
     d_ons_bozuk = calistir(ek_env={"RADAR_MOCK_ONS_BOZUK": "1"})
+    # 9 Kas: Brent çapraz kontrolü aynı günün kapanışlarıyla
+    d_brent_gunici = calistir(ek_env={"RADAR_MOCK_BRENT_GUNICI": "1"})
+    _geride = fon_geride_birim()
+    d_brent_celiski = calistir(ek_env={"RADAR_MOCK_BRENT_CELISKI": "1"})
     d_usdt_yedek = calistir(ek_env={"RADAR_MOCK_BTCTURK_HATA": "1"})
     _an_gun = _pd.Timestamp(_AN[:10])
     _usdt_gecmis = {(_an_gun - _pd.offsets.BDay(i)).strftime("%Y-%m-%d"): 0.8 for i in range(1, 8)}
@@ -623,6 +643,18 @@ def main():
         (d["kuresel"]["nasdaq"].get("son_bar_kismi_mi") is False
          and "seans_ici" in ((T.get("kuresel_akis") or {}).get("turkiye_vs_gelismekte") or {}),
                                                                     "ABD seansı: sabah çalışmasında ABD barı tamam; Türkiye-gelişmekte karşılaştırması seans bilgisini taşır"),
+        (str((_geride.get("h") or {}).get("fon_TIE_geride", "")).startswith("NOT")
+         and "fon_TIE_bayat" not in (_geride.get("h") or {})
+         and str((_geride.get("h") or {}).get("fon_BGP_bayat", "")).startswith("UYARI")
+         and "fon_YLB_geride" not in (_geride.get("h") or {}) and (_geride.get("tie") or {}).get("akranlardan_geride") == "2026-11-09",
+                                                                    "Fon tarihi: diğer fonlardan 1 gün geride kalan fon NOT verir (bildirim yok); 2+ gün eski bayat UYARI sürer"),
+        # --- 9 Kas: Brent çapraz kontrolü (borsapy bir gün geride) ---
+        ("brent_kaynak_celiskisi" not in d_brent_gunici["saglik"]["hatali_moduller"]
+         and (d_brent_gunici["tetikler"].get("brent_capraz") or {}).get("yahoo_tarih") == (d_brent_gunici["tetikler"].get("brent_capraz") or {}).get("borsapy_tarih", "")[:10]
+         and abs((d_brent_gunici["tetikler"].get("brent_capraz") or {}).get("fark_pct", 99)) < 3,
+                                                                    "Brent: petrolün gün içi %5 düşüşü, borsapy dünkü kapanışta diye sahte çelişki bildirimi açmaz (aynı gün kıyası)"),
+        ("brent_kaynak_celiskisi" in d_brent_celiski["saglik"].get("issue_tetikleyen", []),
+                                                                    "Brent: aynı günün kapanışlarında gerçek %3+ fark hâlâ bildirim açar"),
         # --- 30 Eki: küresel para akışı, USDT primi, piyasa takvimi, kalibrasyon ---
         (((d["tetikler"].get("kuresel_akis")) or {}).get("turkiye_vs_gelismekte", {}).get("durum") == "NORMAL"
          and ((d_tur["tetikler"].get("kuresel_akis")) or {}).get("turkiye_vs_gelismekte", {}).get("durum") == "TÜRKİYE'YE ÖZGÜ BASKI",
