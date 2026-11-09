@@ -1627,6 +1627,9 @@ def fon_tutarlilik(R):
     if b30.get("son_bar_kismi_mi"):
         kap = kap[:-1]
     out = {}
+    # 9 Kas: diğer fonlar bugünün fiyatını yayınlamışken bir fon geride kalabiliyor (TIE 9 Kas gün boyu 6 Kas'ta kaldı);
+    # "son iş günü" ölçüsü bunu yakalamaz → en yeni fon tarihine göre de bakılır (NOT: bildirim açmaz, gündemde görünür)
+    en_yeni = max((x["fiyat_tarihi"] for x in fon.values() if x and x.get("fiyat_tarihi")), default=None)
     for c, fb in fon.items():
         if not fb or fb.get("fiyat_tarihi") is None:
             continue
@@ -1636,6 +1639,10 @@ def fon_tutarlilik(R):
         r["fiyat_yasi_is_gunu"] = yas
         if yas > 1:
             HEALTH[f"fon_{c}_bayat"] = f"UYARI: {c} fiyatı {fb['fiyat_tarihi']} tarihli, son iş günü {son_is} — bayat olabilir"
+        elif en_yeni and fb["fiyat_tarihi"] < en_yeni:
+            r["akranlardan_geride"] = en_yeni
+            HEALTH[f"fon_{c}_geride"] = (f"NOT: {c} fiyatı {fb['fiyat_tarihi']} tarihli, diğer fonlar {en_yeni} — "
+                                         "bu fonun yeni fiyatı henüz gelmedi (değeri bir gün geriden)")
         g = fb.get("gunluk_getiri_pct")
         if c in CEPHANE and g is not None and abs(g) > 0.35:
             HEALTH[f"fon_{c}_gunluk_sapma"] = f"UYARI: para piyasası fonu {c} günde %{g} hareket etti (normal ±0,15) — veri şüpheli"
@@ -3107,11 +3114,24 @@ def main():
         T["brent_kaynak"] = "borsapy"
         by = (k.get("brent_yahoo") or {}).get("son_fiyat")
         if T["brent"] and by:
-            fark = round((T["brent"] / by - 1) * 100, 2)
-            T["brent_capraz"] = {"borsapy": T["brent"], "yahoo": by, "fark_pct": fark}
+            # 9 Kas (hata #29'un Brent ayağı): borsapy Brent ÖNCEKİ günün kapanışı (update_time D−1). Canlı Yahoo ile
+            # kıyaslanınca gün içi %3+ petrol hareketi sahte "kaynak çelişkisi" bildirimi açıyordu (8 günde 30 çalışma).
+            # Artık AYNI GÜNÜN kapanışları karşılaştırılır: borsapy'nin tarihindeki (ya da öncesindeki son) Yahoo kapanışı.
+            bt = str(br.get("update_time") or "")[:10] if isinstance(br, dict) else ""
+            ky, kt = by, "son (tarih bilinmiyor)"
+            ys = _SERI.get("Y:brent_yahoo")
+            if bt and ys is not None:
+                yg = _gun_seri(ys)
+                yg = yg[yg.index.strftime("%Y-%m-%d") <= bt]
+                if len(yg):
+                    ky, kt = float(yg.iloc[-1]), yg.index[-1].strftime("%Y-%m-%d")
+            fark = round((T["brent"] / ky - 1) * 100, 2)
+            T["brent_tarih"] = bt or None
+            T["brent_capraz"] = {"borsapy": T["brent"], "borsapy_tarih": bt or None, "yahoo_ayni_gun": J(round(ky, 2)),
+                                 "yahoo_tarih": kt, "yahoo_canli": by, "fark_pct": fark}
             if abs(fark) > 3:
-                HEALTH["brent_kaynak_celiskisi"] = (f"UYARI: Brent borsapy {T['brent']} / Yahoo {by} (%{fark} fark) — "
-                                                   "biri bayat ya da vade geçişi; haberle teyit et")
+                HEALTH["brent_kaynak_celiskisi"] = (f"UYARI: Brent borsapy {T['brent']} ({bt or '?'}) / Yahoo {round(ky, 2)} ({kt}) "
+                                                   f"aynı gün %{fark} fark — vade geçişi ya da hatalı veri; haberle teyit et")
         # 5 Kas (hata #29): borsapy gram altın önceki günün kapanışı → canlı (ons × kur) değer birincil
         T["gram_altin_zirveden_pct_borsapy"] = (R.get("gram_altin_1y") or {}).get("zirveden_pct")
         gc = R.get("gram_altin_canli") or {}
