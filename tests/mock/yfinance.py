@@ -15,6 +15,8 @@ def download(t, period="300d", interval="1d", **k):
             c[-1] = c[-1] * 1.03
         if os.environ.get("RADAR_MOCK_ONS_BOZUK"):              # saçma ons değeri → canlı gram kullanılmamalı
             c = c / 10
+    if t == "BZ=F" and os.environ.get("RADAR_MOCK_BRENT_GUNICI"):   # 9 Kas: petrol bugün −%5 (borsapy dünkü kapanışta)
+        c[-1] = c[-2] * 0.95
     if t == "HYG" and os.environ.get("RADAR_MOCK_KREDI_STRES"):   # 30 Eki: yüksek getirili tahviller 1 ayda ~%6 düşer
         c[-22:] = c[-22:] * np.linspace(1.0, 0.94, 22)
     return pd.DataFrame({"Open": c, "High": c + 1, "Low": c - 1, "Close": c, "Volume": 1000}, index=idx)
