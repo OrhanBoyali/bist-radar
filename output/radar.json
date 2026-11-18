@@ -22,40 +22,40 @@
   }
  },
  "surum": "v3",
- "uretim_zamani_tr": "2026-11-18 17:17:43",
+ "uretim_zamani_tr": "2026-11-18 18:17:46",
  "not": "Kişisel veri yok. BIST verisi ~15 dk gecikmeli. Günlük göstergeler tamamlanmış barlarla.",
  "bist100": {
   "kaynak": "borsapy",
   "son_bar_tarihi": "2026-11-18",
-  "son_bar_kismi_mi": true,
-  "son_fiyat": 11507.28,
-  "gunluk_degisim_pct": -1.32,
-  "rsi14_tamamlanmis": 47.6247,
-  "rsi14_anlik": 44.0923,
-  "atr14": 273.7286,
+  "son_bar_kismi_mi": false,
+  "son_fiyat": 11482.25,
+  "gunluk_degisim_pct": -1.53,
+  "rsi14_tamamlanmis": 43.5662,
+  "rsi14_anlik": null,
+  "atr14": 273.0137,
   "52h_zirve_kapanis": 15133.54,
-  "zirveden_pct": -23.96,
-  "haftalik_degisim_pct": -1.36,
-  "aylik_degisim_pct": 0.67,
-  "gun_ici_dusuk": 11507.2,
+  "zirveden_pct": -24.13,
+  "haftalik_degisim_pct": -1.58,
+  "aylik_degisim_pct": 0.46,
+  "gun_ici_dusuk": 11452.69,
   "gun_ici_yuksek": 11716.41,
   "hareketli_ortalamalar": {
-   "sma5": 11764.648,
-   "ema5": 11724.6371,
-   "sma10": 11649.177,
-   "ema10": 11641.9479,
-   "sma20": 11420.858,
-   "ema20": 11649.211,
-   "sma50": 12286.4406,
-   "ema50": 12179.4781,
-   "sma100": 13191.681,
-   "ema100": 12750.6421,
-   "sma200": 13521.7035,
-   "ema200": 12869.3739
+   "sma5": 11727.814,
+   "ema5": 11643.8414,
+   "sma10": 11649.589,
+   "ema10": 11612.9119,
+   "sma20": 11405.0855,
+   "ema20": 11633.3099,
+   "sma50": 12227.9806,
+   "ema50": 12152.1358,
+   "sma100": 13164.6714,
+   "ema100": 12725.5254,
+   "sma200": 13509.9593,
+   "ema200": 12855.5717
   },
   "haftalik_kapanis": {
    "son_tamamlanan_hafta": 11842.82,
-   "bu_hafta_son": 11661.0,
+   "bu_hafta_son": 11482.25,
    "son_biten_hafta": {
     "hafta_sonu": "2026-11-13",
     "son_islem_gunu": "2026-11-13",
@@ -63,7 +63,7 @@
     "onceki_k": 11482.6
    }
   },
-  "hacim_orani_20g": 0.6339,
+  "hacim_orani_20g": 0.7511,
   "son_5_kapanis": [
    {
     "t": "2026-11-12",
@@ -83,12 +83,12 @@
    },
    {
     "t": "2026-11-18",
-    "k": 11507.28
+    "k": 11482.25
    }
   ],
   "oynaklik_yillik_pct": {
-   "20g": 30.3,
-   "60g": 28.4
+   "20g": 28.6,
+   "60g": 28.5
   },
   "son_5_bar": [
    {
@@ -121,10 +121,10 @@
    },
    {
     "t": "2026-11-18",
-    "k": 11507.28,
-    "degisim_pct": -1.32,
-    "hacim_orani": 0.63,
-    "kismi": true
+    "k": 11482.25,
+    "degisim_pct": -1.53,
+    "hacim_orani": 0.75,
+    "kismi": false
    }
   ],
   "son_10_bar": [
@@ -193,45 +193,45 @@
    },
    {
     "t": "2026-11-18",
-    "k": 11507.28,
-    "degisim_pct": -1.32,
-    "hacim_orani": 0.63,
-    "kismi": true
+    "k": 11482.25,
+    "degisim_pct": -1.53,
+    "hacim_orani": 0.75,
+    "kismi": false
    }
   ]
  },
  "bist30": {
   "kaynak": "borsapy",
   "son_bar_tarihi": "2026-11-18",
-  "son_bar_kismi_mi": true,
-  "son_fiyat": 14442.31,
-  "gunluk_degisim_pct": -1.18,
-  "rsi14_tamamlanmis": 49.8655,
-  "rsi14_anlik": 46.5714,
-  "atr14": 355.0137,
+  "son_bar_kismi_mi": false,
+  "son_fiyat": 14415.16,
+  "gunluk_degisim_pct": -1.37,
+  "rsi14_tamamlanmis": 46.0925,
+  "rsi14_anlik": null,
+  "atr14": 352.9563,
   "52h_zirve_kapanis": 17272.28,
-  "zirveden_pct": -16.38,
-  "haftalik_degisim_pct": -1.38,
-  "aylik_degisim_pct": 1.55,
-  "gun_ici_dusuk": 14441.49,
+  "zirveden_pct": -16.54,
+  "haftalik_degisim_pct": -1.56,
+  "aylik_degisim_pct": 1.36,
+  "gun_ici_dusuk": 14371.29,
   "gun_ici_yuksek": 14697.5,
   "hareketli_ortalamalar": {
-   "sma5": 14752.158,
-   "ema5": 14690.5577,
-   "sma10": 14570.145,
-   "ema10": 14571.24,
-   "sma20": 14272.0855,
-   "ema20": 14539.1855,
-   "sma50": 15164.801,
-   "ema50": 14954.6417,
-   "sma100": 15668.924,
-   "ema100": 15306.3478,
-   "sma200": 15688.905,
-   "ema200": 15088.7858
+   "sma5": 14706.344,
+   "ema5": 14598.7584,
+   "sma10": 14578.568,
+   "ema10": 14542.8619,
+   "sma20": 14259.017,
+   "ema20": 14527.3736,
+   "sma50": 15111.03,
+   "ema50": 14933.4856,
+   "sma100": 15648.7989,
+   "ema100": 15288.7005,
+   "sma200": 15685.1517,
+   "ema200": 15082.0831
   },
   "haftalik_kapanis": {
    "son_tamamlanan_hafta": 14844.74,
-   "bu_hafta_son": 14614.92,
+   "bu_hafta_son": 14415.16,
    "son_biten_hafta": {
     "hafta_sonu": "2026-11-13",
     "son_islem_gunu": "2026-11-13",
@@ -239,7 +239,7 @@
     "onceki_k": 14290.21
    }
   },
-  "hacim_orani_20g": 0.6351,
+  "hacim_orani_20g": 0.7559,
   "son_5_kapanis": [
    {
     "t": "2026-11-12",
@@ -259,12 +259,12 @@
    },
    {
     "t": "2026-11-18",
-    "k": 14442.31
+    "k": 14415.16
    }
   ],
   "oynaklik_yillik_pct": {
-   "20g": 31.1,
-   "60g": 29.7
+   "20g": 29.4,
+   "60g": 29.8
   },
   "son_5_bar": [
    {
@@ -297,10 +297,10 @@
    },
    {
     "t": "2026-11-18",
-    "k": 14442.31,
-    "degisim_pct": -1.18,
-    "hacim_orani": 0.64,
-    "kismi": true
+    "k": 14415.16,
+    "degisim_pct": -1.37,
+    "hacim_orani": 0.76,
+    "kismi": false
    }
   ],
   "son_10_bar": [
@@ -369,10 +369,10 @@
    },
    {
     "t": "2026-11-18",
-    "k": 14442.31,
-    "degisim_pct": -1.18,
-    "hacim_orani": 0.64,
-    "kismi": true
+    "k": 14415.16,
+    "degisim_pct": -1.37,
+    "hacim_orani": 0.76,
+    "kismi": false
    }
   ]
  },
@@ -380,81 +380,81 @@
   "XBANK": {
    "kaynak": "borsapy",
    "son_bar_tarihi": "2026-11-18",
-   "son_bar_kismi_mi": true,
-   "son_fiyat": 16109.2,
-   "gunluk_degisim_pct": -2.07,
-   "rsi14_tamamlanmis": 54.3788,
-   "rsi14_anlik": 49.213,
-   "atr14": 477.9061,
+   "son_bar_kismi_mi": false,
+   "son_fiyat": 16042.49,
+   "gunluk_degisim_pct": -2.48,
+   "rsi14_tamamlanmis": 48.3158,
+   "rsi14_anlik": null,
+   "atr14": 479.9642,
    "52h_zirve_kapanis": 20641.12,
-   "zirveden_pct": -21.96,
-   "haftalik_degisim_pct": -5.11,
-   "aylik_degisim_pct": 1.58,
-   "gun_ici_dusuk": 16105.63,
+   "zirveden_pct": -22.28,
+   "haftalik_degisim_pct": -5.51,
+   "aylik_degisim_pct": 1.16,
+   "gun_ici_dusuk": 16018.88,
    "gun_ici_yuksek": 16525.6
   },
   "XUSIN": {
    "kaynak": "borsapy",
    "son_bar_tarihi": "2026-11-18",
-   "son_bar_kismi_mi": true,
-   "son_fiyat": 13643.55,
-   "gunluk_degisim_pct": -1.86,
-   "rsi14_tamamlanmis": 40.7688,
-   "rsi14_anlik": 37.2945,
-   "atr14": 367.8177,
+   "son_bar_kismi_mi": false,
+   "son_fiyat": 13626.9,
+   "gunluk_degisim_pct": -1.98,
+   "rsi14_tamamlanmis": 37.0912,
+   "rsi14_anlik": null,
+   "atr14": 364.3643,
    "52h_zirve_kapanis": 20399.9,
-   "zirveden_pct": -33.12,
-   "haftalik_degisim_pct": -1.38,
-   "aylik_degisim_pct": -4.56,
-   "gun_ici_dusuk": 13635.15,
+   "zirveden_pct": -33.2,
+   "haftalik_degisim_pct": -1.5,
+   "aylik_degisim_pct": -4.68,
+   "gun_ici_dusuk": 13592.26,
    "gun_ici_yuksek": 13911.73
   },
   "XHOLD": {
    "kaynak": "borsapy",
    "son_bar_tarihi": "2026-11-18",
-   "son_bar_kismi_mi": true,
-   "son_fiyat": 9346.3,
-   "gunluk_degisim_pct": -2.07,
-   "rsi14_tamamlanmis": 39.3993,
-   "rsi14_anlik": 35.2955,
-   "atr14": 241.016,
+   "son_bar_kismi_mi": false,
+   "son_fiyat": 9299.44,
+   "gunluk_degisim_pct": -2.56,
+   "rsi14_tamamlanmis": 34.445,
+   "rsi14_anlik": null,
+   "atr14": 246.902,
    "52h_zirve_kapanis": 16025.99,
-   "zirveden_pct": -41.68,
-   "haftalik_degisim_pct": -1.73,
-   "aylik_degisim_pct": -3.66,
-   "gun_ici_dusuk": 9345.84,
+   "zirveden_pct": -41.97,
+   "haftalik_degisim_pct": -2.22,
+   "aylik_degisim_pct": -4.14,
+   "gun_ici_dusuk": 9268.69,
    "gun_ici_yuksek": 9592.11
   },
   "XUTEK": {
    "kaynak": "borsapy",
    "son_bar_tarihi": "2026-11-18",
-   "son_bar_kismi_mi": true,
-   "son_fiyat": 35943.2,
-   "gunluk_degisim_pct": -0.05,
-   "rsi14_tamamlanmis": 45.4627,
-   "rsi14_anlik": 45.3759,
-   "atr14": 1376.4397,
+   "son_bar_kismi_mi": false,
+   "son_fiyat": 35969.73,
+   "gunluk_degisim_pct": 0.02,
+   "rsi14_tamamlanmis": 45.5061,
+   "rsi14_anlik": null,
+   "atr14": 1340.0312,
    "52h_zirve_kapanis": 54566.9,
-   "zirveden_pct": -34.13,
-   "haftalik_degisim_pct": -0.03,
-   "aylik_degisim_pct": 4.51,
+   "zirveden_pct": -34.08,
+   "haftalik_degisim_pct": 0.04,
+   "aylik_degisim_pct": 4.59,
    "gun_ici_dusuk": 35877.2,
    "gun_ici_yuksek": 36743.92
   },
   "XUMAL": {
    "kaynak": "borsapy",
    "son_bar_tarihi": "2026-11-18",
-   "son_bar_kismi_mi": true,
-   "son_fiyat": 13407.96,
-   "gunluk_degisim_pct": -2.08,
-   "rsi14_tamamlanmis": 44.6653,
-   "rsi14_anlik": 39.6963,
-   "atr14": 325.0781,
+   "son_bar_kismi_mi": false,
+   "son_fiyat": 13359.44,
+   "gunluk_degisim_pct": -2.44,
+   "rsi14_tamamlanmis": 38.9589,
+   "rsi14_anlik": null,
+   "atr14": 332.4803,
    "52h_zirve_kapanis": 21288.18,
-   "zirveden_pct": -37.02,
-   "haftalik_degisim_pct": -2.29,
-   "aylik_degisim_pct": -1.67,
-   "gun_ici_dusuk": 13407.26,
+   "zirveden_pct": -37.24,
+   "haftalik_degisim_pct": -2.65,
+   "aylik_degisim_pct": -2.02,
+   "gun_ici_dusuk": 13334.4,
    "gun_ici_yuksek": 13763.11
   }
  },
@@ -464,12 +464,12 @@
  "genislik": {
   "kaynak": "borsapy scan (XUTUM)",
   "hisse_sayisi": 576,
-  "yukselen": 59,
-  "dusen": 512,
-  "tabana_kilitli": 29,
-  "tavana_kilitli": 13,
-  "yukselen_orani_pct": 10.2,
-  "medyan_degisim_pct": -3.18
+  "yukselen": 63,
+  "dusen": 510,
+  "tabana_kilitli": 32,
+  "tavana_kilitli": 16,
+  "yukselen_orani_pct": 10.9,
+  "medyan_degisim_pct": -3.4
  },
  "genislik_bist30": {
   "kaynak": "borsapy scan (XU030)",
@@ -479,7 +479,7 @@
   "tabana_kilitli": 0,
   "tavana_kilitli": 0,
   "yukselen_orani_pct": 10.0,
-  "medyan_degisim_pct": -1.87
+  "medyan_degisim_pct": -2.37
  },
  "yabanci": {
   "bugun_ort_yabanci_orani": 33.437,
@@ -9643,7 +9643,7 @@
   "ppk_kalan_gun": 22,
   "aofm": {
    "oran": 36.0,
-   "tarih": "2026-11-17",
+   "tarih": "2026-11-18",
    "30g_once": 37.0,
    "kaynak": "TCMB EVDS (TP.APIFON4)"
   }
@@ -10167,79 +10167,79 @@
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-18",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 90.11,
-   "gunluk_degisim_pct": -3.25,
-   "rsi14_tamamlanmis": 34.6411,
+   "son_fiyat": 89.34,
+   "gunluk_degisim_pct": -4.08,
+   "rsi14_tamamlanmis": 33.8954,
    "rsi14_anlik": null,
-   "atr14": 4.7878,
+   "atr14": 4.7921,
    "52h_zirve_kapanis": 118.35,
-   "zirveden_pct": -23.86,
-   "haftalik_degisim_pct": -2.86,
-   "aylik_degisim_pct": -17.17,
-   "gun_ici_dusuk": 88.44,
+   "zirveden_pct": -24.51,
+   "haftalik_degisim_pct": -3.69,
+   "aylik_degisim_pct": -17.88,
+   "gun_ici_dusuk": 88.38,
    "gun_ici_yuksek": 90.75
   },
   "sp500": {
    "kaynak": "yahoo",
-   "son_bar_tarihi": "2026-11-17",
-   "son_bar_kismi_mi": false,
-   "son_fiyat": 7340.5298,
-   "gunluk_degisim_pct": -1.03,
+   "son_bar_tarihi": "2026-11-18",
+   "son_bar_kismi_mi": true,
+   "son_fiyat": 7337.23,
+   "gunluk_degisim_pct": -0.04,
    "rsi14_tamamlanmis": 37.2094,
-   "rsi14_anlik": null,
+   "rsi14_anlik": 37.0812,
    "atr14": 113.0703,
    "52h_zirve_kapanis": 7818.9302,
-   "zirveden_pct": -6.12,
-   "haftalik_degisim_pct": -2.4,
-   "aylik_degisim_pct": -4.55,
-   "gun_ici_dusuk": 7288.3398,
-   "gun_ici_yuksek": 7415.3701
+   "zirveden_pct": -6.16,
+   "haftalik_degisim_pct": -3.7,
+   "aylik_degisim_pct": -4.87,
+   "gun_ici_dusuk": 7303.2202,
+   "gun_ici_yuksek": 7367.6802
   },
   "nasdaq": {
    "kaynak": "yahoo",
-   "son_bar_tarihi": "2026-11-17",
-   "son_bar_kismi_mi": false,
-   "son_fiyat": 24328.3809,
-   "gunluk_degisim_pct": -0.74,
+   "son_bar_tarihi": "2026-11-18",
+   "son_bar_kismi_mi": true,
+   "son_fiyat": 24460.4551,
+   "gunluk_degisim_pct": 0.54,
    "rsi14_tamamlanmis": 35.6557,
-   "rsi14_anlik": null,
+   "rsi14_anlik": 37.5095,
    "atr14": 547.4737,
    "52h_zirve_kapanis": 27599.7891,
-   "zirveden_pct": -11.85,
-   "haftalik_degisim_pct": -2.94,
-   "aylik_degisim_pct": -7.95,
-   "gun_ici_dusuk": 23989.0898,
-   "gun_ici_yuksek": 24547.6602
+   "zirveden_pct": -11.37,
+   "haftalik_degisim_pct": -3.95,
+   "aylik_degisim_pct": -7.43,
+   "gun_ici_dusuk": 24268.0293,
+   "gun_ici_yuksek": 24538.7793
   },
   "vix": {
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-18",
-   "son_bar_kismi_mi": false,
-   "son_fiyat": 23.81,
-   "gunluk_degisim_pct": -6.48,
-   "rsi14_tamamlanmis": 57.2728,
-   "rsi14_anlik": null,
-   "atr14": 3.2881,
+   "son_bar_kismi_mi": true,
+   "son_fiyat": 24.51,
+   "gunluk_degisim_pct": -3.73,
+   "rsi14_tamamlanmis": 60.7349,
+   "rsi14_anlik": 58.6922,
+   "atr14": 3.388,
    "52h_zirve_kapanis": 31.05,
-   "zirveden_pct": -23.32,
-   "haftalik_degisim_pct": 36.13,
-   "aylik_degisim_pct": 37.55,
+   "zirveden_pct": -21.06,
+   "haftalik_degisim_pct": 40.14,
+   "aylik_degisim_pct": 41.59,
    "gun_ici_dusuk": 23.47,
-   "gun_ici_yuksek": 24.91
+   "gun_ici_yuksek": 26.26
   },
   "dolar_endeksi": {
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-18",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 103.8,
-   "gunluk_degisim_pct": 0.3,
-   "rsi14_tamamlanmis": 69.3972,
+   "son_fiyat": 103.758,
+   "gunluk_degisim_pct": 0.26,
+   "rsi14_tamamlanmis": 69.0742,
    "rsi14_anlik": null,
    "atr14": 0.5165,
-   "52h_zirve_kapanis": 103.8,
+   "52h_zirve_kapanis": 103.758,
    "zirveden_pct": 0.0,
-   "haftalik_degisim_pct": 0.86,
-   "aylik_degisim_pct": 2.03,
+   "haftalik_degisim_pct": 0.82,
+   "aylik_degisim_pct": 1.99,
    "gun_ici_dusuk": 103.586,
    "gun_ici_yuksek": 103.911
   },
@@ -10247,137 +10247,137 @@
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-18",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 5.101,
-   "gunluk_degisim_pct": -0.04,
-   "rsi14_tamamlanmis": 56.1428,
+   "son_fiyat": 5.089,
+   "gunluk_degisim_pct": -0.27,
+   "rsi14_tamamlanmis": 55.0304,
    "rsi14_anlik": null,
-   "atr14": 0.0737,
+   "atr14": 0.076,
    "52h_zirve_kapanis": 5.311,
-   "zirveden_pct": -3.95,
-   "haftalik_degisim_pct": 2.06,
-   "aylik_degisim_pct": -0.31,
-   "gun_ici_dusuk": 5.097,
+   "zirveden_pct": -4.18,
+   "haftalik_degisim_pct": 1.82,
+   "aylik_degisim_pct": -0.55,
+   "gun_ici_dusuk": 5.064,
    "gun_ici_yuksek": 5.121
   },
   "ons_altin": {
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-18",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 3786.1001,
-   "gunluk_degisim_pct": -2.02,
-   "rsi14_tamamlanmis": 31.2317,
+   "son_fiyat": 3760.8999,
+   "gunluk_degisim_pct": -2.67,
+   "rsi14_tamamlanmis": 30.1075,
    "rsi14_anlik": null,
    "atr14": 89.8754,
    "52h_zirve_kapanis": 5318.3999,
-   "zirveden_pct": -28.81,
-   "haftalik_degisim_pct": -5.36,
-   "aylik_degisim_pct": -8.61,
+   "zirveden_pct": -29.29,
+   "haftalik_degisim_pct": -5.99,
+   "aylik_degisim_pct": -9.21,
    "gun_ici_dusuk": 3744.6001,
    "gun_ici_yuksek": 3859.3
   },
   "tur_etf": {
    "kaynak": "yahoo",
-   "son_bar_tarihi": "2026-11-17",
-   "son_bar_kismi_mi": false,
-   "son_fiyat": 31.65,
-   "gunluk_degisim_pct": -1.4,
+   "son_bar_tarihi": "2026-11-18",
+   "son_bar_kismi_mi": true,
+   "son_fiyat": 31.145,
+   "gunluk_degisim_pct": -1.6,
    "rsi14_tamamlanmis": 45.4296,
-   "rsi14_anlik": null,
+   "rsi14_anlik": 41.972,
    "atr14": 0.6155,
    "52h_zirve_kapanis": 43.74,
-   "zirveden_pct": -27.64,
-   "haftalik_degisim_pct": -0.35,
-   "aylik_degisim_pct": -0.47,
-   "gun_ici_dusuk": 31.44,
-   "gun_ici_yuksek": 31.8
+   "zirveden_pct": -28.8,
+   "haftalik_degisim_pct": -2.34,
+   "aylik_degisim_pct": -4.46,
+   "gun_ici_dusuk": 31.04,
+   "gun_ici_yuksek": 31.19
   },
   "eem_etf": {
    "kaynak": "yahoo",
-   "son_bar_tarihi": "2026-11-17",
-   "son_bar_kismi_mi": false,
-   "son_fiyat": 58.27,
-   "gunluk_degisim_pct": -1.05,
+   "son_bar_tarihi": "2026-11-18",
+   "son_bar_kismi_mi": true,
+   "son_fiyat": 58.08,
+   "gunluk_degisim_pct": -0.33,
    "rsi14_tamamlanmis": 35.3341,
-   "rsi14_anlik": null,
+   "rsi14_anlik": 34.8023,
    "atr14": 1.4017,
    "52h_zirve_kapanis": 71.21,
-   "zirveden_pct": -18.17,
-   "haftalik_degisim_pct": -3.8,
-   "aylik_degisim_pct": -7.96,
-   "gun_ici_dusuk": 57.57,
-   "gun_ici_yuksek": 58.6
+   "zirveden_pct": -18.44,
+   "haftalik_degisim_pct": -6.38,
+   "aylik_degisim_pct": -8.28,
+   "gun_ici_dusuk": 57.765,
+   "gun_ici_yuksek": 58.375
   },
   "emb_etf": {
    "kaynak": "yahoo",
-   "son_bar_tarihi": "2026-11-17",
-   "son_bar_kismi_mi": false,
-   "son_fiyat": 90.72,
-   "gunluk_degisim_pct": 0.0,
+   "son_bar_tarihi": "2026-11-18",
+   "son_bar_kismi_mi": true,
+   "son_fiyat": 90.755,
+   "gunluk_degisim_pct": 0.04,
    "rsi14_tamamlanmis": 38.6547,
-   "rsi14_anlik": null,
+   "rsi14_anlik": 39.1547,
    "atr14": 0.4865,
    "52h_zirve_kapanis": 97.74,
-   "zirveden_pct": -7.18,
-   "haftalik_degisim_pct": -1.37,
-   "aylik_degisim_pct": -0.41,
-   "gun_ici_dusuk": 90.48,
-   "gun_ici_yuksek": 90.76
+   "zirveden_pct": -7.15,
+   "haftalik_degisim_pct": -1.43,
+   "aylik_degisim_pct": -0.51,
+   "gun_ici_dusuk": 90.75,
+   "gun_ici_yuksek": 90.975
   },
   "hyg_etf": {
    "kaynak": "yahoo",
-   "son_bar_tarihi": "2026-11-17",
-   "son_bar_kismi_mi": false,
-   "son_fiyat": 76.63,
-   "gunluk_degisim_pct": -0.13,
+   "son_bar_tarihi": "2026-11-18",
+   "son_bar_kismi_mi": true,
+   "son_fiyat": 76.67,
+   "gunluk_degisim_pct": 0.05,
    "rsi14_tamamlanmis": 38.0909,
-   "rsi14_anlik": null,
+   "rsi14_anlik": 39.0639,
    "atr14": 0.3017,
    "52h_zirve_kapanis": 81.18,
-   "zirveden_pct": -5.6,
-   "haftalik_degisim_pct": -0.71,
-   "aylik_degisim_pct": -0.26,
-   "gun_ici_dusuk": 76.62,
-   "gun_ici_yuksek": 76.78
+   "zirveden_pct": -5.56,
+   "haftalik_degisim_pct": -0.88,
+   "aylik_degisim_pct": -0.21,
+   "gun_ici_dusuk": 76.645,
+   "gun_ici_yuksek": 76.725
   },
   "bitcoin": {
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-18",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 63911.9609,
-   "gunluk_degisim_pct": -1.51,
-   "rsi14_tamamlanmis": 22.9415,
+   "son_fiyat": 63522.2305,
+   "gunluk_degisim_pct": -2.11,
+   "rsi14_tamamlanmis": 22.4628,
    "rsi14_anlik": null,
-   "atr14": 2460.1962,
+   "atr14": 2506.6836,
    "52h_zirve_kapanis": 86602.9141,
-   "zirveden_pct": -26.2,
-   "haftalik_degisim_pct": -6.36,
-   "aylik_degisim_pct": -21.36,
-   "gun_ici_dusuk": 63869.0742,
+   "zirveden_pct": -26.65,
+   "haftalik_degisim_pct": -6.93,
+   "aylik_degisim_pct": -21.84,
+   "gun_ici_dusuk": 63218.25,
    "gun_ici_yuksek": 64884.8086
   },
   "usdtry_yahoo": {
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-18",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 50.4369,
-   "gunluk_degisim_pct": 0.04,
-   "rsi14_tamamlanmis": 95.8686,
+   "son_fiyat": 50.4355,
+   "gunluk_degisim_pct": 0.03,
+   "rsi14_tamamlanmis": 95.8593,
    "rsi14_anlik": null,
    "atr14": 0.0753,
-   "52h_zirve_kapanis": 50.4369,
+   "52h_zirve_kapanis": 50.4355,
    "zirveden_pct": 0.0,
    "haftalik_degisim_pct": 0.45,
-   "aylik_degisim_pct": 1.76,
+   "aylik_degisim_pct": 1.75,
    "gun_ici_dusuk": 50.3326,
    "gun_ici_yuksek": 50.4516
   }
  },
  "usdt_prim": {
-  "usdt_try": 50.375,
+  "usdt_try": 50.415,
   "kaynak": "BtcTurk",
   "usdtry": 50.4199,
   "usdtry_kaynak": "doviz.com (borsapy)",
-  "prim_pct": -0.09,
+  "prim_pct": -0.01,
   "olagan_30g_pct": -0.02,
   "gozlem_gun": 13,
   "esikler": {
@@ -10387,45 +10387,45 @@
   "durum": "NORMAL"
  },
  "gram_altin_canli": {
-  "canli": 6122.31,
-  "ons_usd": 3786.1,
+  "canli": 6081.39,
+  "ons_usd": 3760.9,
   "ons_tarih": "2026-11-18",
-  "usdtry": 50.4369,
+  "usdtry": 50.4355,
   "kalibrasyon_orani": 0.9972,
   "gozlem": 20,
   "borsapy_son": 6241.76,
   "borsapy_tarih": "2026-11-17",
   "borsapy_update_time": "2026-11-17T00:00:00",
-  "fark_pct": -1.91,
+  "fark_pct": -2.57,
   "yontem": "ons × USD/TRY / 31,1035 × kalibrasyon (son 20 gün, borsapy gram kapanışlarına göre)",
   "zirve_1y": 7549.47,
-  "zirveden_pct": -18.9,
+  "zirveden_pct": -19.45,
   "durum": "OK"
  },
  "tetikler": {
-  "korunan_taban_mesafe_pct": -11.48,
-  "tez_cizgisi_mesafe_pct": -8.67,
-  "k3_tetik_13000_alti_kapanis": false,
-  "k3_yaklasiyor_anlik": true,
+  "korunan_taban_mesafe_pct": -11.68,
+  "tez_cizgisi_mesafe_pct": -8.87,
+  "k3_tetik_13000_alti_kapanis": true,
+  "k3_yaklasiyor_anlik": false,
   "tez_cizgisi_referans_kapanis": 11842.82,
   "tez_cizgisi_haftalik_kirildi": true,
   "korunan_taban_3gun": false,
   "ma200_ustu": false,
-  "banka_minus_endeks_pct": -0.75,
+  "banka_minus_endeks_pct": -0.95,
   "kamu_alim_proxy": "YOK",
   "kamu_alim_proxy_not": "ZAYIF PROXY: banka primi faiz indirimi beklentisinden de gelebilir; haberle teyit şart",
-  "genislik_tabana_kilitli_tum": 29,
-  "genislik_yukselen_orani_tum": 10.2,
+  "genislik_tabana_kilitli_tum": 32,
+  "genislik_yukselen_orani_tum": 10.9,
   "genislik_yukselen_orani_bist30": 10.0,
-  "generaller_eksi_ordu_puan": -0.2,
+  "generaller_eksi_ordu_puan": -0.9,
   "yapay_taban_sinyali": true,
   "yapay_taban_gerekce": "çok hisse tabanda VE medyan hisse < -%1",
   "yabanci_1hafta_puan": 0.3623,
-  "nasdaq_zirveden_pct": -11.85,
+  "nasdaq_zirveden_pct": -11.37,
   "nasdaq_duzeltme_tetik": false,
-  "altin_zirveden_pct": -28.81,
+  "altin_zirveden_pct": -29.29,
   "altin_duzeltme_tetik": true,
-  "vix": 23.81,
+  "vix": 24.51,
   "brent": 92.89,
   "brent_kaynak": "borsapy",
   "brent_tarih": "2026-11-17",
@@ -10434,12 +10434,12 @@
    "borsapy_tarih": "2026-11-17",
    "yahoo_ayni_gun": 93.14,
    "yahoo_tarih": "2026-11-17",
-   "yahoo_canli": 90.11,
+   "yahoo_canli": 89.34,
    "fark_pct": -0.27
   },
   "gram_altin_zirveden_pct_borsapy": -17.32,
-  "gram_altin": 6122.31,
-  "gram_altin_zirveden_pct": -18.9,
+  "gram_altin": 6081.39,
+  "gram_altin_zirveden_pct": -19.45,
   "gram_altin_kaynak": "canlı (ons × USD/TRY, kalibre)",
   "politika_faizi": 36.0,
   "ppk_kalan_gun": 22,
@@ -10581,13 +10581,13 @@
   "dolar_makasi_puan": 15.47,
   "dolar_gecis_tetik": false,
   "k3_donus_kapisi": {
-   "ma200": 13521.7035,
+   "ma200": 13509.9593,
    "ma200_ustu_2gun": false,
    "genislik_katilim": false,
    "yabanci_net_alici": true,
    "TETIK": false
   },
-  "k3_dusus_kapisi_TETIK": false,
+  "k3_dusus_kapisi_TETIK": true,
   "reel_getiri": {
    "YLB": {
     "brut_30g_pct": 2.9,
@@ -10615,8 +10615,8 @@
   "pozisyon_takip": {},
   "reel_getiri_yontem": "NET: getiri×(1-0.175) − aylık TÜFE; ALARM <0.5, ACİL ≤0.0",
   "borsa_plani": {
-   "son_kapanis": 11661.0,
-   "son_kapanis_tarihi": "2026-11-17",
+   "son_kapanis": 11482.25,
+   "son_kapanis_tarihi": "2026-11-18",
    "haftalik_kapanis": 11842.82,
    "kurallar": [
     {
@@ -10625,7 +10625,7 @@
      "seviye": 12200,
      "islem": "TIE 87.400 adet sat (pozisyonun ~1/3'ü)",
      "durum": "BEKLİYOR",
-     "uzaklik_pct": 4.62
+     "uzaklik_pct": 6.25
     },
     {
      "ad": "azalt2",
@@ -10633,7 +10633,7 @@
      "seviye": 12600,
      "islem": "TIE 87.400 adet daha sat (~1/3)",
      "durum": "BEKLİYOR",
-     "uzaklik_pct": 8.05
+     "uzaklik_pct": 9.73
     },
     {
      "ad": "plan1",
@@ -10641,7 +10641,7 @@
      "seviye": 14000,
      "islem": "kalan pozisyonun yarısını sat",
      "durum": "BEKLİYOR",
-     "uzaklik_pct": 20.06
+     "uzaklik_pct": 21.93
     },
     {
      "ad": "plan2",
@@ -10649,7 +10649,7 @@
      "seviye": 14450,
      "islem": "kalan pozisyonun tamamını sat",
      "durum": "BEKLİYOR",
-     "uzaklik_pct": 23.92
+     "uzaklik_pct": 25.85
     },
     {
      "ad": "koruma",
@@ -10674,20 +10674,20 @@
     },
     "durum": "YOK",
     "panik_aday_gun": {
-     "t": "2026-11-16",
-     "k": 11841.81,
-     "degisim_pct": -0.01,
-     "hacim_orani": 0.95,
-     "kismi": false
-    },
-    "donus_gun": {
      "t": "2026-11-17",
      "k": 11661.0,
      "degisim_pct": -1.53,
      "hacim_orani": 0.83,
      "kismi": false
     },
-    "panik_gunu_taban": 1.0
+    "donus_gun": {
+     "t": "2026-11-18",
+     "k": 11482.25,
+     "degisim_pct": -1.53,
+     "hacim_orani": 0.75,
+     "kismi": false
+    },
+    "panik_gunu_taban": 3.0
    }
   },
   "piyasa_takvimi": {
@@ -10722,50 +10722,50 @@
   },
   "kuresel_akis": {
    "turkiye_vs_gelismekte": {
-    "tur_5g_pct": -0.35,
-    "eem_5g_pct": -3.8,
-    "fark_5g_puan": 3.45,
-    "tur_20g_pct": -0.47,
-    "eem_20g_pct": -7.96,
-    "fark_20g_puan": 7.49,
+    "tur_5g_pct": -2.34,
+    "eem_5g_pct": -6.38,
+    "fark_5g_puan": 4.04,
+    "tur_20g_pct": -4.46,
+    "eem_20g_pct": -8.28,
+    "fark_20g_puan": 3.82,
     "durum": "NORMAL",
-    "seans_ici": false,
+    "seans_ici": true,
     "okuma": "TUR: Türkiye hisseleri (dolar, ABD'de işlem görür); EEM: tüm gelişmekte olan ülkeler"
    },
    "kuresel_kredi": {
-    "hyg_20g_pct": -0.26,
-    "emb_20g_pct": -0.41,
-    "hyg_zirveden_pct": -5.6,
-    "emb_zirveden_pct": -7.18,
+    "hyg_20g_pct": -0.21,
+    "emb_20g_pct": -0.51,
+    "hyg_zirveden_pct": -5.56,
+    "emb_zirveden_pct": -7.15,
     "durum": "NORMAL"
    },
    "bitcoin": {
-    "son_usd": 63911.9609,
-    "gunluk_pct": -1.51,
-    "haftalik_pct": -6.36,
-    "zirveden_pct": -26.2,
-    "son_cumadan_beri_pct": -6.36,
+    "son_usd": 63522.2305,
+    "gunluk_pct": -2.11,
+    "haftalik_pct": -6.93,
+    "zirveden_pct": -26.65,
+    "son_cumadan_beri_pct": -6.93,
     "son_cuma": "2026-11-13"
    }
   },
   "bist_dolar": {
-   "son": 228.15,
+   "son": 227.66,
    "tarih": "2026-11-18",
-   "usdtry": 50.4369,
+   "usdtry": 50.4355,
    "52h_zirve": 333.69,
    "52h_dip": 215.44,
-   "zirveden_pct": -31.63,
-   "dipten_pct": 5.9,
+   "zirveden_pct": -31.77,
+   "dipten_pct": 5.67,
    "yuzdelik_1y": 3.6,
-   "20g_degisim_pct": -4.14,
+   "20g_degisim_pct": -4.35,
    "durum": "ARADA"
   },
   "usdt_prim": {
-   "usdt_try": 50.375,
+   "usdt_try": 50.415,
    "kaynak": "BtcTurk",
    "usdtry": 50.4199,
    "usdtry_kaynak": "doviz.com (borsapy)",
-   "prim_pct": -0.09,
+   "prim_pct": -0.01,
    "olagan_30g_pct": -0.02,
    "gozlem_gun": 13,
    "esikler": {
@@ -10807,8 +10807,8 @@
   },
   "kalibrasyon": {
    "bist_oynaklik": {
-    "gerceklesen_20g": 30.3,
-    "gerceklesen_60g": 28.4,
+    "gerceklesen_20g": 28.6,
+    "gerceklesen_60g": 28.5,
     "simulasyon_varsayimi": 27.0,
     "durum": "UYUMLU"
    },
@@ -10871,7 +10871,7 @@
     "altin": {
      "sinyaller": [],
      "bekle": {
-      "gram_zirveden_pct": -18.9,
+      "gram_zirveden_pct": -19.45,
       "gram_kaynak": "canlı (ons × USD/TRY, kalibre)",
       "fed_gevseme": false,
       "tl_stres": 0,
@@ -10957,8 +10957,8 @@
     "yurtdisi": {
      "sinyaller": [],
      "bekle": {
-      "nasdaq_zirveden": -11.85,
-      "sp500_zirveden": -6.12,
+      "nasdaq_zirveden": -11.37,
+      "sp500_zirveden": -6.16,
       "fed_gevseme": false
      },
      "durum": "BEKLE"
@@ -10976,7 +10976,7 @@
      "durum": "YOK"
     },
     "fed_gevseme_beklentisi": {
-     "abd10y_1a_pct": -0.31,
+     "abd10y_1a_pct": -0.55,
      "durum": false
     }
    },
@@ -11454,7 +11454,7 @@
    }
   }
  },
- "arsiv": "saat değil",
+ "arsiv": "42 gün kayıtlı",
  "fonoloji_cagri": {
   "cagri": 0,
   "limit_429": 0,
@@ -11485,7 +11485,7 @@
    "son_deneme_sayisi": 20,
    "basari_pct": 100,
    "ardisik_basarisiz": 0,
-   "son_basari": "2026-11-18 17:17",
+   "son_basari": "2026-11-18 18:17",
    "basarisiz_saatler": {},
    "bu_calisma": [
     1,
@@ -11497,7 +11497,7 @@
    "son_deneme_sayisi": 20,
    "basari_pct": 100,
    "ardisik_basarisiz": 0,
-   "son_basari": "2026-11-18 17:17",
+   "son_basari": "2026-11-18 18:17",
    "basarisiz_saatler": {},
    "bu_calisma": [
     13,
@@ -11509,7 +11509,7 @@
    "son_deneme_sayisi": 20,
    "basari_pct": 100,
    "ardisik_basarisiz": 0,
-   "son_basari": "2026-11-18 17:17",
+   "son_basari": "2026-11-18 18:17",
    "basarisiz_saatler": {},
    "bu_calisma": [
     9,
@@ -11530,7 +11530,7 @@
    "son_deneme_sayisi": 20,
    "basari_pct": 100,
    "ardisik_basarisiz": 0,
-   "son_basari": "2026-11-18 17:17",
+   "son_basari": "2026-11-18 18:17",
    "basarisiz_saatler": {},
    "bu_calisma": [
     8,
@@ -11542,7 +11542,7 @@
    "son_deneme_sayisi": 20,
    "basari_pct": 100,
    "ardisik_basarisiz": 0,
-   "son_basari": "2026-11-18 17:17",
+   "son_basari": "2026-11-18 18:17",
    "basarisiz_saatler": {},
    "bu_calisma": [
     2,
@@ -11565,7 +11565,7 @@
    "son_deneme_sayisi": 20,
    "basari_pct": 100,
    "ardisik_basarisiz": 0,
-   "son_basari": "2026-11-18 17:17",
+   "son_basari": "2026-11-18 18:17",
    "basarisiz_saatler": {},
    "bu_calisma": [
     2,
@@ -11577,7 +11577,7 @@
    "son_deneme_sayisi": 20,
    "basari_pct": 100,
    "ardisik_basarisiz": 0,
-   "son_basari": "2026-11-18 17:17",
+   "son_basari": "2026-11-18 18:17",
    "basarisiz_saatler": {},
    "bu_calisma": [
     1,
@@ -11585,22 +11585,22 @@
    ]
   }
  },
- "calisma_suresi_dk": 0.3,
+ "calisma_suresi_dk": 0.2,
  "saglik": {
   "ozet": "TAMAM",
   "issue_tetikleyen": [],
-  "sure_dk": 0.3,
+  "sure_dk": 0.2,
   "en_yavas_moduller_sn": {
-   "enflasyon": 3.9,
-   "genislik_tum_piyasa": 2.4,
-   "evds_aofm": 1.4,
-   "tahvil": 1.0,
-   "borsapy_endeks_XU030": 0.6,
-   "borsapy_endeks_XBANK": 0.6,
-   "fx_USD": 0.6,
-   "takvim_abd": 0.6,
-   "borsapy_endeks_XU100": 0.5,
-   "borsapy_endeks_XUSIN": 0.5
+   "enflasyon": 3.7,
+   "genislik_tum_piyasa": 1.8,
+   "evds_aofm": 1.2,
+   "tahvil": 0.6,
+   "borsapy_endeks_XHOLD": 0.5,
+   "borsapy_endeks_XUTEK": 0.5,
+   "borsapy_endeks_XBANK": 0.4,
+   "fx_USD": 0.4,
+   "borsapy_endeks_XU030": 0.3,
+   "yahoo_brent_yahoo": 0.3
   },
   "hatali_moduller": {
    "tahvil": "NOT: borsapy (doviz.com) okunamadı (HATA: DataNotAvailableError: Bond table not found on page) → yedek kaynak: doviz.com (kendi okuma)",
