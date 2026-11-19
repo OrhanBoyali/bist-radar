@@ -22,40 +22,40 @@
   }
  },
  "surum": "v3",
- "uretim_zamani_tr": "2026-11-19 18:17:45",
+ "uretim_zamani_tr": "2026-11-19 18:52:48",
  "not": "Kişisel veri yok. BIST verisi ~15 dk gecikmeli. Günlük göstergeler tamamlanmış barlarla.",
  "bist100": {
   "kaynak": "borsapy",
   "son_bar_tarihi": "2026-11-19",
   "son_bar_kismi_mi": false,
-  "son_fiyat": 11407.55,
-  "gunluk_degisim_pct": -0.61,
-  "rsi14_tamamlanmis": 41.9642,
+  "son_fiyat": 11400.09,
+  "gunluk_degisim_pct": -0.67,
+  "rsi14_tamamlanmis": 41.8099,
   "rsi14_anlik": null,
   "atr14": 267.0063,
   "52h_zirve_kapanis": 15133.54,
-  "zirveden_pct": -24.62,
-  "haftalik_degisim_pct": -3.42,
-  "aylik_degisim_pct": -3.31,
+  "zirveden_pct": -24.67,
+  "haftalik_degisim_pct": -3.48,
+  "aylik_degisim_pct": -3.37,
   "gun_ici_dusuk": 11384.89,
   "gun_ici_yuksek": 11573.8,
   "hareketli_ortalamalar": {
-   "sma5": 11646.118,
-   "ema5": 11564.002,
-   "sma10": 11656.533,
-   "ema10": 11574.8534,
-   "sma20": 11396.365,
-   "ema20": 11611.3919,
-   "sma50": 12165.9252,
-   "ema50": 12122.754,
-   "sma100": 13137.4802,
-   "ema100": 12699.3511,
-   "sma200": 13497.7814,
-   "ema200": 12841.8123
+   "sma5": 11644.626,
+   "ema5": 11561.5154,
+   "sma10": 11655.787,
+   "ema10": 11573.497,
+   "sma20": 11395.992,
+   "ema20": 11610.6815,
+   "sma50": 12165.776,
+   "ema50": 12122.4615,
+   "sma100": 13137.4056,
+   "ema100": 12699.2033,
+   "sma200": 13497.7441,
+   "ema200": 12841.7381
   },
   "haftalik_kapanis": {
    "son_tamamlanan_hafta": 11842.82,
-   "bu_hafta_son": 11407.55,
+   "bu_hafta_son": 11400.09,
    "son_biten_hafta": {
     "hafta_sonu": "2026-11-13",
     "son_islem_gunu": "2026-11-13",
@@ -63,7 +63,7 @@
     "onceki_k": 11482.6
    }
   },
-  "hacim_orani_20g": 0.7367,
+  "hacim_orani_20g": 0.7584,
   "son_5_kapanis": [
    {
     "t": "2026-11-13",
@@ -83,7 +83,7 @@
    },
    {
     "t": "2026-11-19",
-    "k": 11407.55
+    "k": 11400.09
    }
   ],
   "oynaklik_yillik_pct": {
@@ -121,9 +121,9 @@
    },
    {
     "t": "2026-11-19",
-    "k": 11407.55,
-    "degisim_pct": -0.61,
-    "hacim_orani": 0.74,
+    "k": 11400.09,
+    "degisim_pct": -0.67,
+    "hacim_orani": 0.76,
     "kismi": false
    }
   ],
@@ -193,9 +193,9 @@
    },
    {
     "t": "2026-11-19",
-    "k": 11407.55,
-    "degisim_pct": -0.61,
-    "hacim_orani": 0.74,
+    "k": 11400.09,
+    "degisim_pct": -0.67,
+    "hacim_orani": 0.76,
     "kismi": false
    }
   ]
@@ -204,34 +204,34 @@
   "kaynak": "borsapy",
   "son_bar_tarihi": "2026-11-19",
   "son_bar_kismi_mi": false,
-  "son_fiyat": 14308.77,
-  "gunluk_degisim_pct": -0.72,
-  "rsi14_tamamlanmis": 44.1783,
+  "son_fiyat": 14300.01,
+  "gunluk_degisim_pct": -0.78,
+  "rsi14_tamamlanmis": 44.0275,
   "rsi14_anlik": null,
   "atr14": 346.4615,
   "52h_zirve_kapanis": 17272.28,
-  "zirveden_pct": -17.16,
-  "haftalik_degisim_pct": -3.42,
-  "aylik_degisim_pct": -2.51,
+  "zirveden_pct": -17.21,
+  "haftalik_degisim_pct": -3.48,
+  "aylik_degisim_pct": -2.57,
   "gun_ici_dusuk": 14273.51,
   "gun_ici_yuksek": 14535.54,
   "hareketli_ortalamalar": {
-   "sma5": 14604.55,
-   "ema5": 14501.569,
-   "sma10": 14599.108,
-   "ema10": 14499.9471,
-   "sma20": 14251.155,
-   "ema20": 14506.35,
-   "sma50": 15052.3752,
-   "ema50": 14908.8977,
-   "sma100": 15628.4677,
-   "ema100": 15269.2666,
-   "sma200": 15681.0438,
-   "ema200": 15075.0083
+   "sma5": 14602.798,
+   "ema5": 14498.649,
+   "sma10": 14598.232,
+   "ema10": 14498.3544,
+   "sma20": 14250.717,
+   "ema20": 14505.5157,
+   "sma50": 15052.2,
+   "ema50": 14908.5541,
+   "sma100": 15628.3801,
+   "ema100": 15269.0932,
+   "sma200": 15681.0,
+   "ema200": 15074.9212
   },
   "haftalik_kapanis": {
    "son_tamamlanan_hafta": 14844.74,
-   "bu_hafta_son": 14308.77,
+   "bu_hafta_son": 14300.01,
    "son_biten_hafta": {
     "hafta_sonu": "2026-11-13",
     "son_islem_gunu": "2026-11-13",
@@ -239,7 +239,7 @@
     "onceki_k": 14290.21
    }
   },
-  "hacim_orani_20g": 0.717,
+  "hacim_orani_20g": 0.7396,
   "son_5_kapanis": [
    {
     "t": "2026-11-13",
@@ -259,7 +259,7 @@
    },
    {
     "t": "2026-11-19",
-    "k": 14308.77
+    "k": 14300.01
    }
   ],
   "oynaklik_yillik_pct": {
@@ -297,9 +297,9 @@
    },
    {
     "t": "2026-11-19",
-    "k": 14308.77,
-    "degisim_pct": -0.72,
-    "hacim_orani": 0.72,
+    "k": 14300.01,
+    "degisim_pct": -0.78,
+    "hacim_orani": 0.74,
     "kismi": false
    }
   ],
@@ -369,9 +369,9 @@
    },
    {
     "t": "2026-11-19",
-    "k": 14308.77,
-    "degisim_pct": -0.72,
-    "hacim_orani": 0.72,
+    "k": 14300.01,
+    "degisim_pct": -0.78,
+    "hacim_orani": 0.74,
     "kismi": false
    }
   ]
@@ -381,14 +381,14 @@
    "kaynak": "borsapy",
    "son_bar_tarihi": "2026-11-19",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 16094.47,
+   "son_fiyat": 16094.62,
    "gunluk_degisim_pct": 0.39,
-   "rsi14_tamamlanmis": 49.1103,
+   "rsi14_tamamlanmis": 49.1125,
    "rsi14_anlik": null,
    "atr14": 463.0103,
    "52h_zirve_kapanis": 20641.12,
    "zirveden_pct": -22.03,
-   "haftalik_degisim_pct": -4.54,
+   "haftalik_degisim_pct": -4.53,
    "aylik_degisim_pct": -0.34,
    "gun_ici_dusuk": 16054.03,
    "gun_ici_yuksek": 16274.82
@@ -397,15 +397,15 @@
    "kaynak": "borsapy",
    "son_bar_tarihi": "2026-11-19",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 13543.01,
-   "gunluk_degisim_pct": -0.64,
-   "rsi14_tamamlanmis": 36.0235,
+   "son_fiyat": 13525.46,
+   "gunluk_degisim_pct": -0.77,
+   "rsi14_tamamlanmis": 35.8084,
    "rsi14_anlik": null,
    "atr14": 352.8718,
    "52h_zirve_kapanis": 20399.9,
-   "zirveden_pct": -33.61,
-   "haftalik_degisim_pct": -3.99,
-   "aylik_degisim_pct": -7.51,
+   "zirveden_pct": -33.7,
+   "haftalik_degisim_pct": -4.11,
+   "aylik_degisim_pct": -7.63,
    "gun_ici_dusuk": 13517.77,
    "gun_ici_yuksek": 13721.24
   },
@@ -413,15 +413,15 @@
    "kaynak": "borsapy",
    "son_bar_tarihi": "2026-11-19",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 9233.89,
-   "gunluk_degisim_pct": -0.62,
-   "rsi14_tamamlanmis": 33.2483,
+   "son_fiyat": 9230.08,
+   "gunluk_degisim_pct": -0.66,
+   "rsi14_tamamlanmis": 33.1808,
    "rsi14_anlik": null,
    "atr14": 239.174,
    "52h_zirve_kapanis": 16025.99,
-   "zirveden_pct": -42.38,
-   "haftalik_degisim_pct": -3.89,
-   "aylik_degisim_pct": -7.41,
+   "zirveden_pct": -42.41,
+   "haftalik_degisim_pct": -3.93,
+   "aylik_degisim_pct": -7.45,
    "gun_ici_dusuk": 9228.5,
    "gun_ici_yuksek": 9367.21
   },
@@ -429,15 +429,15 @@
    "kaynak": "borsapy",
    "son_bar_tarihi": "2026-11-19",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 35297.8,
-   "gunluk_degisim_pct": -1.76,
-   "rsi14_tamamlanmis": 42.3775,
+   "son_fiyat": 35270.7,
+   "gunluk_degisim_pct": -1.83,
+   "rsi14_tamamlanmis": 42.26,
    "rsi14_anlik": null,
    "atr14": 1326.9611,
    "52h_zirve_kapanis": 54566.9,
-   "zirveden_pct": -35.31,
-   "haftalik_degisim_pct": -2.57,
-   "aylik_degisim_pct": -2.96,
+   "zirveden_pct": -35.36,
+   "haftalik_degisim_pct": -2.65,
+   "aylik_degisim_pct": -3.04,
    "gun_ici_dusuk": 35073.19,
    "gun_ici_yuksek": 36230.24
   },
@@ -445,31 +445,31 @@
    "kaynak": "borsapy",
    "son_bar_tarihi": "2026-11-19",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 13316.56,
-   "gunluk_degisim_pct": -0.2,
-   "rsi14_tamamlanmis": 38.3,
+   "son_fiyat": 13309.36,
+   "gunluk_degisim_pct": -0.25,
+   "rsi14_tamamlanmis": 38.1886,
    "rsi14_anlik": null,
    "atr14": 322.0589,
    "52h_zirve_kapanis": 21288.18,
-   "zirveden_pct": -37.45,
-   "haftalik_degisim_pct": -3.54,
-   "aylik_degisim_pct": -4.34,
+   "zirveden_pct": -37.48,
+   "haftalik_degisim_pct": -3.59,
+   "aylik_degisim_pct": -4.39,
    "gun_ici_dusuk": 13297.44,
    "gun_ici_yuksek": 13484.02
   }
  },
- "agir_slot": "2026-11-19-sabah",
- "agir_calisma": false,
+ "agir_slot": "2026-11-19-aksam",
+ "agir_calisma": true,
  "agir_zorla": false,
  "genislik": {
   "kaynak": "borsapy scan (XUTUM)",
   "hisse_sayisi": 576,
-  "yukselen": 221,
-  "dusen": 325,
-  "tabana_kilitli": 11,
-  "tavana_kilitli": 26,
-  "yukselen_orani_pct": 38.4,
-  "medyan_degisim_pct": -0.37
+  "yukselen": 222,
+  "dusen": 327,
+  "tabana_kilitli": 12,
+  "tavana_kilitli": 25,
+  "yukselen_orani_pct": 38.5,
+  "medyan_degisim_pct": -0.43
  },
  "genislik_bist30": {
   "kaynak": "borsapy scan (XU030)",
@@ -479,8 +479,9 @@
   "tabana_kilitli": 0,
   "tavana_kilitli": 0,
   "yukselen_orani_pct": 43.3,
-  "medyan_degisim_pct": -0.24
+  "medyan_degisim_pct": -0.22
  },
+ "yabanci_kaynak": "İş Yatırım tarama (toplu)",
  "yabanci": {
   "bugun_ort_yabanci_orani": 33.3783,
   "gecmis_gun_sayisi": 40,
@@ -499,353 +500,8 @@
    "TRALT": -1.79,
    "TOASO": -1.51,
    "KCHOL": -1.02
-  },
-  "not_onbellek": "yabancı oranı günde 2 kez güncellenir"
- },
- "fonlar": {
-  "YLB": {
-   "kaynak": "fonoloji",
-   "fiyat": 1.9848,
-   "fiyat_tarihi": "2026-11-19",
-   "gunluk_getiri_pct": 0.1,
-   "getiri_30g_pct": 2.9,
-   "getiri_1y_pct": 44.8754,
-   "akis": {
-    "buyukluk_son": 113987672456.09,
-    "buyukluk_30g_degisim_pct": 13.97,
-    "yatirimci_son": 370830,
-    "yatirimci_30g_degisim_pct": 2.17
-   },
-   "bilgi": {
-    "name": "YAPI KREDİ PORTFÖY PARA PİYASASI FONU",
-    "category": "Para Piyasası Şemsiye Fonu",
-    "risk_value": 1,
-    "buy_valor": 0,
-    "sell_valor": 0,
-    "fund_size": 113987672456.09,
-    "investor_count": 370830,
-    "trading_status": "TEFAS'ta İşlem Görmüyor",
-    "management_company": "Yapı Kredi Portföy Yönetimi A.Ş."
-   },
-   "portfoy": {
-    "code": "YLB",
-    "date": "2026-11-19",
-    "stock": 0,
-    "government_bond": 15.81,
-    "treasury_bill": 0,
-    "corporate_bond": 1.8,
-    "eurobond": 0,
-    "gold": 0,
-    "cash": 82.39,
-    "other": 0,
-    "fund": 0
-   }
-  },
-  "IJV": {
-   "kaynak": "fonoloji",
-   "fiyat": 6.1309,
-   "fiyat_tarihi": "2026-11-19",
-   "gunluk_getiri_pct": 0.1,
-   "getiri_30g_pct": 2.41,
-   "getiri_1y_pct": 45.3306,
-   "akis": {
-    "buyukluk_son": 2545993415.03,
-    "buyukluk_30g_degisim_pct": 1.81,
-    "yatirimci_son": 2195,
-    "yatirimci_30g_degisim_pct": -5.14
-   },
-   "bilgi": {
-    "name": "İSTANBUL PORTFÖY BİRİNCİ PARA PİYASASI (TL) FONU",
-    "category": "Para Piyasası Şemsiye Fonu",
-    "risk_value": 1,
-    "buy_valor": 0,
-    "sell_valor": 0,
-    "fund_size": 2545993415.03,
-    "investor_count": 2195,
-    "trading_status": "AKTİF",
-    "management_company": "İstanbul Portföy Yönetimi A.Ş."
-   },
-   "portfoy": {
-    "code": "IJV",
-    "date": "2026-11-18",
-    "stock": 0,
-    "government_bond": 0,
-    "treasury_bill": 10.82,
-    "corporate_bond": 14.25,
-    "eurobond": 0,
-    "gold": 0,
-    "cash": 74.93,
-    "other": 0,
-    "fund": 0
-   }
-  },
-  "ZBJ": {
-   "kaynak": "fonoloji",
-   "fiyat": 5.6629,
-   "fiyat_tarihi": "2026-11-19",
-   "gunluk_getiri_pct": 0.1,
-   "getiri_30g_pct": 2.99,
-   "getiri_1y_pct": 46.3214,
-   "akis": {
-    "buyukluk_son": 61772960577.5,
-    "buyukluk_30g_degisim_pct": 28.29,
-    "yatirimci_son": 37329,
-    "yatirimci_30g_degisim_pct": 27.48
-   },
-   "bilgi": {
-    "name": "ZİRAAT PORTFÖY BAŞAK PARA PİYASASI (TL) FONU",
-    "category": "Para Piyasası Şemsiye Fonu",
-    "risk_value": 1,
-    "buy_valor": 0,
-    "sell_valor": 0,
-    "fund_size": 61772960577.5,
-    "investor_count": 37329,
-    "trading_status": "AKTİF",
-    "management_company": "Ziraat Portföy Yönetimi A.Ş."
-   },
-   "portfoy": {
-    "code": "ZBJ",
-    "date": "2026-11-19",
-    "stock": 0,
-    "government_bond": 15.73,
-    "treasury_bill": 0,
-    "corporate_bond": 3.72,
-    "eurobond": 0,
-    "gold": 0,
-    "cash": 80.56,
-    "other": 0,
-    "fund": 0
-   }
-  },
-  "BGP": {
-   "kaynak": "fonoloji",
-   "fiyat": 7.146,
-   "fiyat_tarihi": "2026-11-19",
-   "gunluk_getiri_pct": 0.11,
-   "getiri_30g_pct": 2.98,
-   "getiri_1y_pct": 45.8848,
-   "akis": {
-    "buyukluk_son": 74778751552.56,
-    "buyukluk_30g_degisim_pct": 30.17,
-    "yatirimci_son": 31649,
-    "yatirimci_30g_degisim_pct": 7.74
-   },
-   "bilgi": {
-    "name": "AK PORTFÖY ÜÇÜNCÜ PARA PİYASASI (TL) FONU",
-    "category": "Para Piyasası Şemsiye Fonu",
-    "risk_value": 1,
-    "buy_valor": 0,
-    "sell_valor": 0,
-    "fund_size": 74778751552.56,
-    "investor_count": 31649,
-    "trading_status": "AKTİF",
-    "management_company": "Ak Portföy Yönetimi A.Ş."
-   },
-   "portfoy": {
-    "code": "BGP",
-    "date": "2026-11-19",
-    "stock": 0,
-    "government_bond": 11.55,
-    "treasury_bill": 0,
-    "corporate_bond": 0.25,
-    "eurobond": 0,
-    "gold": 0,
-    "cash": 88.2,
-    "other": 0,
-    "fund": 0
-   }
-  },
-  "YOT": {
-   "kaynak": "fonoloji",
-   "fiyat": 43.0441,
-   "fiyat_tarihi": "2026-11-19",
-   "gunluk_getiri_pct": 0.11,
-   "getiri_30g_pct": 1.97,
-   "getiri_1y_pct": 35.7254,
-   "akis": {
-    "buyukluk_son": 1654460021.13,
-    "buyukluk_30g_degisim_pct": 1.09,
-    "yatirimci_son": 9521,
-    "yatirimci_30g_degisim_pct": -1.06
-   },
-   "bilgi": {
-    "name": "YAPI KREDİ PORTFÖY BORÇLANMA ARAÇLARI FONU",
-    "category": "Borçlanma Araçları Şemsiye Fonu",
-    "risk_value": 4,
-    "buy_valor": 1,
-    "sell_valor": 1,
-    "fund_size": 1654460021.13,
-    "investor_count": 9521,
-    "trading_status": "AKTİF",
-    "management_company": "Yapı Kredi Portföy Yönetimi A.Ş."
-   },
-   "portfoy": {
-    "code": "YOT",
-    "date": "2026-11-19",
-    "stock": 0,
-    "government_bond": 89.17,
-    "treasury_bill": 0,
-    "corporate_bond": 0.47,
-    "eurobond": 0.34,
-    "gold": 0,
-    "cash": 1.54,
-    "other": 0,
-    "fund": 8.48
-   }
-  },
-  "TIE": {
-   "kaynak": "fonoloji",
-   "fiyat": 0.6468,
-   "fiyat_tarihi": "2026-11-19",
-   "gunluk_getiri_pct": -1.32,
-   "getiri_30g_pct": 0.63,
-   "getiri_1y_pct": 21.4994,
-   "akis": {
-    "buyukluk_son": 1690068110.85,
-    "buyukluk_30g_degisim_pct": 3.12,
-    "yatirimci_son": 18717,
-    "yatirimci_30g_degisim_pct": -2.6
-   },
-   "bilgi": {
-    "name": "İŞ PORTFÖY BIST 30 ENDEKSİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)",
-    "category": "Hisse Senedi Şemsiye Fonu",
-    "risk_value": 6,
-    "buy_valor": 1,
-    "sell_valor": 2,
-    "fund_size": 1690068110.85,
-    "investor_count": 18717,
-    "trading_status": "AKTİF",
-    "management_company": "İş Portföy Yönetimi A.Ş."
-   },
-   "portfoy": {
-    "code": "TIE",
-    "date": "2026-11-18",
-    "stock": 95.98,
-    "government_bond": 0,
-    "treasury_bill": 0,
-    "corporate_bond": 0,
-    "eurobond": 0,
-    "gold": 0,
-    "cash": 3.39,
-    "other": 0,
-    "fund": 0.63
-   }
-  },
-  "AKU": {
-   "kaynak": "fonoloji",
-   "fiyat": 0.8672,
-   "fiyat_tarihi": "2026-11-19",
-   "gunluk_getiri_pct": -0.97,
-   "getiri_30g_pct": 1.45,
-   "getiri_1y_pct": 29.651,
-   "akis": {
-    "buyukluk_son": 2258154995.71,
-    "buyukluk_30g_degisim_pct": 3.38,
-    "yatirimci_son": 17752,
-    "yatirimci_30g_degisim_pct": -0.4
-   },
-   "bilgi": {
-    "name": "AK PORTFÖY BIST 30 ENDEKSİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)",
-    "category": "Hisse Senedi Şemsiye Fonu",
-    "risk_value": 6,
-    "buy_valor": 1,
-    "sell_valor": 2,
-    "fund_size": 2258154995.71,
-    "investor_count": 17752,
-    "trading_status": "AKTİF",
-    "management_company": "Ak Portföy Yönetimi A.Ş."
-   },
-   "portfoy": {
-    "code": "AKU",
-    "date": "2026-11-19",
-    "stock": 85.52,
-    "government_bond": 0,
-    "treasury_bill": 0,
-    "corporate_bond": 0,
-    "eurobond": 0,
-    "gold": 0,
-    "cash": 11.31,
-    "other": 0,
-    "fund": 3.17
-   }
-  },
-  "DLY": {
-   "kaynak": "fonoloji",
-   "fiyat": 6.6266,
-   "fiyat_tarihi": "2026-11-19",
-   "gunluk_getiri_pct": 0.1,
-   "getiri_30g_pct": 2.92,
-   "getiri_1y_pct": 44.8623,
-   "akis": {
-    "buyukluk_son": 71071404360.54,
-    "buyukluk_30g_degisim_pct": 23.18,
-    "yatirimci_son": 302572,
-    "yatirimci_30g_degisim_pct": 0.5
-   },
-   "bilgi": {
-    "name": "DENİZ PORTFÖY PARA PİYASASI (TL) FONU",
-    "category": "Para Piyasası Şemsiye Fonu",
-    "risk_value": 1,
-    "buy_valor": 0,
-    "sell_valor": 0,
-    "fund_size": 71071404360.54,
-    "investor_count": 302572,
-    "trading_status": "AKTİF",
-    "management_company": "Deniz Portföy Yönetimi A.Ş."
-   },
-   "portfoy": {
-    "code": "DLY",
-    "date": "2026-11-19",
-    "stock": 0,
-    "government_bond": 19.49,
-    "treasury_bill": 0.01,
-    "corporate_bond": 2.41,
-    "eurobond": 0,
-    "gold": 0,
-    "cash": 78.09,
-    "other": 0,
-    "fund": 0
-   }
   }
  },
- "fonlar_zamani": "2026-11-19 08:17 (önbellek — TEFAS günde 1 fiyat)",
- "fon_akis": {
-  "referans_tarih": "2026-10-20",
-  "gun": 30,
-  "YLB": {
-   "buyukluk_degisim_pct": 13.97,
-   "yatirimci_degisim_pct": 2.17
-  },
-  "IJV": {
-   "buyukluk_degisim_pct": 1.81,
-   "yatirimci_degisim_pct": -5.14
-  },
-  "ZBJ": {
-   "buyukluk_degisim_pct": 28.29,
-   "yatirimci_degisim_pct": 27.48
-  },
-  "BGP": {
-   "buyukluk_degisim_pct": 30.17,
-   "yatirimci_degisim_pct": 7.74
-  },
-  "YOT": {
-   "buyukluk_degisim_pct": 1.09,
-   "yatirimci_degisim_pct": -1.06
-  },
-  "TIE": {
-   "buyukluk_degisim_pct": 3.12,
-   "yatirimci_degisim_pct": -2.6
-  },
-  "AKU": {
-   "buyukluk_degisim_pct": 3.38,
-   "yatirimci_degisim_pct": -0.4
-  },
-  "DLY": {
-   "buyukluk_degisim_pct": 23.18,
-   "yatirimci_degisim_pct": 0.5
-  }
- },
- "pozisyon_takip": {},
  "fonlar_borsapy": {
   "YLB": {
    "fiyat": 1.9848,
@@ -863,7 +519,7 @@
     "category": "Para Piyasası Fonu",
     "risk_value": 1,
     "daily_return": 0.0972,
-    "category_rank": 40,
+    "category_rank": 43,
     "buy_valor": null,
     "sell_valor": null
    },
@@ -890,7 +546,7 @@
     "category": "Para Piyasası Fonu",
     "risk_value": 1,
     "daily_return": 0.0951,
-    "category_rank": 20,
+    "category_rank": 22,
     "buy_valor": 0,
     "sell_valor": 0
    },
@@ -971,7 +627,7 @@
     "category": "Borçlanma Araçları Fonu",
     "risk_value": 4,
     "daily_return": 0.1144,
-    "category_rank": 45,
+    "category_rank": 49,
     "buy_valor": 1,
     "sell_valor": 1
    },
@@ -998,7 +654,7 @@
     "category": "Hisse Senedi Fonu",
     "risk_value": 6,
     "daily_return": -1.3166,
-    "category_rank": 47,
+    "category_rank": 52,
     "buy_valor": 1,
     "sell_valor": 2
    },
@@ -1025,7 +681,7 @@
     "category": "Hisse Senedi Fonu",
     "risk_value": 6,
     "daily_return": -0.9746,
-    "category_rank": 12,
+    "category_rank": 15,
     "buy_valor": 1,
     "sell_valor": 2
    },
@@ -1052,7 +708,7 @@
     "category": "Para Piyasası Fonu",
     "risk_value": 1,
     "daily_return": 0.0982,
-    "category_rank": 43,
+    "category_rank": 44,
     "buy_valor": 0,
     "sell_valor": 0
    },
@@ -1129,14 +785,14 @@
    },
    "portfoy": {
     "code": "IJV",
-    "date": "2026-11-18",
+    "date": "2026-11-19",
     "stock": 0,
     "government_bond": 0,
-    "treasury_bill": 10.82,
-    "corporate_bond": 14.25,
+    "treasury_bill": 10.81,
+    "corporate_bond": 14.23,
     "eurobond": 0,
     "gold": 0,
-    "cash": 74.93,
+    "cash": 74.96,
     "other": 0,
     "fund": 0
    }
@@ -1281,16 +937,322 @@
    },
    "portfoy": {
     "code": "TIE",
-    "date": "2026-11-18",
-    "stock": 95.98,
+    "date": "2026-11-19",
+    "stock": 96.03,
     "government_bond": 0,
     "treasury_bill": 0,
     "corporate_bond": 0,
     "eurobond": 0,
     "gold": 0,
-    "cash": 3.39,
+    "cash": 3.33,
     "other": 0,
-    "fund": 0.63
+    "fund": 0.64
+   }
+  },
+  "AKU": {
+   "kaynak": "fonoloji",
+   "fiyat": 0.8672,
+   "fiyat_tarihi": "2026-11-19",
+   "gunluk_getiri_pct": -0.97,
+   "getiri_30g_pct": 1.45,
+   "getiri_1y_pct": 29.651,
+   "akis": {
+    "buyukluk_son": 2258154995.71,
+    "buyukluk_30g_degisim_pct": 3.38,
+    "yatirimci_son": 17752,
+    "yatirimci_30g_degisim_pct": -0.4
+   },
+   "bilgi": {
+    "name": "AK PORTFÖY BIST 30 ENDEKSİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)",
+    "category": "Hisse Senedi Şemsiye Fonu",
+    "risk_value": 6,
+    "buy_valor": 1,
+    "sell_valor": 2,
+    "fund_size": 2258154995.71,
+    "investor_count": 17752,
+    "trading_status": "AKTİF",
+    "management_company": "Ak Portföy Yönetimi A.Ş."
+   },
+   "portfoy": {
+    "code": "AKU",
+    "date": "2026-11-19",
+    "stock": 85.52,
+    "government_bond": 0,
+    "treasury_bill": 0,
+    "corporate_bond": 0,
+    "eurobond": 0,
+    "gold": 0,
+    "cash": 11.31,
+    "other": 0,
+    "fund": 3.17
+   }
+  },
+  "DLY": {
+   "kaynak": "fonoloji",
+   "fiyat": 6.6266,
+   "fiyat_tarihi": "2026-11-19",
+   "gunluk_getiri_pct": 0.1,
+   "getiri_30g_pct": 2.92,
+   "getiri_1y_pct": 44.8623,
+   "akis": {
+    "buyukluk_son": 71071404360.54,
+    "buyukluk_30g_degisim_pct": 23.18,
+    "yatirimci_son": 302572,
+    "yatirimci_30g_degisim_pct": 0.5
+   },
+   "bilgi": {
+    "name": "DENİZ PORTFÖY PARA PİYASASI (TL) FONU",
+    "category": "Para Piyasası Şemsiye Fonu",
+    "risk_value": 1,
+    "buy_valor": 0,
+    "sell_valor": 0,
+    "fund_size": 71071404360.54,
+    "investor_count": 302572,
+    "trading_status": "AKTİF",
+    "management_company": "Deniz Portföy Yönetimi A.Ş."
+   },
+   "portfoy": {
+    "code": "DLY",
+    "date": "2026-11-19",
+    "stock": 0,
+    "government_bond": 19.49,
+    "treasury_bill": 0.01,
+    "corporate_bond": 2.41,
+    "eurobond": 0,
+    "gold": 0,
+    "cash": 78.09,
+    "other": 0,
+    "fund": 0
+   }
+  }
+ },
+ "fonlar": {
+  "YLB": {
+   "kaynak": "fonoloji",
+   "fiyat": 1.9848,
+   "fiyat_tarihi": "2026-11-19",
+   "gunluk_getiri_pct": 0.1,
+   "getiri_30g_pct": 2.9,
+   "getiri_1y_pct": 44.8754,
+   "akis": {
+    "buyukluk_son": 113987672456.09,
+    "buyukluk_30g_degisim_pct": 13.97,
+    "yatirimci_son": 370830,
+    "yatirimci_30g_degisim_pct": 2.17
+   },
+   "bilgi": {
+    "name": "YAPI KREDİ PORTFÖY PARA PİYASASI FONU",
+    "category": "Para Piyasası Şemsiye Fonu",
+    "risk_value": 1,
+    "buy_valor": 0,
+    "sell_valor": 0,
+    "fund_size": 113987672456.09,
+    "investor_count": 370830,
+    "trading_status": "TEFAS'ta İşlem Görmüyor",
+    "management_company": "Yapı Kredi Portföy Yönetimi A.Ş."
+   },
+   "portfoy": {
+    "code": "YLB",
+    "date": "2026-11-19",
+    "stock": 0,
+    "government_bond": 15.81,
+    "treasury_bill": 0,
+    "corporate_bond": 1.8,
+    "eurobond": 0,
+    "gold": 0,
+    "cash": 82.39,
+    "other": 0,
+    "fund": 0
+   }
+  },
+  "IJV": {
+   "kaynak": "fonoloji",
+   "fiyat": 6.1309,
+   "fiyat_tarihi": "2026-11-19",
+   "gunluk_getiri_pct": 0.1,
+   "getiri_30g_pct": 2.41,
+   "getiri_1y_pct": 45.3306,
+   "akis": {
+    "buyukluk_son": 2545993415.03,
+    "buyukluk_30g_degisim_pct": 1.81,
+    "yatirimci_son": 2195,
+    "yatirimci_30g_degisim_pct": -5.14
+   },
+   "bilgi": {
+    "name": "İSTANBUL PORTFÖY BİRİNCİ PARA PİYASASI (TL) FONU",
+    "category": "Para Piyasası Şemsiye Fonu",
+    "risk_value": 1,
+    "buy_valor": 0,
+    "sell_valor": 0,
+    "fund_size": 2545993415.03,
+    "investor_count": 2195,
+    "trading_status": "AKTİF",
+    "management_company": "İstanbul Portföy Yönetimi A.Ş."
+   },
+   "portfoy": {
+    "code": "IJV",
+    "date": "2026-11-19",
+    "stock": 0,
+    "government_bond": 0,
+    "treasury_bill": 10.81,
+    "corporate_bond": 14.23,
+    "eurobond": 0,
+    "gold": 0,
+    "cash": 74.96,
+    "other": 0,
+    "fund": 0
+   }
+  },
+  "ZBJ": {
+   "kaynak": "fonoloji",
+   "fiyat": 5.6629,
+   "fiyat_tarihi": "2026-11-19",
+   "gunluk_getiri_pct": 0.1,
+   "getiri_30g_pct": 2.99,
+   "getiri_1y_pct": 46.3214,
+   "akis": {
+    "buyukluk_son": 61772960577.5,
+    "buyukluk_30g_degisim_pct": 28.29,
+    "yatirimci_son": 37329,
+    "yatirimci_30g_degisim_pct": 27.48
+   },
+   "bilgi": {
+    "name": "ZİRAAT PORTFÖY BAŞAK PARA PİYASASI (TL) FONU",
+    "category": "Para Piyasası Şemsiye Fonu",
+    "risk_value": 1,
+    "buy_valor": 0,
+    "sell_valor": 0,
+    "fund_size": 61772960577.5,
+    "investor_count": 37329,
+    "trading_status": "AKTİF",
+    "management_company": "Ziraat Portföy Yönetimi A.Ş."
+   },
+   "portfoy": {
+    "code": "ZBJ",
+    "date": "2026-11-19",
+    "stock": 0,
+    "government_bond": 15.73,
+    "treasury_bill": 0,
+    "corporate_bond": 3.72,
+    "eurobond": 0,
+    "gold": 0,
+    "cash": 80.56,
+    "other": 0,
+    "fund": 0
+   }
+  },
+  "BGP": {
+   "kaynak": "fonoloji",
+   "fiyat": 7.146,
+   "fiyat_tarihi": "2026-11-19",
+   "gunluk_getiri_pct": 0.11,
+   "getiri_30g_pct": 2.98,
+   "getiri_1y_pct": 45.8848,
+   "akis": {
+    "buyukluk_son": 74778751552.56,
+    "buyukluk_30g_degisim_pct": 30.17,
+    "yatirimci_son": 31649,
+    "yatirimci_30g_degisim_pct": 7.74
+   },
+   "bilgi": {
+    "name": "AK PORTFÖY ÜÇÜNCÜ PARA PİYASASI (TL) FONU",
+    "category": "Para Piyasası Şemsiye Fonu",
+    "risk_value": 1,
+    "buy_valor": 0,
+    "sell_valor": 0,
+    "fund_size": 74778751552.56,
+    "investor_count": 31649,
+    "trading_status": "AKTİF",
+    "management_company": "Ak Portföy Yönetimi A.Ş."
+   },
+   "portfoy": {
+    "code": "BGP",
+    "date": "2026-11-19",
+    "stock": 0,
+    "government_bond": 11.55,
+    "treasury_bill": 0,
+    "corporate_bond": 0.25,
+    "eurobond": 0,
+    "gold": 0,
+    "cash": 88.2,
+    "other": 0,
+    "fund": 0
+   }
+  },
+  "YOT": {
+   "kaynak": "fonoloji",
+   "fiyat": 43.0441,
+   "fiyat_tarihi": "2026-11-19",
+   "gunluk_getiri_pct": 0.11,
+   "getiri_30g_pct": 1.97,
+   "getiri_1y_pct": 35.7254,
+   "akis": {
+    "buyukluk_son": 1654460021.13,
+    "buyukluk_30g_degisim_pct": 1.09,
+    "yatirimci_son": 9521,
+    "yatirimci_30g_degisim_pct": -1.06
+   },
+   "bilgi": {
+    "name": "YAPI KREDİ PORTFÖY BORÇLANMA ARAÇLARI FONU",
+    "category": "Borçlanma Araçları Şemsiye Fonu",
+    "risk_value": 4,
+    "buy_valor": 1,
+    "sell_valor": 1,
+    "fund_size": 1654460021.13,
+    "investor_count": 9521,
+    "trading_status": "AKTİF",
+    "management_company": "Yapı Kredi Portföy Yönetimi A.Ş."
+   },
+   "portfoy": {
+    "code": "YOT",
+    "date": "2026-11-19",
+    "stock": 0,
+    "government_bond": 89.17,
+    "treasury_bill": 0,
+    "corporate_bond": 0.47,
+    "eurobond": 0.34,
+    "gold": 0,
+    "cash": 1.54,
+    "other": 0,
+    "fund": 8.48
+   }
+  },
+  "TIE": {
+   "kaynak": "fonoloji",
+   "fiyat": 0.6468,
+   "fiyat_tarihi": "2026-11-19",
+   "gunluk_getiri_pct": -1.32,
+   "getiri_30g_pct": 0.63,
+   "getiri_1y_pct": 21.4994,
+   "akis": {
+    "buyukluk_son": 1690068110.85,
+    "buyukluk_30g_degisim_pct": 3.12,
+    "yatirimci_son": 18717,
+    "yatirimci_30g_degisim_pct": -2.6
+   },
+   "bilgi": {
+    "name": "İŞ PORTFÖY BIST 30 ENDEKSİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)",
+    "category": "Hisse Senedi Şemsiye Fonu",
+    "risk_value": 6,
+    "buy_valor": 1,
+    "sell_valor": 2,
+    "fund_size": 1690068110.85,
+    "investor_count": 18717,
+    "trading_status": "AKTİF",
+    "management_company": "İş Portföy Yönetimi A.Ş."
+   },
+   "portfoy": {
+    "code": "TIE",
+    "date": "2026-11-19",
+    "stock": 96.03,
+    "government_bond": 0,
+    "treasury_bill": 0,
+    "corporate_bond": 0,
+    "eurobond": 0,
+    "gold": 0,
+    "cash": 3.33,
+    "other": 0,
+    "fund": 0.64
    }
   },
   "AKU": {
@@ -1438,28 +1400,95 @@
    "fark_pct": 0.0
   }
  },
+ "fonlar_zamani": "2026-11-19 18:52",
+ "fon_akis": {
+  "referans_tarih": "2026-10-20",
+  "gun": 30,
+  "YLB": {
+   "buyukluk_degisim_pct": 13.97,
+   "yatirimci_degisim_pct": 2.17
+  },
+  "IJV": {
+   "buyukluk_degisim_pct": 1.81,
+   "yatirimci_degisim_pct": -5.14
+  },
+  "ZBJ": {
+   "buyukluk_degisim_pct": 28.29,
+   "yatirimci_degisim_pct": 27.48
+  },
+  "BGP": {
+   "buyukluk_degisim_pct": 30.17,
+   "yatirimci_degisim_pct": 7.74
+  },
+  "YOT": {
+   "buyukluk_degisim_pct": 1.09,
+   "yatirimci_degisim_pct": -1.06
+  },
+  "TIE": {
+   "buyukluk_degisim_pct": 3.12,
+   "yatirimci_degisim_pct": -2.6
+  },
+  "AKU": {
+   "buyukluk_degisim_pct": 3.38,
+   "yatirimci_degisim_pct": -0.4
+  },
+  "DLY": {
+   "buyukluk_degisim_pct": 23.18,
+   "yatirimci_degisim_pct": 0.5
+  }
+ },
+ "fon_tutarlilik": {
+  "YLB": {
+   "fiyat_yasi_is_gunu": -1
+  },
+  "IJV": {
+   "fiyat_yasi_is_gunu": -1
+  },
+  "ZBJ": {
+   "fiyat_yasi_is_gunu": -1
+  },
+  "BGP": {
+   "fiyat_yasi_is_gunu": -1
+  },
+  "YOT": {
+   "fiyat_yasi_is_gunu": -1
+  },
+  "TIE": {
+   "fiyat_yasi_is_gunu": -1,
+   "endeks_gun": -1.38,
+   "fon_eksi_endeks": 0.06
+  },
+  "AKU": {
+   "fiyat_yasi_is_gunu": -1,
+   "endeks_gun": -1.38,
+   "fon_eksi_endeks": 0.41
+  },
+  "DLY": {
+   "fiyat_yasi_is_gunu": -1
+  }
+ },
  "rakip_tarama": {
-  "evren": 2136,
-  "zaman": "2026-11-19 08:17",
+  "evren": 2135,
+  "zaman": "2026-11-19 18:52",
   "kunye_durumu": {
    "yenilenen": 150,
    "hata": 0,
-   "kapsam": 1783,
-   "evren": 1861,
+   "kapsam": 1782,
+   "evren": 1860,
    "hiz_siniri_durdurdu": false
   },
   "para_piyasasi": {
    "surum": 7,
    "fon_sayisi": 113,
-   "temiz_havuz": 101,
-   "medyan_1m": 2.9912,
+   "temiz_havuz": 100,
+   "medyan_1m": 2.9924,
    "medyan_1y": 44.9306,
    "elenen_tasfiye": [
-    "HYV",
-    "HPH",
     "PRY",
     "TP2",
     "PPT",
+    "HPH",
+    "HYV",
     "PAB",
     "BPZ",
     "AC4",
@@ -1468,7 +1497,9 @@
     "PKM",
     "PNU"
    ],
-   "supheli_yuksek": [],
+   "supheli_yuksek": [
+    "KHP"
+   ],
    "tefas_kapali": [],
    "en_iyi_5_1y": [
     {
@@ -4767,6 +4798,66 @@
     },
     {
      "sira": 55,
+     "kod": "FTL",
+     "ad": "ONE PORTFÖY PARA PİYASASI KATILIM FONU",
+     "1a": 2.9449,
+     "3a": 9.3542,
+     "1y": 44.7295,
+     "bizim": false,
+     "kamu_payi": 0.0,
+     "ozel_payi": 53.87,
+     "hisse_payi": 0.0,
+     "nakit_repo_payi": 46.13,
+     "eurobond_payi": 0.0,
+     "altin_payi": 0.0,
+     "fon_payi": 0.0,
+     "buyukluk": 98138905.93,
+     "yatirimci": 562,
+     "alis_valoru": 0,
+     "satis_valoru": 0,
+     "risk": 1,
+     "kurucu": "One Portföy Yönetimi A.Ş.",
+     "tefas_durum": "AKTİF",
+     "max_dusus_1y": 0,
+     "reel_getiri_1y": 11.7615,
+     "yonetim_ucreti": null,
+     "kunye_kaynak": "fonoloji",
+     "t": "2026-11-17",
+     "g": [
+      [
+       "2026-10-06",
+       176865045.6
+      ],
+      [
+       "2026-10-13",
+       254532206.65
+      ],
+      [
+       "2026-10-20",
+       235129589.56
+      ],
+      [
+       "2026-10-27",
+       176622373.64
+      ],
+      [
+       "2026-11-03",
+       139744590.71
+      ],
+      [
+       "2026-11-10",
+       114856984.77
+      ],
+      [
+       "2026-11-17",
+       98138905.93
+      ]
+     ],
+     "tefas_kapali": false,
+     "kucuk": true
+    },
+    {
+     "sira": 56,
      "kod": "EPA",
      "ad": "EMAA BLUE PORTFÖY PARA PİYASASI KATILIM (TL) FONU",
      "1a": 2.9777,
@@ -4830,7 +4921,7 @@
      "kucuk": false
     },
     {
-     "sira": 56,
+     "sira": 57,
      "kod": "DCN",
      "ad": "DENİZ PORTFÖY ÜÇÜNCÜ PARA PİYASASI (TL) FONU",
      "1a": 2.9974,
@@ -4890,7 +4981,7 @@
      "kucuk": true
     },
     {
-     "sira": 57,
+     "sira": 58,
      "kod": "FPI",
      "ad": "FONMAP PORTFÖY BİRİNCİ PARA PİYASASI (TL) FONU",
      "1a": 2.9321,
@@ -4950,7 +5041,7 @@
      "kucuk": true
     },
     {
-     "sira": 58,
+     "sira": 59,
      "kod": "GTL",
      "ad": "GARANTİ PORTFÖY BİRİNCİ PARA PİYASASI (TL) FONU",
      "1a": 3.0037,
@@ -5010,7 +5101,7 @@
      "kucuk": false
     },
     {
-     "sira": 59,
+     "sira": 60,
      "kod": "ICE",
      "ad": "TEB PORTFÖY ICBC TURKEY PARA PİYASASI (TL) FONU",
      "1a": 2.963,
@@ -5070,7 +5161,7 @@
      "kucuk": false
     },
     {
-     "sira": 60,
+     "sira": 61,
      "kod": "KPI",
      "ad": "İŞ PORTFÖY PARA PİYASASI KATILIM (TL) FONU",
      "1a": 2.9605,
@@ -5130,7 +5221,7 @@
      "kucuk": false
     },
     {
-     "sira": 61,
+     "sira": 62,
      "kod": "NRG",
      "ad": "NEO PORTFÖY BİRİNCİ PARA PİYASASI FONU",
      "1a": 1.7184,
@@ -5190,7 +5281,7 @@
      "kucuk": false
     },
     {
-     "sira": 62,
+     "sira": 63,
      "kod": "TLK",
      "ad": "AKTİF PORTFÖY PARA PİYASASI KATILIM (TL) FONU",
      "1a": 2.9042,
@@ -5250,7 +5341,7 @@
      "kucuk": true
     },
     {
-     "sira": 63,
+     "sira": 64,
      "kod": "PPG",
      "ad": "ALBARAKA PORTFÖY PARA PİYASASI KATILIM FONU",
      "1a": 2.9499,
@@ -5310,7 +5401,67 @@
      "kucuk": false
     },
     {
-     "sira": 64,
+     "sira": 65,
+     "kod": "OYL",
+     "ad": "OYAK PORTFÖY BİRİNCİ PARA PİYASASI (TL) FONU",
+     "1a": 2.9581,
+     "3a": 9.2899,
+     "1y": 44.2219,
+     "bizim": false,
+     "kamu_payi": 10.95,
+     "ozel_payi": 8.78,
+     "hisse_payi": 0.0,
+     "nakit_repo_payi": 80.27,
+     "eurobond_payi": 0.0,
+     "altin_payi": 0.0,
+     "fon_payi": 0.0,
+     "buyukluk": 2872892054.22,
+     "yatirimci": 7798,
+     "alis_valoru": 0,
+     "satis_valoru": 0,
+     "risk": 1,
+     "kurucu": "Oyak Portföy Yönetimi A.Ş.",
+     "tefas_durum": "TEFAS'ta İşlem Görmüyor",
+     "max_dusus_1y": 0,
+     "reel_getiri_1y": 11.3884,
+     "yonetim_ucreti": null,
+     "kunye_kaynak": "fonoloji",
+     "t": "2026-11-17",
+     "g": [
+      [
+       "2026-10-06",
+       3286316391.03
+      ],
+      [
+       "2026-10-13",
+       3300656934.75
+      ],
+      [
+       "2026-10-20",
+       2668899984.18
+      ],
+      [
+       "2026-10-27",
+       2732740484.64
+      ],
+      [
+       "2026-11-03",
+       2731237208.9
+      ],
+      [
+       "2026-11-10",
+       2846895855.45
+      ],
+      [
+       "2026-11-17",
+       2872892054.22
+      ]
+     ],
+     "tefas_kapali": false,
+     "kucuk": false
+    },
+    {
+     "sira": 66,
      "kod": "YVD",
      "ad": "YAPI KREDİ PORTFÖY İKİNCİ PARA PİYASASI (TL) FONU",
      "1a": 3.0077,
@@ -5370,7 +5521,7 @@
      "kucuk": false
     },
     {
-     "sira": 65,
+     "sira": 67,
      "kod": "NVB",
      "ad": "NEO PORTFÖY İKİNCİ PARA PİYASASI (TL) FON",
      "1a": 1.8759,
@@ -5430,7 +5581,7 @@
      "kucuk": false
     },
     {
-     "sira": 66,
+     "sira": 68,
      "kod": "EKL",
      "ad": "EMLAK KATILIM PORTFÖY İKİNCİ PARA PİYASASI KATILIM FONU",
      "1a": 2.9867,
@@ -5490,7 +5641,7 @@
      "kucuk": false
     },
     {
-     "sira": 67,
+     "sira": 69,
      "kod": "OPJ",
      "ad": "QNB PORTFÖY QNB PARA PİYASASI (TL) FONU",
      "1a": 2.9263,
@@ -5550,7 +5701,7 @@
      "kucuk": true
     },
     {
-     "sira": 68,
+     "sira": 70,
      "kod": "GNP",
      "ad": "GARANTİ PORTFÖY NEMA PARA PİYASASI (TL) FONU",
      "1a": 2.9684,
@@ -5610,7 +5761,7 @@
      "kucuk": false
     },
     {
-     "sira": 69,
+     "sira": 71,
      "kod": "RRP",
      "ad": "RE-PIE PORTFÖY PARA PİYASASI KATILIM (TL) FON",
      "1a": 3.1789,
@@ -5670,7 +5821,67 @@
      "kucuk": true
     },
     {
-     "sira": 70,
+     "sira": 72,
+     "kod": "KLU",
+     "ad": "KUVEYT TÜRK PORTFÖY PARA PİYASASI KATILIM (TL) FONU",
+     "1a": 2.9427,
+     "3a": 9.2751,
+     "1y": 43.6559,
+     "bizim": false,
+     "kamu_payi": 4.48,
+     "ozel_payi": 0.2,
+     "hisse_payi": 0.0,
+     "nakit_repo_payi": 95.32,
+     "eurobond_payi": 0.0,
+     "altin_payi": 0.0,
+     "fon_payi": 0.0,
+     "buyukluk": 78127908502.84,
+     "yatirimci": 112058,
+     "alis_valoru": 0,
+     "satis_valoru": 0,
+     "risk": 1,
+     "kurucu": "Kuveyt Türk Portföy Yönetimi A.Ş.",
+     "tefas_durum": "AKTİF",
+     "max_dusus_1y": 0,
+     "reel_getiri_1y": 10.9142,
+     "yonetim_ucreti": null,
+     "kunye_kaynak": "fonoloji",
+     "t": "2026-11-17",
+     "g": [
+      [
+       "2026-10-06",
+       86974114289.17
+      ],
+      [
+       "2026-10-13",
+       81374271118.7
+      ],
+      [
+       "2026-10-20",
+       81023834524.31
+      ],
+      [
+       "2026-10-27",
+       81553517513.05
+      ],
+      [
+       "2026-11-03",
+       79939960552.04
+      ],
+      [
+       "2026-11-10",
+       78982150256.55
+      ],
+      [
+       "2026-11-17",
+       78127908502.84
+      ]
+     ],
+     "tefas_kapali": false,
+     "kucuk": false
+    },
+    {
+     "sira": 73,
      "kod": "GAL",
      "ad": "GARANTİ PORTFÖY İKİNCİ PARA PİYASASI (TL) FONU",
      "1a": 2.9819,
@@ -5730,7 +5941,7 @@
      "kucuk": false
     },
     {
-     "sira": 71,
+     "sira": 74,
      "kod": "SLF",
      "ad": "ROTA PORTFÖY ŞEKERBANK PARA PİYASASI (TL) FONU",
      "1a": 1.6222,
@@ -5790,7 +6001,7 @@
      "kucuk": true
     },
     {
-     "sira": 72,
+     "sira": 75,
      "kod": "LKT",
      "ad": "AKTİF PORTFÖY İKİNCİ PARA PİYASASI (TL) FONU",
      "1a": 2.8119,
@@ -5850,7 +6061,7 @@
      "kucuk": true
     },
     {
-     "sira": 73,
+     "sira": 76,
      "kod": "TCB",
      "ad": "TACİRLER PORTFÖY PARA PİYASASI FONU",
      "1a": 1.067,
@@ -5910,7 +6121,7 @@
      "kucuk": false
     },
     {
-     "sira": 74,
+     "sira": 77,
      "kod": "KPP",
      "ad": "KARE PORTFÖY PARA PİYASASI FONU",
      "1a": -0.1745,
@@ -5970,7 +6181,7 @@
      "kucuk": true
     },
     {
-     "sira": 75,
+     "sira": 78,
      "kod": "PKR",
      "ad": "ROTA PORTFÖY PARA PİYASASI KATILIM FONU",
      "1a": 2.7744,
@@ -6030,7 +6241,67 @@
      "kucuk": true
     },
     {
-     "sira": 76,
+     "sira": 79,
+     "kod": "AAL",
+     "ad": "ATA PORTFÖY PARA PİYASASI (TL) FONU",
+     "1a": 1.5878,
+     "3a": 7.9689,
+     "1y": 39.5167,
+     "bizim": false,
+     "kamu_payi": 17.33,
+     "ozel_payi": 3.33,
+     "hisse_payi": 0.0,
+     "nakit_repo_payi": 79.34,
+     "eurobond_payi": 0.0,
+     "altin_payi": 0.0,
+     "fon_payi": 0.0,
+     "buyukluk": 1438509937.03,
+     "yatirimci": 4092,
+     "alis_valoru": 0,
+     "satis_valoru": 0,
+     "risk": 1,
+     "kurucu": "Ata Portföy Yönetimi A.Ş.",
+     "tefas_durum": "AKTİF",
+     "max_dusus_1y": -1.3037,
+     "reel_getiri_1y": 7.7705,
+     "yonetim_ucreti": null,
+     "kunye_kaynak": "fonoloji",
+     "t": "2026-11-17",
+     "g": [
+      [
+       "2026-10-06",
+       1750665713.15
+      ],
+      [
+       "2026-10-13",
+       1751621020.92
+      ],
+      [
+       "2026-10-20",
+       1706845797.98
+      ],
+      [
+       "2026-10-27",
+       1711805579.17
+      ],
+      [
+       "2026-11-03",
+       1678742076.15
+      ],
+      [
+       "2026-11-10",
+       1714769704.17
+      ],
+      [
+       "2026-11-17",
+       1438509937.03
+      ]
+     ],
+     "tefas_kapali": false,
+     "kucuk": false
+    },
+    {
+     "sira": 80,
      "kod": "PRH",
      "ad": "AURA PORTFÖY PARA PİYASASI (TL) FONU",
      "1a": -0.5293,
@@ -6090,7 +6361,7 @@
      "kucuk": true
     },
     {
-     "sira": 77,
+     "sira": 81,
      "kod": "MPE",
      "ad": "MT PORTFÖY PARA PİYASASI KATILIM (TL) FONU",
      "1a": 1.6831,
@@ -6150,7 +6421,7 @@
      "kucuk": true
     },
     {
-     "sira": 78,
+     "sira": 82,
      "kod": "KIE",
      "ad": "TRIVE PORTFÖY PARA PİYASASI (TL) FONU",
      "1a": -4.5923,
@@ -6210,7 +6481,67 @@
      "kucuk": true
     },
     {
-     "sira": 79,
+     "sira": 83,
+     "kod": "GO6",
+     "ad": "ONE PORTFÖY PARA PİYASASI (TL) FONU",
+     "1a": -12.3489,
+     "3a": -7.8766,
+     "1y": 26.1839,
+     "bizim": false,
+     "kamu_payi": 13.61,
+     "ozel_payi": 46.94,
+     "hisse_payi": 0.0,
+     "nakit_repo_payi": 39.45,
+     "eurobond_payi": 0.0,
+     "altin_payi": 0.0,
+     "fon_payi": 0.0,
+     "buyukluk": 700413957.53,
+     "yatirimci": 1809,
+     "alis_valoru": 0,
+     "satis_valoru": 0,
+     "risk": 1,
+     "kurucu": "One Portföy Yönetimi A.Ş.",
+     "tefas_durum": "AKTİF",
+     "max_dusus_1y": -14.1598,
+     "reel_getiri_1y": -2.6611,
+     "yonetim_ucreti": null,
+     "kunye_kaynak": "fonoloji",
+     "t": "2026-11-16",
+     "g": [
+      [
+       "2026-10-05",
+       1360698673.51
+      ],
+      [
+       "2026-10-12",
+       1260887955.34
+      ],
+      [
+       "2026-10-19",
+       1202569978.58
+      ],
+      [
+       "2026-10-26",
+       996973740.54
+      ],
+      [
+       "2026-11-02",
+       962013134.6
+      ],
+      [
+       "2026-11-09",
+       916864835.71
+      ],
+      [
+       "2026-11-16",
+       700413957.53
+      ]
+     ],
+     "tefas_kapali": false,
+     "kucuk": false
+    },
+    {
+     "sira": 84,
      "kod": "BVF",
      "ad": "BV PORTFÖY PARA PİYASASI (TL) FON",
      "1a": -15.0414,
@@ -6268,306 +6599,6 @@
      ],
      "tefas_kapali": false,
      "kucuk": true
-    },
-    {
-     "sira": 80,
-     "kod": "AAL",
-     "ad": "ATA PORTFÖY PARA PİYASASI (TL) FONU",
-     "1a": 0.0,
-     "3a": 0.0,
-     "1y": 0.0,
-     "bizim": false,
-     "kamu_payi": 17.33,
-     "ozel_payi": 3.33,
-     "hisse_payi": 0.0,
-     "nakit_repo_payi": 79.34,
-     "eurobond_payi": 0.0,
-     "altin_payi": 0.0,
-     "fon_payi": 0.0,
-     "buyukluk": 1438509937.03,
-     "yatirimci": 4092,
-     "alis_valoru": 0,
-     "satis_valoru": 0,
-     "risk": 1,
-     "kurucu": "Ata Portföy Yönetimi A.Ş.",
-     "tefas_durum": "AKTİF",
-     "max_dusus_1y": -1.3037,
-     "reel_getiri_1y": 7.7705,
-     "yonetim_ucreti": null,
-     "kunye_kaynak": "fonoloji",
-     "t": "2026-11-17",
-     "g": [
-      [
-       "2026-10-06",
-       1750665713.15
-      ],
-      [
-       "2026-10-13",
-       1751621020.92
-      ],
-      [
-       "2026-10-20",
-       1706845797.98
-      ],
-      [
-       "2026-10-27",
-       1711805579.17
-      ],
-      [
-       "2026-11-03",
-       1678742076.15
-      ],
-      [
-       "2026-11-10",
-       1714769704.17
-      ],
-      [
-       "2026-11-17",
-       1438509937.03
-      ]
-     ],
-     "tefas_kapali": false,
-     "kucuk": false
-    },
-    {
-     "sira": 81,
-     "kod": "KLU",
-     "ad": "KUVEYT TÜRK PORTFÖY PARA PİYASASI KATILIM (TL) FONU",
-     "1a": 0.0,
-     "3a": 0.0,
-     "1y": 0.0,
-     "bizim": false,
-     "kamu_payi": 4.48,
-     "ozel_payi": 0.2,
-     "hisse_payi": 0.0,
-     "nakit_repo_payi": 95.32,
-     "eurobond_payi": 0.0,
-     "altin_payi": 0.0,
-     "fon_payi": 0.0,
-     "buyukluk": 78127908502.84,
-     "yatirimci": 112058,
-     "alis_valoru": 0,
-     "satis_valoru": 0,
-     "risk": 1,
-     "kurucu": "Kuveyt Türk Portföy Yönetimi A.Ş.",
-     "tefas_durum": "AKTİF",
-     "max_dusus_1y": 0,
-     "reel_getiri_1y": 10.9142,
-     "yonetim_ucreti": null,
-     "kunye_kaynak": "fonoloji",
-     "t": "2026-11-17",
-     "g": [
-      [
-       "2026-10-06",
-       86974114289.17
-      ],
-      [
-       "2026-10-13",
-       81374271118.7
-      ],
-      [
-       "2026-10-20",
-       81023834524.31
-      ],
-      [
-       "2026-10-27",
-       81553517513.05
-      ],
-      [
-       "2026-11-03",
-       79939960552.04
-      ],
-      [
-       "2026-11-10",
-       78982150256.55
-      ],
-      [
-       "2026-11-17",
-       78127908502.84
-      ]
-     ],
-     "tefas_kapali": false,
-     "kucuk": false
-    },
-    {
-     "sira": 82,
-     "kod": "GO6",
-     "ad": "ONE PORTFÖY PARA PİYASASI (TL) FONU",
-     "1a": 0.0,
-     "3a": 0.0,
-     "1y": 0.0,
-     "bizim": false,
-     "kamu_payi": 13.61,
-     "ozel_payi": 46.94,
-     "hisse_payi": 0.0,
-     "nakit_repo_payi": 39.45,
-     "eurobond_payi": 0.0,
-     "altin_payi": 0.0,
-     "fon_payi": 0.0,
-     "buyukluk": 700413957.53,
-     "yatirimci": 1809,
-     "alis_valoru": 0,
-     "satis_valoru": 0,
-     "risk": 1,
-     "kurucu": "One Portföy Yönetimi A.Ş.",
-     "tefas_durum": "AKTİF",
-     "max_dusus_1y": -14.1598,
-     "reel_getiri_1y": -2.6611,
-     "yonetim_ucreti": null,
-     "kunye_kaynak": "fonoloji",
-     "t": "2026-11-16",
-     "g": [
-      [
-       "2026-10-05",
-       1360698673.51
-      ],
-      [
-       "2026-10-12",
-       1260887955.34
-      ],
-      [
-       "2026-10-19",
-       1202569978.58
-      ],
-      [
-       "2026-10-26",
-       996973740.54
-      ],
-      [
-       "2026-11-02",
-       962013134.6
-      ],
-      [
-       "2026-11-09",
-       916864835.71
-      ],
-      [
-       "2026-11-16",
-       700413957.53
-      ]
-     ],
-     "tefas_kapali": false,
-     "kucuk": false
-    },
-    {
-     "sira": 83,
-     "kod": "FTL",
-     "ad": "ONE PORTFÖY PARA PİYASASI KATILIM FONU",
-     "1a": 0.0,
-     "3a": 0.0,
-     "1y": 0.0,
-     "bizim": false,
-     "kamu_payi": 0.0,
-     "ozel_payi": 53.87,
-     "hisse_payi": 0.0,
-     "nakit_repo_payi": 46.13,
-     "eurobond_payi": 0.0,
-     "altin_payi": 0.0,
-     "fon_payi": 0.0,
-     "buyukluk": 98138905.93,
-     "yatirimci": 562,
-     "alis_valoru": 0,
-     "satis_valoru": 0,
-     "risk": 1,
-     "kurucu": "One Portföy Yönetimi A.Ş.",
-     "tefas_durum": "AKTİF",
-     "max_dusus_1y": 0,
-     "reel_getiri_1y": 11.7615,
-     "yonetim_ucreti": null,
-     "kunye_kaynak": "fonoloji",
-     "t": "2026-11-17",
-     "g": [
-      [
-       "2026-10-06",
-       176865045.6
-      ],
-      [
-       "2026-10-13",
-       254532206.65
-      ],
-      [
-       "2026-10-20",
-       235129589.56
-      ],
-      [
-       "2026-10-27",
-       176622373.64
-      ],
-      [
-       "2026-11-03",
-       139744590.71
-      ],
-      [
-       "2026-11-10",
-       114856984.77
-      ],
-      [
-       "2026-11-17",
-       98138905.93
-      ]
-     ],
-     "tefas_kapali": false,
-     "kucuk": true
-    },
-    {
-     "sira": 84,
-     "kod": "OYL",
-     "ad": "OYAK PORTFÖY BİRİNCİ PARA PİYASASI (TL) FONU",
-     "1a": 0.0,
-     "3a": 0.0,
-     "1y": 0.0,
-     "bizim": false,
-     "kamu_payi": 10.95,
-     "ozel_payi": 8.78,
-     "hisse_payi": 0.0,
-     "nakit_repo_payi": 80.27,
-     "eurobond_payi": 0.0,
-     "altin_payi": 0.0,
-     "fon_payi": 0.0,
-     "buyukluk": 2872892054.22,
-     "yatirimci": 7798,
-     "alis_valoru": 0,
-     "satis_valoru": 0,
-     "risk": 1,
-     "kurucu": "Oyak Portföy Yönetimi A.Ş.",
-     "tefas_durum": "TEFAS'ta İşlem Görmüyor",
-     "max_dusus_1y": 0,
-     "reel_getiri_1y": 11.3884,
-     "yonetim_ucreti": null,
-     "kunye_kaynak": "fonoloji",
-     "t": "2026-11-17",
-     "g": [
-      [
-       "2026-10-06",
-       3286316391.03
-      ],
-      [
-       "2026-10-13",
-       3300656934.75
-      ],
-      [
-       "2026-10-20",
-       2668899984.18
-      ],
-      [
-       "2026-10-27",
-       2732740484.64
-      ],
-      [
-       "2026-11-03",
-       2731237208.9
-      ],
-      [
-       "2026-11-10",
-       2846895855.45
-      ],
-      [
-       "2026-11-17",
-       2872892054.22
-      ]
-     ],
-     "tefas_kapali": false,
-     "kucuk": false
     },
     {
      "sira": 85,
@@ -7067,8 +7098,8 @@
      "sira": 94,
      "kod": "GOP",
      "ad": "GOLDEN GLOBAL PORTFÖY PARA PİYASASI KATILIM FONU",
-     "1a": 0.0,
-     "3a": 0.0,
+     "1a": -0.5647,
+     "3a": 6.7396,
      "1y": null,
      "bizim": false,
      "kamu_payi": 0.0,
@@ -7125,66 +7156,6 @@
     },
     {
      "sira": 95,
-     "kod": "KHP",
-     "ad": "KUVEYT TÜRK PORTFÖY PAYLAŞIMLI HESAP PARA PİYASASI KATILIM FONU",
-     "1a": 0.0,
-     "3a": 0.0,
-     "1y": null,
-     "bizim": false,
-     "kamu_payi": 0.0,
-     "ozel_payi": 0.3,
-     "hisse_payi": 0.0,
-     "nakit_repo_payi": 99.7,
-     "eurobond_payi": 0.0,
-     "altin_payi": 0.0,
-     "fon_payi": 0.0,
-     "buyukluk": 16970017384.93,
-     "yatirimci": 1002,
-     "alis_valoru": 0,
-     "satis_valoru": 0,
-     "risk": 1,
-     "kurucu": "Kuveyt Türk Portföy Yönetimi A.Ş.",
-     "tefas_durum": "TEFAS'ta İşlem Görmüyor",
-     "max_dusus_1y": 0,
-     "reel_getiri_1y": null,
-     "yonetim_ucreti": null,
-     "kunye_kaynak": "fonoloji",
-     "t": "2026-11-16",
-     "g": [
-      [
-       "2026-10-05",
-       20074094629.99
-      ],
-      [
-       "2026-10-12",
-       21820906887.35
-      ],
-      [
-       "2026-10-19",
-       20218204782.89
-      ],
-      [
-       "2026-10-26",
-       6262318259.9
-      ],
-      [
-       "2026-11-02",
-       8496389868.43
-      ],
-      [
-       "2026-11-09",
-       21465004271.35
-      ],
-      [
-       "2026-11-16",
-       16970017384.93
-      ]
-     ],
-     "tefas_kapali": false,
-     "kucuk": false
-    },
-    {
-     "sira": 96,
      "kod": "OMT",
      "ad": "OSMANLI PORTFÖY PARA PİYASASI KATILIM (TL) FONU",
      "1a": 2.9408,
@@ -7248,7 +7219,7 @@
      "kucuk": true
     },
     {
-     "sira": 97,
+     "sira": 96,
      "kod": "ENR",
      "ad": "QNB PORTFÖY ENPARA PARA PİYASASI (TL) FONU",
      "1a": 3.0999,
@@ -7308,7 +7279,7 @@
      "kucuk": false
     },
     {
-     "sira": 98,
+     "sira": 97,
      "kod": "SPU",
      "ad": "STRATEJİ PORTFÖY PARA PİYASASI FONU",
      "1a": null,
@@ -7333,7 +7304,7 @@
      "kucuk": false
     },
     {
-     "sira": 99,
+     "sira": 98,
      "kod": "VPA",
      "ad": "VAKIF KATILIM PORTFÖY PARA PİYASASI KATILIM FONU",
      "1a": 2.9665,
@@ -7393,7 +7364,7 @@
      "kucuk": false
     },
     {
-     "sira": 100,
+     "sira": 99,
      "kod": "ZPO",
      "ad": "ZİRAAT PORTFÖY PARA PİYASASI KATILIM FONU",
      "1a": 2.3507,
@@ -7453,7 +7424,7 @@
      "kucuk": false
     },
     {
-     "sira": 101,
+     "sira": 100,
      "kod": "ICM",
      "ad": "İNCİR PORTFÖY BİRİNCİ PARA PİYASASI (TL) FONU",
      "1a": 2.9638,
@@ -7519,7 +7490,7 @@
      "return_3m": 9.3527,
      "return_1y": 44.8754,
      "gruptaki_sira_1y": 47,
-     "aday_havuz_sayisi": 101,
+     "aday_havuz_sayisi": 100,
      "gecis_adaylari": [
       {
        "kod": "RBP",
@@ -7631,7 +7602,7 @@
      "return_3m": 9.5987,
      "return_1y": 46.3214,
      "gruptaki_sira_1y": 7,
-     "aday_havuz_sayisi": 101,
+     "aday_havuz_sayisi": 100,
      "gecis_adaylari": [],
      "buyuk_adaylar": []
     },
@@ -7640,7 +7611,7 @@
      "return_3m": 9.5716,
      "return_1y": 45.8848,
      "gruptaki_sira_1y": 13,
-     "aday_havuz_sayisi": 101,
+     "aday_havuz_sayisi": 100,
      "gecis_adaylari": [],
      "buyuk_adaylar": []
     }
@@ -8207,18 +8178,18 @@
    "bizim": {}
   },
   "evren_ozeti": {
-   "toplam_fon": 2136,
-   "temiz_fon": 698,
+   "toplam_fon": 2135,
+   "temiz_fon": 697,
    "kategori_sayisi": 8,
    "kategoriler": {
     "Borçlanma Araçları Şemsiye Fonu": {
      "fon_sayisi": 72,
-     "medyan_1a": 2.3057,
+     "medyan_1a": 2.2564,
      "medyan_3a": 8.391,
-     "medyan_1y": 41.6892,
+     "medyan_1y": 41.2304,
      "en_iyi_5_buyuk": [
       {
-       "index": 97,
+       "index": 110,
        "kod": "BRR",
        "ad": "AK PORTFÖY İKİNCİ KISA VADELİ BORÇLANMA ARAÇLARI (TL) FONU",
        "1a": 3.2767,
@@ -8228,7 +8199,7 @@
        "kurucu": "Ak Portföy Yönetimi A.Ş."
       },
       {
-       "index": 127,
+       "index": 143,
        "kod": "YBS",
        "ad": "YAPI KREDİ PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU",
        "1a": 2.9458,
@@ -8238,7 +8209,7 @@
        "kurucu": "Yapı Kredi Portföy Yönetimi A.Ş."
       },
       {
-       "index": 171,
+       "index": 190,
        "kod": "GUB",
        "ad": "GARANTİ PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU",
        "1a": 2.9139,
@@ -8248,7 +8219,7 @@
        "kurucu": "Garanti Portföy Yönetimi A.Ş."
       },
       {
-       "index": 189,
+       "index": 208,
        "kod": "OSL",
        "ad": "OSMANLI PORTFÖY KISA VADELİ BORÇLANMA ARAÇLARI (TL) FONU",
        "1a": 3.0894,
@@ -8258,7 +8229,7 @@
        "kurucu": "Osmanlı Portföy Yönetimi A.Ş."
       },
       {
-       "index": 201,
+       "index": 223,
        "kod": "AVT",
        "ad": "AK PORTFÖY KISA VADELİ BORÇLANMA ARAÇLARI (TL) FONU",
        "1a": 3.0572,
@@ -8271,12 +8242,22 @@
     },
     "Değişken Şemsiye Fonu": {
      "fon_sayisi": 151,
-     "medyan_1a": -0.4805,
-     "medyan_3a": -3.6593,
-     "medyan_1y": 22.6314,
+     "medyan_1a": -2.0509,
+     "medyan_3a": -4.9694,
+     "medyan_1y": 27.3291,
      "en_iyi_5_buyuk": [
       {
-       "index": 104,
+       "index": 31,
+       "kod": "YIT",
+       "ad": "GARANTİ PORTFÖY YARI İLETKEN TEKNOLOJİLERİ DEĞİŞKEN FON",
+       "1a": -10.1065,
+       "3a": -15.2093,
+       "1y": 58.8072,
+       "buyukluk": 1451880415.64,
+       "kurucu": "Garanti Portföy Yönetimi A.Ş."
+      },
+      {
+       "index": 119,
        "kod": "GPG",
        "ad": "INVEO PORTFÖY BİRİNCİ DEĞİŞKEN FON",
        "1a": 2.3096,
@@ -8286,7 +8267,17 @@
        "kurucu": "Inveo Portföy Yönetimi A.Ş."
       },
       {
-       "index": 270,
+       "index": 215,
+       "kod": "TE4",
+       "ad": "TEB PORTFÖY BİRİNCİ DEĞİŞKEN FON",
+       "1a": 2.8394,
+       "3a": 8.6375,
+       "1y": 44.7558,
+       "buyukluk": 1656648557.66,
+       "kurucu": "Teb Portföy Yönetimi A.Ş."
+      },
+      {
+       "index": 296,
        "kod": "IJC",
        "ad": "İŞ PORTFÖY YARI İLETKEN TEKNOLOJİLERİ DEĞİŞKEN FON",
        "1a": -8.2012,
@@ -8296,7 +8287,7 @@
        "kurucu": "İş Portföy Yönetimi A.Ş."
       },
       {
-       "index": 318,
+       "index": 354,
        "kod": "IJZ",
        "ad": "İŞ PORTFÖY SİBER GÜVENLİK TEKNOLOJİLERİ DEĞİŞKEN FON",
        "1a": -5.9568,
@@ -8304,47 +8295,37 @@
        "1y": 41.4477,
        "buyukluk": 811323814.98,
        "kurucu": "İş Portföy Yönetimi A.Ş."
-      },
-      {
-       "index": 321,
-       "kod": "HPO",
-       "ad": "HSBC PORTFÖY ÇOKLU VARLIK BİRİNCİ DEĞİŞKEN FON",
-       "1a": 2.9401,
-       "3a": 8.3882,
-       "1y": 41.2453,
-       "buyukluk": 1332556422.42,
-       "kurucu": "HSBC Portföy Yönetimi A.Ş."
-      },
-      {
-       "index": 323,
-       "kod": "TI4",
-       "ad": "İŞ PORTFÖY TEMKİNLİ DEĞİŞKEN FON",
-       "1a": 1.431,
-       "3a": 6.2786,
-       "1y": 41.1844,
-       "buyukluk": 1834473214.27,
-       "kurucu": "İş Portföy Yönetimi A.Ş."
       }
      ]
     },
     "Fon Sepeti Şemsiye Fonu": {
-     "fon_sayisi": 86,
-     "medyan_1a": 0.0,
-     "medyan_3a": 0.0,
-     "medyan_1y": 12.6761,
+     "fon_sayisi": 85,
+     "medyan_1a": -3.1021,
+     "medyan_3a": -5.263,
+     "medyan_1y": 23.2555,
      "en_iyi_5_buyuk": [
       {
-       "index": 96,
+       "index": 70,
+       "kod": "NBO",
+       "ad": "NEO PORTFÖY BORÇLANMA ARACI FONLARI FON SEPETİ FONU",
+       "1a": 2.4991,
+       "3a": 8.8782,
+       "1y": 48.6252,
+       "buyukluk": 1284285778.86,
+       "kurucu": "Neo Portföy Yönetimi A.Ş."
+      },
+      {
+       "index": 106,
        "kod": "OLE",
        "ad": "OSMANLI PORTFÖY BİRİNCİ FON SEPETİ FONU",
-       "1a": 2.5234,
-       "3a": 9.0671,
-       "1y": 46.4177,
+       "1a": 2.6286,
+       "3a": 9.179,
+       "1y": 46.5678,
        "buyukluk": 533755544.76,
        "kurucu": "Osmanlı Portföy Yönetimi A.Ş."
       },
       {
-       "index": 239,
+       "index": 263,
        "kod": "TGE",
        "ad": "İŞ PORTFÖY EMTİA YABANCI BYF FON SEPETİ FONU",
        "1a": -6.708,
@@ -8354,45 +8335,35 @@
        "kurucu": "İş Portföy Yönetimi A.Ş."
       },
       {
-       "index": 375,
+       "index": 314,
+       "kod": "TCF",
+       "ad": "TEB PORTFÖY ÜÇÜNCÜ FON SEPETİ FONU",
+       "1a": 2.6528,
+       "3a": 8.1886,
+       "1y": 42.8153,
+       "buyukluk": 2798384215.79,
+       "kurucu": "Teb Portföy Yönetimi A.Ş."
+      },
+      {
+       "index": 421,
        "kod": "TEJ",
        "ad": "AZİMUT PORTFÖY TEKNOLOJİ FON SEPETİ FONU",
-       "1a": -8.9512,
-       "3a": -10.194,
-       "1y": 38.1739,
+       "1a": -8.9564,
+       "3a": -10.1991,
+       "1y": 38.1661,
        "buyukluk": 575400705.33,
        "kurucu": "Azimut Portföy Yönetimi A.Ş."
-      },
-      {
-       "index": 398,
-       "kod": "OVD",
-       "ad": "QNB PORTFÖY EMTİA FON SEPETİ FONU",
-       "1a": -7.2991,
-       "3a": -2.0563,
-       "1y": 36.5275,
-       "buyukluk": 702088747.62,
-       "kurucu": "QNB Portföy Yönetimi A.Ş."
-      },
-      {
-       "index": 430,
-       "kod": "ILZ",
-       "ad": "İŞ PORTFÖY TEMKİNLİ FON SEPETİ FONU",
-       "1a": 1.6106,
-       "3a": 6.3851,
-       "1y": 34.1914,
-       "buyukluk": 883827318.11,
-       "kurucu": "İş Portföy Yönetimi A.Ş."
       }
      ]
     },
     "Hisse Senedi Şemsiye Fonu": {
      "fon_sayisi": 176,
-     "medyan_1a": -2.3075,
-     "medyan_3a": -11.489,
-     "medyan_1y": 12.9071,
+     "medyan_1a": -2.7108,
+     "medyan_3a": -12.3882,
+     "medyan_1y": 13.5418,
      "en_iyi_5_buyuk": [
       {
-       "index": 384,
+       "index": 432,
        "kod": "AFS",
        "ad": "AK PORTFÖY SAĞLIK SEKTÖRÜ YABANCI HİSSE SENEDİ FONU",
        "1a": 5.353,
@@ -8402,7 +8373,7 @@
        "kurucu": "Ak Portföy Yönetimi A.Ş."
       },
       {
-       "index": 392,
+       "index": 442,
        "kod": "YHK",
        "ad": "YAPI KREDİ PORTFÖY KATILIM HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
        "1a": -2.9056,
@@ -8412,7 +8383,27 @@
        "kurucu": "Yapı Kredi Portföy Yönetimi A.Ş."
       },
       {
-       "index": 477,
+       "index": 522,
+       "kod": "GUH",
+       "ad": "GARANTİ PORTFÖY YABANCI TEKNOLOJİ HİSSE SENEDİ FONU",
+       "1a": -14.3877,
+       "3a": -13.909,
+       "1y": 32.7804,
+       "buyukluk": 3997909941.72,
+       "kurucu": "Garanti Portföy Yönetimi A.Ş."
+      },
+      {
+       "index": 526,
+       "kod": "KPC",
+       "ad": "KUVEYT TÜRK PORTFÖY KATILIM HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)",
+       "1a": -3.6623,
+       "3a": -11.8411,
+       "1y": 32.7289,
+       "buyukluk": 3867836148.35,
+       "kurucu": "Kuveyt Türk Portföy Yönetimi A.Ş."
+      },
+      {
+       "index": 549,
        "kod": "GSP",
        "ad": "AZİMUT PYŞ KAR PAYI ÖDEYEN HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN FON)",
        "1a": 0.2942,
@@ -8420,26 +8411,6 @@
        "1y": 31.3485,
        "buyukluk": 3855639580.38,
        "kurucu": "Azimut Portföy Yönetimi A.Ş."
-      },
-      {
-       "index": 485,
-       "kod": "YAY",
-       "ad": "YAPI KREDİ PORTFÖY YABANCI TEKNOLOJİ SEKTÖRÜ HİSSE SENEDİ FONU",
-       "1a": -13.0947,
-       "3a": -15.2922,
-       "1y": 30.9481,
-       "buyukluk": 10545628495.8,
-       "kurucu": "Yapı Kredi Portföy Yönetimi A.Ş."
-      },
-      {
-       "index": 499,
-       "kod": "AKU",
-       "ad": "AK PORTFÖY BIST 30 ENDEKSİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)",
-       "1a": -0.6789,
-       "3a": -8.7037,
-       "1y": 29.651,
-       "buyukluk": 2305082440.45,
-       "kurucu": "Ak Portföy Yönetimi A.Ş."
       }
      ]
     },
@@ -8450,7 +8421,7 @@
      "medyan_1y": 32.5761,
      "en_iyi_5_buyuk": [
       {
-       "index": 417,
+       "index": 475,
        "kod": "ITP",
        "ad": "İŞ PORTFÖY TEKNOLOJİ KARMA FON",
        "1a": -5.0314,
@@ -8460,7 +8431,7 @@
        "kurucu": "İş Portföy Yönetimi A.Ş."
       },
       {
-       "index": 442,
+       "index": 502,
        "kod": "IJP",
        "ad": "İŞ PORTFÖY BLOCKCHAİN TEKNOLOJİLERİ KARMA FON",
        "1a": -5.2708,
@@ -8470,7 +8441,7 @@
        "kurucu": "İş Portföy Yönetimi A.Ş."
       },
       {
-       "index": 458,
+       "index": 527,
        "kod": "YAK",
        "ad": "YAPI KREDİ PORTFÖY KARMA FON",
        "1a": 1.1716,
@@ -8480,7 +8451,7 @@
        "kurucu": "Yapı Kredi Portföy Yönetimi A.Ş."
       },
       {
-       "index": 561,
+       "index": 663,
        "kod": "IKP",
        "ad": "İŞ PORTFÖY YENİLENEBİLİR ENERJİ KARMA FON",
        "1a": -5.0286,
@@ -8490,7 +8461,7 @@
        "kurucu": "İş Portföy Yönetimi A.Ş."
       },
       {
-       "index": 864,
+       "index": 1040,
        "kod": "IPJ",
        "ad": "İŞ PORTFÖY ELEKTRİKLİ ARAÇLAR KARMA FON",
        "1a": -6.9314,
@@ -8502,13 +8473,13 @@
      ]
     },
     "Katılım Şemsiye Fonu": {
-     "fon_sayisi": 106,
-     "medyan_1a": 0.0,
-     "medyan_3a": 0.0,
-     "medyan_1y": 27.1727,
+     "fon_sayisi": 105,
+     "medyan_1a": 1.9948,
+     "medyan_3a": 5.2913,
+     "medyan_1y": 39.4223,
      "en_iyi_5_buyuk": [
       {
-       "index": 27,
+       "index": 30,
        "kod": "CPU",
        "ad": "AKTİF PORTFÖY TEKNOLOJİ KATILIM FONU",
        "1a": -6.0107,
@@ -8518,7 +8489,17 @@
        "kurucu": "Aktif Portföy Yönetimi A.Ş."
       },
       {
-       "index": 119,
+       "index": 62,
+       "kod": "KTJ",
+       "ad": "KUVEYT TÜRK PORTFÖY TEKNOLOJİ KATILIM FONU",
+       "1a": -5.5985,
+       "3a": -3.376,
+       "1y": 50.3166,
+       "buyukluk": 1378670164.51,
+       "kurucu": "Kuveyt Türk Portföy Yönetimi A.Ş."
+      },
+      {
+       "index": 134,
        "kod": "AIS",
        "ad": "AK PORTFÖY PARA PİYASASI KATILIM FONU",
        "1a": 3.0213,
@@ -8528,7 +8509,7 @@
        "kurucu": "Ak Portföy Yönetimi A.Ş."
       },
       {
-       "index": 133,
+       "index": 149,
        "kod": "NSP",
        "ad": "NUROL PORTFÖY PARA PİYASASI KATILIM FONU",
        "1a": 3.026,
@@ -8538,7 +8519,7 @@
        "kurucu": "Nurol Portföy Yönetimi A.Ş."
       },
       {
-       "index": 144,
+       "index": 163,
        "kod": "RBT",
        "ad": "ALBARAKA PORTFÖY KİRA SERTİFİKALARI  KATILIM FONU",
        "1a": 3.0159,
@@ -8546,27 +8527,17 @@
        "1y": 45.4231,
        "buyukluk": 1318911085.93,
        "kurucu": "Albaraka Portföy Yönetimi A.Ş."
-      },
-      {
-       "index": 148,
-       "kod": "KSK",
-       "ad": "AZİMUT PORTFÖY İKİNCİ PARA PİYASASI KATILIM FONU",
-       "1a": 2.8895,
-       "3a": 9.3351,
-       "1y": 45.3828,
-       "buyukluk": 2952361040.65,
-       "kurucu": "Azimut Portföy Yönetimi A.Ş."
       }
      ]
     },
     "Kıymetli Madenler Şemsiye Fonu": {
-     "fon_sayisi": 24,
-     "medyan_1a": -6.704,
-     "medyan_3a": -8.7805,
-     "medyan_1y": 7.3846,
+     "fon_sayisi": 25,
+     "medyan_1a": -6.7576,
+     "medyan_3a": -8.8062,
+     "medyan_1y": 7.5128,
      "en_iyi_5_buyuk": [
       {
-       "index": 1137,
+       "index": 1371,
        "kod": "PTN",
        "ad": "PHİLLİP PORTFÖY ALTIN FONU",
        "1a": -5.9807,
@@ -8576,7 +8547,7 @@
        "kurucu": "Phillip Portföy Yönetimi A.Ş."
       },
       {
-       "index": 1152,
+       "index": 1387,
        "kod": "OJK",
        "ad": "QNB PORTFÖY ALTIN FONU",
        "1a": -6.5877,
@@ -8586,7 +8557,7 @@
        "kurucu": "QNB Portföy Yönetimi A.Ş."
       },
       {
-       "index": 1174,
+       "index": 1410,
        "kod": "DBA",
        "ad": "DENİZ PORTFÖY ALTIN FONU",
        "1a": -6.5286,
@@ -8596,7 +8567,7 @@
        "kurucu": "Deniz Portföy Yönetimi A.Ş."
       },
       {
-       "index": 1185,
+       "index": 1423,
        "kod": "MKG",
        "ad": "AKTİF PORTFÖY ALTIN KATILIM FONU",
        "1a": -6.6288,
@@ -8606,7 +8577,7 @@
        "kurucu": "Aktif Portföy Yönetimi A.Ş."
       },
       {
-       "index": 1187,
+       "index": 1425,
        "kod": "HBF",
        "ad": "HSBC PORTFÖY ALTIN FONU",
        "1a": -6.6504,
@@ -8624,7 +8595,7 @@
      "medyan_1y": 45.0624,
      "en_iyi_5_buyuk": [
       {
-       "index": 53,
+       "index": 57,
        "kod": "HVT",
        "ad": "ALLBATROSS PORTFÖY BİRİNCİ PARA PİYASASI (TL) FONU",
        "1a": 3.1285,
@@ -8634,7 +8605,7 @@
        "kurucu": "Allbatross Portföy Yönetimi A.Ş."
       },
       {
-       "index": 75,
+       "index": 84,
        "kod": "PRD",
        "ad": "PİRAMİT PORTFÖY PARA PİYASASI (TL) FONU",
        "1a": 3.1879,
@@ -8644,7 +8615,7 @@
        "kurucu": "Piramit Portföy Yönetimi A.Ş."
       },
       {
-       "index": 76,
+       "index": 85,
        "kod": "IRY",
        "ad": "INVEO PORTFÖY PARA PİYASASI (TL) FONU",
        "1a": 3.2463,
@@ -8654,7 +8625,7 @@
        "kurucu": "Inveo Portföy Yönetimi A.Ş."
       },
       {
-       "index": 79,
+       "index": 88,
        "kod": "EIL",
        "ad": "ASTRA PORTFÖY PARA PİYASASI (TL) FONU",
        "1a": 3.006,
@@ -8664,7 +8635,7 @@
        "kurucu": "Astra Portföy Yönetimi A.Ş."
       },
       {
-       "index": 99,
+       "index": 112,
        "kod": "ZBJ",
        "ad": "ZİRAAT PORTFÖY BAŞAK PARA PİYASASI (TL) FONU",
        "1a": 3.0888,
@@ -8912,8 +8883,8 @@
    "para_piyasasi": {
     "referans_fon_sayisi": 12,
     "hata_sayisi": 0,
-    "medyan_buyukluk_30g": 4.0,
-    "medyan_yatirimci_30g": 0.935
+    "medyan_buyukluk_30g": 6.305,
+    "medyan_yatirimci_30g": 1.16
    },
    "bist30_endeks": {
     "referans_fon_sayisi": 3,
@@ -9185,42 +9156,42 @@
   "varlik_siniflari": {
    "siniflar": {
     "Altın / kıymetli maden": {
-     "fon_sayisi": 53,
+     "fon_sayisi": 54,
      "buyuk_fon_sayisi": 31,
-     "medyan_max_dusus_1y": -23.9115,
-     "akis_30g_pct": -6.28,
-     "akis_kapsam": 42,
-     "1a": -6.4854,
-     "3a": -8.4262,
-     "1y": 7.0021,
+     "medyan_max_dusus_1y": -23.9227,
+     "akis_30g_pct": -6.29,
+     "akis_kapsam": 43,
+     "1a": -6.7576,
+     "3a": -8.7685,
+     "1y": 7.1373,
      "en_iyi_3_buyuk": [
       {
-       "index": 1283,
-       "fund_code": "GUM",
-       "name": "AK PORTFÖY GÜMÜŞ FON SEPETI FONU",
-       "return_1m": 0.0,
-       "return_3m": 0.0,
-       "return_1y": 0.0
+       "index": 1450,
+       "fund_code": "RBA",
+       "name": "ALBARAKA PORTFÖY BEREKET VAKFI NA DESTEK ALTIN KATILIM FONU",
+       "return_1m": -5.6994,
+       "return_3m": -7.2861,
+       "return_1y": 7.0021
       },
       {
-       "index": 1478,
-       "fund_code": "KZL",
-       "name": "KUVEYT TÜRK PORTFÖY ALTIN KATILIM FONU",
-       "return_1m": 0.0,
-       "return_3m": 0.0,
-       "return_1y": 0.0
+       "index": 1371,
+       "fund_code": "PTN",
+       "name": "PHİLLİP PORTFÖY ALTIN FONU",
+       "return_1m": -5.9807,
+       "return_3m": -7.5729,
+       "return_1y": 11.353
       },
       {
-       "index": 1350,
-       "fund_code": "GTZ",
-       "name": "GARANTİ PORTFÖY GÜMÜŞ FON SEPETİ FONU",
-       "return_1m": 0.0,
-       "return_3m": 0.0,
-       "return_1y": 0.0
+       "index": 1357,
+       "fund_code": "NJF",
+       "name": "NUROL PORTFÖY ALTIN KATILIM FONU",
+       "return_1m": -6.2073,
+       "return_3m": -7.6435,
+       "return_1y": 12.3624
       }
      ],
-     "ppf_farki_1a": -9.48,
-     "ppf_farki_3a": -17.77
+     "ppf_farki_1a": -9.75,
+     "ppf_farki_3a": -18.11
     },
     "BIST endeks hisse": {
      "fon_sayisi": 21,
@@ -9233,7 +9204,7 @@
      "1y": 22.0905,
      "en_iyi_3_buyuk": [
       {
-       "index": 1094,
+       "index": 1320,
        "fund_code": "ADP",
        "name": "AK PORTFÖY BIST BANKA ENDEKSİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)",
        "return_1m": 1.3825,
@@ -9241,7 +9212,7 @@
        "return_1y": 13.9455
       },
       {
-       "index": 1116,
+       "index": 1347,
        "fund_code": "YZH",
        "name": "TEB PORTFÖY BIST BANKA ENDEKSİ HİSSE SENEDİ FONU (HİSSE SENEDİ YOĞUN)",
        "return_1m": 1.0458,
@@ -9249,7 +9220,7 @@
        "return_1y": 12.7391
       },
       {
-       "index": 1140,
+       "index": 1374,
        "fund_code": "TAU",
        "name": "İŞ PORTFÖY BIST BANKA ENDEKSİ HİSSE SENEDİ (TL) FONU (HİSSE SENEDİ YOĞUN FON)",
        "return_1m": 0.7817,
@@ -9257,7 +9228,7 @@
        "return_1y": 11.2477
       }
      ],
-     "ppf_farki_1a": -4.14,
+     "ppf_farki_1a": -4.15,
      "ppf_farki_3a": -19.9
     },
     "Borçlanma (karma)": {
@@ -9266,21 +9237,21 @@
      "medyan_max_dusus_1y": -1.4043,
      "akis_30g_pct": 1.41,
      "akis_kapsam": 2,
-     "1a": -0.0939,
-     "3a": 2.4554,
-     "1y": 19.3716,
+     "1a": 1.1556,
+     "3a": 6.8944,
+     "1y": 43.6842,
      "en_iyi_3_buyuk": [
       {
-       "index": 1539,
+       "index": 70,
        "fund_code": "NBO",
        "name": "NEO PORTFÖY BORÇLANMA ARACI FONLARI FON SEPETİ FONU",
-       "return_1m": 0.0,
-       "return_3m": 0.0,
-       "return_1y": 0.0
+       "return_1m": 2.4991,
+       "return_3m": 8.8782,
+       "return_1y": 48.6252
       }
      ],
-     "ppf_farki_1a": -3.09,
-     "ppf_farki_3a": -6.89
+     "ppf_farki_1a": -1.84,
+     "ppf_farki_3a": -2.45
     },
     "Enflasyona endeksli": {
      "fon_sayisi": 1,
@@ -9301,12 +9272,12 @@
      "medyan_max_dusus_1y": -3.1021,
      "akis_30g_pct": -1.38,
      "akis_kapsam": 14,
-     "1a": 2.0317,
-     "3a": 3.8381,
-     "1y": 19.9567,
+     "1a": 2.088,
+     "3a": 4.1231,
+     "1y": 20.2326,
      "en_iyi_3_buyuk": [
       {
-       "index": 675,
+       "index": 806,
        "fund_code": "ZPF",
        "name": "ZİRAAT PORTFÖY KATILIM FONU (DÖVİZ)",
        "return_1m": 2.5339,
@@ -9314,7 +9285,7 @@
        "return_1y": 23.7211
       },
       {
-       "index": 647,
+       "index": 772,
        "fund_code": "IPV",
        "name": "İŞ PORTFÖY EUROBOND BORÇLANMA ARAÇLARI (DÖVİZ) FONU",
        "return_1m": 2.4002,
@@ -9322,7 +9293,7 @@
        "return_1y": 24.2056
       },
       {
-       "index": 737,
+       "index": 883,
        "fund_code": "DBH",
        "name": "DENİZ PORTFÖY EUROBOND (DÖVİZ) BORÇLANMA ARAÇLARI FONU",
        "return_1m": 2.0074,
@@ -9330,21 +9301,21 @@
        "return_1y": 23.0738
       }
      ],
-     "ppf_farki_1a": -0.96,
-     "ppf_farki_3a": -5.51
+     "ppf_farki_1a": -0.9,
+     "ppf_farki_3a": -5.22
     },
     "Hisse (aktif)": {
      "fon_sayisi": 295,
      "buyuk_fon_sayisi": 79,
-     "medyan_max_dusus_1y": -18.1978,
-     "akis_30g_pct": -4.56,
+     "medyan_max_dusus_1y": -18.2392,
+     "akis_30g_pct": -4.77,
      "akis_kapsam": 276,
-     "1a": -2.5212,
-     "3a": -8.9042,
-     "1y": 16.2494,
+     "1a": -3.6677,
+     "3a": -10.2257,
+     "1y": 18.8143,
      "en_iyi_3_buyuk": [
       {
-       "index": 384,
+       "index": 432,
        "fund_code": "AFS",
        "name": "AK PORTFÖY SAĞLIK SEKTÖRÜ YABANCI HİSSE SENEDİ FONU",
        "return_1m": 5.353,
@@ -9352,7 +9323,7 @@
        "return_1y": 37.2693
       },
       {
-       "index": 498,
+       "index": 584,
        "fund_code": "TMC",
        "name": "İŞ PORTFÖY TEMA DEĞİŞKEN FON",
        "return_1m": -0.506,
@@ -9360,7 +9331,7 @@
        "return_1y": 29.6852
       },
       {
-       "index": 389,
+       "index": 438,
        "fund_code": "IBB",
        "name": "İŞ PORTFÖY ATAK DEĞİŞKEN FON",
        "return_1m": 0.3775,
@@ -9368,8 +9339,8 @@
        "return_1y": 37.0272
       }
      ],
-     "ppf_farki_1a": -5.51,
-     "ppf_farki_3a": -18.25
+     "ppf_farki_1a": -6.66,
+     "ppf_farki_3a": -19.57
     },
     "Kamu borçlanma (devlet tahvili)": {
      "fon_sayisi": 21,
@@ -9382,7 +9353,7 @@
      "1y": 32.2576,
      "en_iyi_3_buyuk": [
       {
-       "index": 448,
+       "index": 513,
        "fund_code": "FI3",
        "name": "QNB PORTFÖY BORÇLANMA ARAÇLARI FONU",
        "return_1m": 2.1102,
@@ -9390,7 +9361,7 @@
        "return_1y": 33.2269
       },
       {
-       "index": 463,
+       "index": 532,
        "fund_code": "TI6",
        "name": "İŞ PORTFÖY BORÇLANMA ARAÇLARI (TL) FONU",
        "return_1m": 1.9638,
@@ -9398,7 +9369,7 @@
        "return_1y": 32.327
       },
       {
-       "index": 405,
+       "index": 458,
        "fund_code": "YOT",
        "name": "YAPI KREDİ PORTFÖY BORÇLANMA ARAÇLARI FONU",
        "return_1m": 1.7594,
@@ -9415,12 +9386,20 @@
      "medyan_max_dusus_1y": -4.9218,
      "akis_30g_pct": -5.48,
      "akis_kapsam": 42,
-     "1a": 0.0,
-     "3a": 0.0,
-     "1y": 30.3139,
+     "1a": 1.0304,
+     "3a": 1.5267,
+     "1y": 32.7541,
      "en_iyi_3_buyuk": [
       {
-       "index": 321,
+       "index": 215,
+       "fund_code": "TE4",
+       "name": "TEB PORTFÖY BİRİNCİ DEĞİŞKEN FON",
+       "return_1m": 2.8394,
+       "return_3m": 8.6375,
+       "return_1y": 44.7558
+      },
+      {
+       "index": 358,
        "fund_code": "HPO",
        "name": "HSBC PORTFÖY ÇOKLU VARLIK BİRİNCİ DEĞİŞKEN FON",
        "return_1m": 2.9401,
@@ -9428,37 +9407,29 @@
        "return_1y": 41.2453
       },
       {
-       "index": 323,
+       "index": 360,
        "fund_code": "TI4",
        "name": "İŞ PORTFÖY TEMKİNLİ DEĞİŞKEN FON",
        "return_1m": 1.431,
        "return_3m": 6.2786,
        "return_1y": 41.1844
-      },
-      {
-       "index": 363,
-       "fund_code": "SUA",
-       "name": "ÜNLÜ PORTFÖY BİRİNCİ DEĞİŞKEN FON",
-       "return_1m": 0.9058,
-       "return_3m": 4.3068,
-       "return_1y": 39.0894
       }
      ],
-     "ppf_farki_1a": -2.99,
-     "ppf_farki_3a": -9.34
+     "ppf_farki_1a": -1.96,
+     "ppf_farki_3a": -7.82
     },
     "Kira sertifikası / katılım": {
      "fon_sayisi": 46,
      "buyuk_fon_sayisi": 18,
      "medyan_max_dusus_1y": -0.528,
-     "akis_30g_pct": 4.72,
+     "akis_30g_pct": 4.71,
      "akis_kapsam": 42,
-     "1a": 2.3049,
-     "3a": 5.6366,
-     "1y": 36.6725,
+     "1a": 2.4947,
+     "3a": 6.4387,
+     "1y": 39.5525,
      "en_iyi_3_buyuk": [
       {
-       "index": 144,
+       "index": 163,
        "fund_code": "RBT",
        "name": "ALBARAKA PORTFÖY KİRA SERTİFİKALARI  KATILIM FONU",
        "return_1m": 3.0159,
@@ -9466,7 +9437,7 @@
        "return_1y": 45.4231
       },
       {
-       "index": 286,
+       "index": 315,
        "fund_code": "RBV",
        "name": "ALBARAKA PORTFÖY KISA VADELİ KİRA SERTİFİKALARI KATILIM (TL) FONU",
        "return_1m": 2.9709,
@@ -9474,7 +9445,7 @@
        "return_1y": 42.8111
       },
       {
-       "index": 278,
+       "index": 306,
        "fund_code": "MPF",
        "name": "AKTİF PORTFÖY KISA VADELİ KİRA SERTİFİKASI KATILIM (TL) FONU",
        "return_1m": 2.9975,
@@ -9482,8 +9453,8 @@
        "return_1y": 43.0094
       }
      ],
-     "ppf_farki_1a": -0.69,
-     "ppf_farki_3a": -3.71
+     "ppf_farki_1a": -0.5,
+     "ppf_farki_3a": -2.91
     },
     "Kısa vadeli borçlanma": {
      "fon_sayisi": 25,
@@ -9496,7 +9467,7 @@
      "1y": 43.2026,
      "en_iyi_3_buyuk": [
       {
-       "index": 97,
+       "index": 110,
        "fund_code": "BRR",
        "name": "AK PORTFÖY İKİNCİ KISA VADELİ BORÇLANMA ARAÇLARI (TL) FONU",
        "return_1m": 3.2767,
@@ -9504,7 +9475,7 @@
        "return_1y": 46.4157
       },
       {
-       "index": 189,
+       "index": 208,
        "fund_code": "OSL",
        "name": "OSMANLI PORTFÖY KISA VADELİ BORÇLANMA ARAÇLARI (TL) FONU",
        "return_1m": 3.0894,
@@ -9512,7 +9483,7 @@
        "return_1y": 44.83
       },
       {
-       "index": 201,
+       "index": 223,
        "fund_code": "AVT",
        "name": "AK PORTFÖY KISA VADELİ BORÇLANMA ARAÇLARI (TL) FONU",
        "return_1m": 3.0572,
@@ -9521,20 +9492,20 @@
       }
      ],
      "ppf_farki_1a": -0.01,
-     "ppf_farki_3a": -0.1
+     "ppf_farki_3a": -0.11
     },
     "Para piyasası": {
-     "fon_sayisi": 101,
-     "buyuk_fon_sayisi": 68,
+     "fon_sayisi": 100,
+     "buyuk_fon_sayisi": 67,
      "medyan_max_dusus_1y": 0.0,
-     "akis_30g_pct": 8.35,
-     "akis_kapsam": 98,
-     "1a": 2.9912,
-     "3a": 9.3441,
+     "akis_30g_pct": 8.66,
+     "akis_kapsam": 97,
+     "1a": 2.9923,
+     "3a": 9.3452,
      "1y": 44.9306,
      "en_iyi_3_buyuk": [
       {
-       "index": 53,
+       "index": 57,
        "fund_code": "HVT",
        "name": "ALLBATROSS PORTFÖY BİRİNCİ PARA PİYASASI (TL) FONU",
        "return_1m": 3.1285,
@@ -9542,7 +9513,7 @@
        "return_1y": 50.9987
       },
       {
-       "index": 75,
+       "index": 84,
        "fund_code": "PRD",
        "name": "PİRAMİT PORTFÖY PARA PİYASASI (TL) FONU",
        "return_1m": 3.1879,
@@ -9550,7 +9521,7 @@
        "return_1y": 47.5195
       },
       {
-       "index": 76,
+       "index": 85,
        "fund_code": "IRY",
        "name": "INVEO PORTFÖY PARA PİYASASI (TL) FONU",
        "return_1m": 3.2463,
@@ -9565,12 +9536,12 @@
      "medyan_max_dusus_1y": -0.9903,
      "akis_30g_pct": -0.13,
      "akis_kapsam": 13,
-     "1a": 2.1857,
+     "1a": 1.8567,
      "3a": 8.092,
-     "1y": 43.9905,
+     "1y": 42.9837,
      "en_iyi_3_buyuk": [
       {
-       "index": 171,
+       "index": 190,
        "fund_code": "GUB",
        "name": "GARANTİ PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU",
        "return_1m": 2.9139,
@@ -9578,7 +9549,7 @@
        "return_1y": 45.0855
       },
       {
-       "index": 127,
+       "index": 143,
        "fund_code": "YBS",
        "name": "YAPI KREDİ PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI FONU",
        "return_1m": 2.9458,
@@ -9586,7 +9557,7 @@
        "return_1y": 45.7512
       },
       {
-       "index": 242,
+       "index": 266,
        "fund_code": "TBV",
        "name": "İŞ PORTFÖY ÖZEL SEKTÖR BORÇLANMA ARAÇLARI (TL) FONU",
        "return_1m": 2.3057,
@@ -9594,7 +9565,7 @@
        "return_1y": 43.9905
       }
      ],
-     "ppf_farki_1a": -0.81,
+     "ppf_farki_1a": -1.14,
      "ppf_farki_3a": -1.25
     }
    },
@@ -9604,28 +9575,28 @@
      "3a": -13.18,
      "1y": null,
      "ppf_farki_1a": -11.26,
-     "ppf_farki_3a": -22.52
+     "ppf_farki_3a": -22.53
     },
     "Dolar (USD/TRY)": {
      "1a": 1.76,
      "3a": 5.19,
      "1y": null,
      "ppf_farki_1a": -1.23,
-     "ppf_farki_3a": -4.15
+     "ppf_farki_3a": -4.16
     },
     "TL mevduat (1 ay, brüt)": {
-     "yillik_oran": 41.87,
-     "1a": 3.44,
-     "3a": 10.44,
+     "yillik_oran": 41.59,
+     "1a": 3.42,
+     "3a": 10.37,
      "not": "faiz oranından hesaplanan beklenen getiri, gerçekleşen değil",
-     "ppf_farki_1a": 0.45,
-     "ppf_farki_3a": 1.1
+     "ppf_farki_1a": 0.43,
+     "ppf_farki_3a": 1.02
     }
    },
    "para_piyasasi_ustu": {
     "TL mevduat (1 ay, brüt)": {
-     "fark_1a": 0.45,
-     "fark_3a": 1.1,
+     "fark_1a": 0.43,
+     "fark_3a": 1.02,
      "ardisik_is_gunu": 36,
      "olgun": true
     }
@@ -9651,15 +9622,11 @@
  "evds_resmi": {
   "yabanci_hisse_net_haftalik": {
    "kod": "TP.MKNETHAR.M7",
-   "son": 367.18,
-   "tarih": "2026-11-06",
-   "onceki": -66.27,
-   "veri_yasi_gun": 13,
+   "son": 246.75,
+   "tarih": "2026-11-13",
+   "onceki": 367.18,
+   "veri_yasi_gun": 6,
    "son_gozlemler": [
-    {
-     "t": "2026-10-02",
-     "v": -189.9
-    },
     {
      "t": "2026-10-09",
      "v": -248.2
@@ -9679,21 +9646,21 @@
     {
      "t": "2026-11-06",
      "v": 367.18
+    },
+    {
+     "t": "2026-11-13",
+     "v": 246.75
     }
    ],
-   "son_4_hafta_toplam": 112.18
+   "son_4_hafta_toplam": 447.68
   },
   "yabanci_dibs_net_haftalik": {
    "kod": "TP.MKNETHAR.M8",
-   "son": 36.93,
-   "tarih": "2026-11-06",
-   "onceki": -750.39,
-   "veri_yasi_gun": 13,
+   "son": 97.58,
+   "tarih": "2026-11-13",
+   "onceki": 36.93,
+   "veri_yasi_gun": 6,
    "son_gozlemler": [
-    {
-     "t": "2026-10-02",
-     "v": -484.73
-    },
     {
      "t": "2026-10-09",
      "v": 451.12
@@ -9713,21 +9680,21 @@
     {
      "t": "2026-11-06",
      "v": 36.93
+    },
+    {
+     "t": "2026-11-13",
+     "v": 97.58
     }
    ],
-   "son_4_hafta_toplam": -938.56
+   "son_4_hafta_toplam": -799.64
   },
   "mevduat_tl_1ay": {
    "kod": "TP.TRY.MT01",
-   "son": 41.87,
-   "tarih": "2026-11-06",
-   "onceki": 42.05,
-   "veri_yasi_gun": 13,
+   "son": 41.59,
+   "tarih": "2026-11-13",
+   "onceki": 41.87,
+   "veri_yasi_gun": 6,
    "son_gozlemler": [
-    {
-     "t": "2026-10-02",
-     "v": 43.11
-    },
     {
      "t": "2026-10-09",
      "v": 42.88
@@ -9747,20 +9714,20 @@
     {
      "t": "2026-11-06",
      "v": 41.87
+    },
+    {
+     "t": "2026-11-13",
+     "v": 41.59
     }
    ]
   },
   "mevduat_tl_3ay": {
    "kod": "TP.TRY.MT02",
-   "son": 42.47,
-   "tarih": "2026-11-06",
-   "onceki": 42.23,
-   "veri_yasi_gun": 13,
+   "son": 41.97,
+   "tarih": "2026-11-13",
+   "onceki": 42.47,
+   "veri_yasi_gun": 6,
    "son_gozlemler": [
-    {
-     "t": "2026-10-02",
-     "v": 43.79
-    },
     {
      "t": "2026-10-09",
      "v": 43.2
@@ -9780,6 +9747,10 @@
     {
      "t": "2026-11-06",
      "v": 42.47
+    },
+    {
+     "t": "2026-11-13",
+     "v": 41.97
     }
    ]
   },
@@ -9853,15 +9824,11 @@
   },
   "brut_doviz_rezerv": {
    "kod": "TP.AB.N07",
-   "son": 8065567919.0,
-   "tarih": "2026-11-06",
-   "onceki": 7876372531.0,
-   "veri_yasi_gun": 13,
+   "son": 7992669481.0,
+   "tarih": "2026-11-13",
+   "onceki": 8065567919.0,
+   "veri_yasi_gun": 6,
    "son_gozlemler": [
-    {
-     "t": "2026-10-02",
-     "v": 8212221681.0
-    },
     {
      "t": "2026-10-09",
      "v": 8448143699.0
@@ -9881,21 +9848,21 @@
     {
      "t": "2026-11-06",
      "v": 8065567919.0
+    },
+    {
+     "t": "2026-11-13",
+     "v": 7992669481.0
     }
    ],
-   "4hafta_degisim_pct": -4.53
+   "4hafta_degisim_pct": -4.41
   },
   "net_uluslararasi_rezerv": {
    "kod": "TP.AB.N06",
-   "son": 2057194087.0,
-   "tarih": "2026-11-06",
-   "onceki": 1889016841.0,
-   "veri_yasi_gun": 13,
+   "son": 2070016188.0,
+   "tarih": "2026-11-13",
+   "onceki": 2057194087.0,
+   "veri_yasi_gun": 6,
    "son_gozlemler": [
-    {
-     "t": "2026-10-02",
-     "v": 2633182631.0
-    },
     {
      "t": "2026-10-09",
      "v": 2837167869.0
@@ -9915,9 +9882,13 @@
     {
      "t": "2026-11-06",
      "v": 2057194087.0
+    },
+    {
+     "t": "2026-11-13",
+     "v": 2070016188.0
     }
    ],
-   "4hafta_degisim_pct": -27.49
+   "4hafta_degisim_pct": -18.53
   },
   "pka_kur_beklentisi": {
    "kod": "TP.PKAUO.S05.C.U",
@@ -10006,7 +9977,7 @@
    ]
   }
  },
- "evds_resmi_zamani": "2026-11-19 08:17 (önbellek)",
+ "evds_resmi_zamani": "2026-11-19 18:52",
  "enflasyon": {
   "date": "2026-10-01",
   "year_month": "10-2026",
@@ -10045,6 +10016,135 @@
   "gun_sayisi": 30,
   "ilk": "2026-10-08",
   "son": "2026-11-19"
+ },
+ "verim_tv": {
+  "kod": "TVC:TR02Y",
+  "birim": "yıllık bileşik (TradingView yarıyıllık verimden çevrildi)",
+  "gozlem": 730,
+  "ilk": "2024-02-02",
+  "son": "2026-11-19",
+  "arsivle_ortak_gun": 30,
+  "ortalama_fark_puan": 0.03,
+  "dogrulandi": true,
+  "zaman": "2026-11-19 18:52"
+ },
+ "verim_evds": {
+  "kod": null,
+  "adaylar": [
+   "TP.HUFE.GK378328474 | H494-N812-STS. Kdii Yönetmeliğinde İstenen Hizmetler Hizmet Üretici Fiyatları Göstergesi İçin | AYLIK",
+   "TP.AB.R18 | 3Aa-a-5 Kasım 2001 Öncesi DIBS (Arşiv) | HAFTALIK(CUMA)",
+   "TP.AB.R19 | 3Aa-b-İkincil Piyasadan Alınan DIBS (Arşiv) | HAFTALIK(CUMA)",
+   "TP.AB.S18 | 3Aa-a-5 Kasım 2001 Öncesi DIBS (Arşiv) | HAFTALIK(CUMA)",
+   "TP.AB.S19 | 3Aa-b-İkincil piyasadan Alınan DIBS (Arşiv) | HAFTALIK(CUMA)",
+   "TP.AB.G20 | 3Aaa-5 Kasım 2001 Öncesi DIBS (Arşiv) | HAFTALIK(CUMA)",
+   "TP.AB.G21 | 3Aab-İkincil Piyasadan Alınan DIBS (Arşiv) | HAFTALIK(CUMA)",
+   "TP.AB.M18 | 3A1a.5 Kasım 2001 Öncesi DIBS (Arşiv) | HAFTALIK(CUMA)",
+   "TP.AB.M19 | 3A1b.İkincil Piyasadan Alınan DIBS (Arşiv) | HAFTALIK(CUMA)",
+   "TP.AB.H20 | 3Aaa-5 Kasım 2001 Öncesi DIBS (Arşiv) | HAFTALIK(CUMA)",
+   "TP.AB.H21 | 3Aab-İkincil Piyasadan Alınan DIBS (Arşiv) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.ST | 1.Toplam DIBS (Yazılı Değer) (S.1, S.2) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.S1 | 1.1.Toplam Ekonomi (S.1) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.S11 | 1.1.1.Finansal Olmayan Kuruluşlar (S.11) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.S12 | 1.1.2.Finansal Kuruluşlar (S.12) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.S121 | 1.1.2.1.Merkez Bankası (S.121) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.S122 | 1.1.2.2.Bankalar (S.122) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.S1234 | 1.1.2.3.Yatırım Fonları (S.123, S.124) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.S125 | 1.1.2.4.Diğer Finansal Aracılar (S.125) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.S126 | 1.1.2.5.Finansal Yardımcılar (S.126) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.S128 | 1.1.2.6.Sigorta Şirketleri (S.128) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.S129 | 1.1.2.7.Emeklilik Fonları (S.129) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.S13 | 1.1.3.Genel Yönetim (S.13) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.S1311 | 1.1.3.1.Merkezi Yönetim (S.1311) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.S1313 | 1.1.3.2.Yerel Yönetim (S.1313) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.S1314 | 1.1.3.3.Sosyal Güvenlik Kuruluşları (S.1314) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.S14 | 1.1.4.Hanehalkı (S.14) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.S15 | 1.1.5.Hanehalkına Hizmet Veren Kar Amacı Olmayan Kuruluşlar (S.15) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.S2 | 1.2.Dünyanın Geri Kalanı (S.2) | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.S228 | 1.2.1.Türkiye'deki Bankaların Yurt Dışı Şubeleri | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.SD | 1.2.2.Diğer | HAFTALIK(CUMA)",
+   "TP.DIBSYAZDEG.SH | 2.İhraç Toplamı | HAFTALIK(CUMA)",
+   "TP.DIBSPIYDEG.ST | 1.Toplam (S.1, S.2) | HAFTALIK(CUMA)",
+   "TP.DIBSPIYDEG.S1 | 1.1.Toplam Ekonomi (S.1) | HAFTALIK(CUMA)",
+   "TP.DIBSPIYDEG.S11 | 1.1.1.Finansal Olmayan Kuruluşlar (S.11) | HAFTALIK(CUMA)",
+   "TP.DIBSPIYDEG.S12 | 1.1.2.Finansal Kuruluşlar (S.12) | HAFTALIK(CUMA)",
+   "TP.DIBSPIYDEG.S121 | 1.1.2.1.Merkez Bankası (S.121) | HAFTALIK(CUMA)",
+   "TP.DIBSPIYDEG.S122 | 1.1.2.2.Bankalar (S.122) | HAFTALIK(CUMA)",
+   "TP.DIBSPIYDEG.S1234 | 1.1.2.3.Yatırım Fonları (S.123, S.124) | HAFTALIK(CUMA)",
+   "TP.DIBSPIYDEG.S125 | 1.1.2.4.Diğer Finansal Aracılar (S.125) | HAFTALIK(CUMA)",
+   "TP.DIBSPIYDEG.S126 | 1.1.2.5.Finansal Yardımcılar (S.126) | HAFTALIK(CUMA)",
+   "TP.BKEA.S009 | 2.2. (Bankanızın Para ve Tahvil Piyasası Finansmanına Erişim Olanağı)_ Geçen üç ayda, bu faktör işletmelerle ilgili Bankanız kredi standartlarını nasıl etkiledi? | ÜÇ AYLIK",
+   "TP.ALTINADT.SERTIFIKA | 14.Altın Tahvili ve Kira Sertifikası (Z_25) (Adet) | AYLIK",
+   "TP.ALTINGR.SERTIFIKA | 14.Altın Tahvili ve Kira Sertifikası (Z_25) (Gram) | AYLIK",
+   "TP.PB.A38 | 6.25.Tahvil Üzerine Avans (Arşiv) | AYLIK",
+   "TP.AB.K040 | A6B5.Tahvil Uzerine Avans (Arşiv) | HAFTALIK(CUMA)",
+   "TP.KY.DVDY09 | 1.4.2. Tahviller (Yurt Dışı) | AYLIK",
+   "TP.MB.DVDY10 | 1.4.2. Tahviller (Yurt Dışı) | AYLIK",
+   "TP.PYUK22 | 4. Özel Sektör Tahvil ve Bonoları Stoku (milyon ABD doları) (Arşiv) | HAFTALIK(CUMA)",
+   "TP.PYUK6 | 8. Özel Sektör Tahvil ve Bonoları Net Değişimi (milyon ABD doları) (Arşiv) | HAFTALIK(CUMA)",
+   "TP.BEKA.S02.E.A | 2E.(Aritmetik Ortalama) Gelecek 3.Ayın Vadesine Beş Yıl ya da Beş Yıla Yakın Süre Kalmış Sabit Faizli TL Cinsi Devlet Tahvillerinin İkincil Piyasa Yıllık Bileşik Faiz Oranı Beklentisi(%) (Arşiv) | AYDA İKİ KEZ",
+   "TP.BEKA.S02.E.B | 2E.(En Büyük) Gelecek 3.Ayın Vadesine Beş Yıl ya da Beş Yıla Yakın Süre Kalmış Sabit Faizli TL Cinsi Devlet Tahvillerinin İkincil Piyasa Yıllık Bileşik Faiz Oranı Beklentisi(%) (Arşiv) | AYDA İKİ KEZ",
+   "TP.BEKA.S02.E.D | 2E.(Mod) Gelecek 3.Ayın Vadesine Beş Yıl ya da Beş Yıla Yakın Süre Kalmış Sabit Faizli TL Cinsi Devlet Tahvillerinin İkincil Piyasa Yıllık Bileşik Faiz Oranı Beklentisi(%) (Arşiv) | AYDA İKİ KEZ",
+   "TP.BEKA.S02.E.K | 2E.(En Küçük) Gelecek 3.Ayın Vadesine Beş Yıl ya da Beş Yıla Yakın Süre Kalmış Sabit Faizli TL Cinsi Devlet Tahvillerinin İkincil Piyasa Yıllık Bileşik Faiz Oranı Beklentisi(%) (Arşiv) | AYDA İKİ KEZ",
+   "TP.BEKA.S02.E.M | 2E.(Medyan) Gelecek 3.Ayın Vadesine Beş Yıl ya da Beş Yıla Yakın Süre Kalmış Sabit Faizli TL Cinsi Devlet Tahvillerinin İkincil Piyasa Yıllık Bileşik Faiz Oranı Beklentisi(%) (Arşiv) | AYDA İKİ KEZ",
+   "TP.BEKA.S02.E.S | 2E.(Standart Sapma) Gelecek 3.Ayın Vadesine Beş Yıl ya da Beş Yıla Yakın Süre Kalmış Sabit Faizli TL Cinsi Devlet Tahvillerinin İkincil Piyasa Yıllık Bileşik Faiz Oranı Beklentisi(%) (Arşiv) | AYDA İKİ KEZ",
+   "TP.BEKA.S02.E.U | 2E.(Uygun Ortalama) Gelecek 3.Ayın Vadesine Beş Yıl ya da Beş Yıla Yakın Süre Kalmış Sabit Faizli TL Cinsi Devlet Tahvillerinin İkincil Piyasa Yıllık Bileşik Faiz Oranı Beklentisi(%) (Arşiv) | AYDA İKİ KEZ",
+   "TP.BEKA.S02.E.X | 2E.(Gözlem Sayısı) Gelecek 3.Ayın Vadesine Beş Yıl ya da Beş Yıla Yakın Süre Kalmış Sabit Faizli TL Cinsi Devlet Tahvillerinin İkincil Piyasa Yıllık Bileşik Faiz Oranı Beklentisi (Arşiv) | AYDA İKİ KEZ",
+   "TP.BEKA.S02.F.A | 2F.(Aritmetik Ortalama) Gelecek 12.Ayın Vadesine Beş Yıl ya da Beş Yıla Yakın Süre Kalmış Sabit Faizli TL Cinsi Devlet Tahvillerinin İkincil Piyasa Yıllık Bileşik Faiz Oranı Beklentisi (%) (Arşiv) | AYDA İKİ KEZ",
+   "TP.BEKA.S02.F.B | 2F.(En Büyük) Gelecek 12.Ayın Vadesine Beş Yıl ya da Beş Yıla Yakın Süre Kalmış Sabit Faizli TL Cinsi Devlet Tahvillerinin İkincil Piyasa Yıllık Bileşik Faiz Oranı Beklentisi (%) (Arşiv) | AYDA İKİ KEZ",
+   "TP.BEKA.S02.F.D | 2F.(Mod) Gelecek 12.Ayın Vadesine Beş Yıl ya da Beş Yıla Yakın Süre Kalmış Sabit Faizli TL Cinsi Devlet Tahvillerinin İkincil Piyasa Yıllık Bileşik Faiz Oranı Beklentisi (%) (Arşiv) | AYDA İKİ KEZ",
+   "TP.BEKA.S02.F.K | 2F.(En Küçük) Gelecek 12.Ayın Vadesine Beş Yıl ya da Beş Yıla Yakın Süre Kalmış Sabit Faizli TL Cinsi Devlet Tahvillerinin İkincil Piyasa Yıllık Bileşik Faiz Oranı Beklentisi (%) (Arşiv) | AYDA İKİ KEZ",
+   "TP.BEKA.S02.F.M | 2F.(Medyan) Gelecek 12.Ayın Vadesine Beş Yıl ya da Beş Yıla Yakın Süre Kalmış Sabit Faizli TL Cinsi Devlet Tahvillerinin İkincil Piyasa Yıllık Bileşik Faiz Oranı Beklentisi (%) (Arşiv) | AYDA İKİ KEZ",
+   "TP.BEKA.S02.F.S | 2F.(Standart Sapma) Gelecek 12.Ayın Vadesine Beş Yıl ya da Beş Yıla Yakın Süre Kalmış Sabit Faizli TL Cinsi Devlet Tahvillerinin İkincil Piyasa Yıllık Bileşik Faiz Oranı Beklentisi (%) (Arşiv) | AYDA İKİ KEZ",
+   "TP.BEKA.S02.F.U | 2F.(Uygun Ortalama) Gelecek 12.Ayın Vadesine Beş Yıl ya da Beş Yıla Yakın Süre Kalmış Sabit Faizli TL Cinsi Devlet Tahvillerinin İkincil Piyasa Yıllık Bileşik Faiz Oranı Beklentisi (%) (Arşiv) | AYDA İKİ KEZ",
+   "TP.BEKA.S02.F.X | 2F.(Gözlem Sayısı) Gelecek 12.Ayın Vadesine Beş Yıl ya da Beş Yıla Yakın Süre Kalmış Sabit Faizli TL Cinsi Devlet Tahvillerinin İkincil Piyasa Yıllık Bileşik Faiz Oranı Beklentisi (Arşiv) | AYDA İKİ KEZ",
+   "TP.KB.GEN49 | 8.2.3.TL Cinsinden Devlet Tahvili | AYLIK",
+   "TP.KB.GEN52 | 8.2.4.Döviz Cinsinden Devlet Tahvili | AYLIK",
+   "TP.KB.GID155 | _Tahvil Faizi | AYLIK",
+   "TP.KB.GID158 | _Tahvil Faizi_1 | AYLIK",
+   "TP.PBD.C50 | P2.Tahviller (Arşiv) | AYLIK",
+   "TP.PBD.A20 | 4.14 Tahvil Üzerine Avans (Arşiv) | AYLIK",
+   "TP.KB.K30 | 9B1.Devlet Tahvili (Net) (Arşiv) | AYLIK",
+   "TP.KB.Y53 | 7A2a.Devlet Tahvili,net (Arşiv) | AYLIK",
+   "TP.KB.GI26 | 2.1.1.2.Devlet Tahvili Faizi (Arşiv) | AYLIK",
+   "TP.KB.GI29 | 2.1.2.2.Devlet Tahvili Faizi (Arşiv) | AYLIK",
+   "TP.KB.A01 | 1.Tahvil | AYLIK",
+   "TP.KB.A02 | 1.1.Tahvil Nakit | AYLIK",
+   "TP.KB.A03 | 1.2.Tahvil Nakit Dışı | AYLIK",
+   "TP.MENKUL.L005 | I.A.1.aa.Hazine Bonosu ve Devlet Tahvili (Arşiv) | HAFTALIK(CUMA)"
+  ],
+  "veri_gruplari": [
+   "Hizmet Üretici Fiyat Endeksi",
+   "MB Bilançosu-Stand By-03.05.2001 Tarihli Niyet Mektubu ile Belirlenmiş (Cari) (Arşiv)",
+   "MB Bilançosu-Stand By-03.05.2001 Tarihli Niyet Mektubu ile Belirlenmiş (Sabit) (Arşiv)",
+   "MB Bilançosu-Stand By-05.04.2003 Tarihli Niyet Mektubu ile Belirlenmiş (Sabit) (Arşiv)",
+   "MB Bilançosu-Stand By-18.01.2002 Tarihli Niyet Mektubu ile Belirlenmiş (Sabit) (Arşiv)",
+   "MB Bilançosu-Stand By-26.04.2005 Tarihli Niyet Mektubu ile Belirlenmiş (Sabit) (Arşiv)",
+   "DİBS, Yazılı Değer",
+   "DİBS, Piyasa Değeri",
+   "Banka Kredileri Eğilim Anketi",
+   "Altın Para Basımı, Cumhuriyet ve Reşad Altını, Adet (HMB Darphane)",
+   "Altın Para Basımı, Cumhuriyet ve Reşad Altını, Gram (HMB Darphane)",
+   "Merkez Bankası Bilançosu (Arşiv)",
+   "Merkez Bankası Haftalık Vaziyeti (Arşiv)",
+   "Dış Varlık Yükümlülükler - Kalkınma ve Yatırım Bankaları",
+   "Dış Varlık Yükümlülükler - Mevduat Bankaları",
+   "Yurt Dışı Yerleşiklerin Menkul Kıymet Portföyü (ABD doları, Piyasa Değeri, Stok, Akım) (Arşiv)",
+   "Piyasa Katılımcıları Anketi Tanımsal İstatistikleri (15/8/2001 - 31/12/2012 Tarihleri Arası 15 Günlük Veriler (Arşiv)",
+   "Genel Bütçe Dengesi ve Finansmanı",
+   "Merkezi Yönetim Bütçe Harcamaları-Yeni Tanım",
+   "Bankalar Durumu (Arşiv)",
+   "Merkez Bankası, Sektörel Bilanço (Arşiv)",
+   "Konsolide Bütçe (Arşiv)",
+   "Konsolide Bütçe Gerçekleşmeleri Kümülatif)-Yeni Tanım (Arşiv)",
+   "Konsolide Bütçe Giderleri-Yeni Tanım (Arşiv)",
+   "İç Borç Stoku",
+   "Menkul Değerler - Bankacılık Sektörü (Arşiv)",
+   "Merkez Bankası, Krediler (Arşiv)",
+   "Mevduat Bankaları, Menkul Değerler (Türlerine Göre) (Arşiv)"
+  ],
+  "son_deneme": "2026-11-13 08:17",
+  "dogrulandi": false,
+  "durum": "bulunamadı; 1 gün sonra yeniden aranacak"
  },
  "doviz_altin": {
   "USD": {
@@ -10178,15 +10278,15 @@
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-19",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 90.5,
-   "gunluk_degisim_pct": -1.58,
-   "rsi14_tamamlanmis": 34.9189,
+   "son_fiyat": 89.65,
+   "gunluk_degisim_pct": -2.5,
+   "rsi14_tamamlanmis": 34.022,
    "rsi14_anlik": null,
    "atr14": 4.5901,
    "52h_zirve_kapanis": 118.35,
-   "zirveden_pct": -23.53,
-   "haftalik_degisim_pct": -5.55,
-   "aylik_degisim_pct": -16.84,
+   "zirveden_pct": -24.25,
+   "haftalik_degisim_pct": -6.44,
+   "aylik_degisim_pct": -17.62,
    "gun_ici_dusuk": 88.51,
    "gun_ici_yuksek": 90.7
   },
@@ -10194,63 +10294,63 @@
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-19",
    "son_bar_kismi_mi": true,
-   "son_fiyat": 7355.8101,
-   "gunluk_degisim_pct": 0.44,
+   "son_fiyat": 7296.1499,
+   "gunluk_degisim_pct": -0.38,
    "rsi14_tamamlanmis": 36.5619,
-   "rsi14_anlik": 38.7477,
+   "rsi14_anlik": 35.4807,
    "atr14": 110.8453,
    "52h_zirve_kapanis": 7818.9302,
-   "zirveden_pct": -5.92,
-   "haftalik_degisim_pct": -3.12,
-   "aylik_degisim_pct": -5.17,
-   "gun_ici_dusuk": 7347.0601,
+   "zirveden_pct": -6.69,
+   "haftalik_degisim_pct": -3.9,
+   "aylik_degisim_pct": -5.94,
+   "gun_ici_dusuk": 7274.4199,
    "gun_ici_yuksek": 7415.6401
   },
   "nasdaq": {
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-19",
    "son_bar_kismi_mi": true,
-   "son_fiyat": 24697.1758,
-   "gunluk_degisim_pct": 1.09,
+   "son_fiyat": 24459.4277,
+   "gunluk_degisim_pct": 0.12,
    "rsi14_tamamlanmis": 37.09,
-   "rsi14_anlik": 40.8304,
+   "rsi14_anlik": 37.5265,
    "atr14": 530.7597,
    "52h_zirve_kapanis": 27599.7891,
-   "zirveden_pct": -10.52,
-   "haftalik_degisim_pct": -2.64,
-   "aylik_degisim_pct": -7.51,
-   "gun_ici_dusuk": 24673.3457,
+   "zirveden_pct": -11.38,
+   "haftalik_degisim_pct": -3.57,
+   "aylik_degisim_pct": -8.4,
+   "gun_ici_dusuk": 24337.5605,
    "gun_ici_yuksek": 24939.623
   },
   "vix": {
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-19",
    "son_bar_kismi_mi": true,
-   "son_fiyat": 22.95,
-   "gunluk_degisim_pct": -6.56,
+   "son_fiyat": 25.43,
+   "gunluk_degisim_pct": 3.54,
    "rsi14_tamamlanmis": 58.7963,
-   "rsi14_anlik": 55.3902,
+   "rsi14_anlik": 60.1214,
    "atr14": 3.3467,
    "52h_zirve_kapanis": 31.05,
-   "zirveden_pct": -26.09,
-   "haftalik_degisim_pct": 22.73,
-   "aylik_degisim_pct": 37.59,
+   "zirveden_pct": -18.1,
+   "haftalik_degisim_pct": 35.99,
+   "aylik_degisim_pct": 52.46,
    "gun_ici_dusuk": 21.84,
-   "gun_ici_yuksek": 23.11
+   "gun_ici_yuksek": 26.39
   },
   "dolar_endeksi": {
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-19",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 103.761,
-   "gunluk_degisim_pct": -0.1,
-   "rsi14_tamamlanmis": 68.0692,
+   "son_fiyat": 103.798,
+   "gunluk_degisim_pct": -0.06,
+   "rsi14_tamamlanmis": 68.7228,
    "rsi14_anlik": null,
    "atr14": 0.5071,
    "52h_zirve_kapanis": 103.86,
-   "zirveden_pct": -0.1,
-   "haftalik_degisim_pct": 0.57,
-   "aylik_degisim_pct": 1.95,
+   "zirveden_pct": -0.06,
+   "haftalik_degisim_pct": 0.61,
+   "aylik_degisim_pct": 1.98,
    "gun_ici_dusuk": 103.588,
    "gun_ici_yuksek": 103.974
   },
@@ -10258,111 +10358,111 @@
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-19",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 5.097,
-   "gunluk_degisim_pct": 0.61,
-   "rsi14_tamamlanmis": 55.3863,
+   "son_fiyat": 5.068,
+   "gunluk_degisim_pct": 0.04,
+   "rsi14_tamamlanmis": 53.1775,
    "rsi14_anlik": null,
-   "atr14": 0.0743,
+   "atr14": 0.0753,
    "52h_zirve_kapanis": 5.311,
-   "zirveden_pct": -4.03,
-   "haftalik_degisim_pct": -0.12,
-   "aylik_degisim_pct": -0.95,
-   "gun_ici_dusuk": 5.074,
+   "zirveden_pct": -4.58,
+   "haftalik_degisim_pct": -0.69,
+   "aylik_degisim_pct": -1.52,
+   "gun_ici_dusuk": 5.052,
    "gun_ici_yuksek": 5.107
   },
   "ons_altin": {
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-19",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 3709.8999,
-   "gunluk_degisim_pct": -0.86,
-   "rsi14_tamamlanmis": 27.9716,
+   "son_fiyat": 3689.3,
+   "gunluk_degisim_pct": -1.41,
+   "rsi14_tamamlanmis": 27.1717,
    "rsi14_anlik": null,
-   "atr14": 89.6108,
+   "atr14": 90.3894,
    "52h_zirve_kapanis": 5318.3999,
-   "zirveden_pct": -30.24,
-   "haftalik_degisim_pct": -4.51,
-   "aylik_degisim_pct": -10.6,
-   "gun_ici_dusuk": 3694.5,
+   "zirveden_pct": -30.63,
+   "haftalik_degisim_pct": -5.04,
+   "aylik_degisim_pct": -11.1,
+   "gun_ici_dusuk": 3683.6001,
    "gun_ici_yuksek": 3759.5
   },
   "tur_etf": {
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-19",
    "son_bar_kismi_mi": true,
-   "son_fiyat": 30.71,
-   "gunluk_degisim_pct": -1.41,
+   "son_fiyat": 30.62,
+   "gunluk_degisim_pct": -1.7,
    "rsi14_tamamlanmis": 42.0036,
-   "rsi14_anlik": 39.2019,
+   "rsi14_anlik": 38.6743,
    "atr14": 0.6151,
    "52h_zirve_kapanis": 43.74,
-   "zirveden_pct": -29.79,
-   "haftalik_degisim_pct": -4.18,
-   "aylik_degisim_pct": -4.54,
-   "gun_ici_dusuk": 30.71,
+   "zirveden_pct": -30.0,
+   "haftalik_degisim_pct": -4.46,
+   "aylik_degisim_pct": -4.82,
+   "gun_ici_dusuk": 30.6,
    "gun_ici_yuksek": 30.865
   },
   "eem_etf": {
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-19",
    "son_bar_kismi_mi": true,
-   "son_fiyat": 57.915,
-   "gunluk_degisim_pct": 0.06,
+   "son_fiyat": 57.42,
+   "gunluk_degisim_pct": -0.79,
    "rsi14_tamamlanmis": 34.2595,
-   "rsi14_anlik": 34.4522,
+   "rsi14_anlik": 32.9853,
    "atr14": 1.3615,
    "52h_zirve_kapanis": 71.21,
-   "zirveden_pct": -18.67,
-   "haftalik_degisim_pct": -5.27,
-   "aylik_degisim_pct": -8.9,
-   "gun_ici_dusuk": 57.865,
+   "zirveden_pct": -19.37,
+   "haftalik_degisim_pct": -6.08,
+   "aylik_degisim_pct": -9.67,
+   "gun_ici_dusuk": 57.18,
    "gun_ici_yuksek": 58.36
   },
   "emb_etf": {
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-19",
    "son_bar_kismi_mi": true,
-   "son_fiyat": 90.635,
-   "gunluk_degisim_pct": -0.17,
+   "son_fiyat": 90.565,
+   "gunluk_degisim_pct": -0.25,
    "rsi14_tamamlanmis": 39.6468,
-   "rsi14_anlik": 38.1746,
+   "rsi14_anlik": 37.5449,
    "atr14": 0.4703,
    "52h_zirve_kapanis": 97.74,
-   "zirveden_pct": -7.27,
-   "haftalik_degisim_pct": -0.77,
-   "aylik_degisim_pct": -0.88,
-   "gun_ici_dusuk": 90.605,
+   "zirveden_pct": -7.34,
+   "haftalik_degisim_pct": -0.85,
+   "aylik_degisim_pct": -0.96,
+   "gun_ici_dusuk": 90.56,
    "gun_ici_yuksek": 90.79
   },
   "hyg_etf": {
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-19",
    "son_bar_kismi_mi": true,
-   "son_fiyat": 76.74,
-   "gunluk_degisim_pct": 0.12,
+   "son_fiyat": 76.705,
+   "gunluk_degisim_pct": 0.07,
    "rsi14_tamamlanmis": 38.5813,
-   "rsi14_anlik": 40.8518,
+   "rsi14_anlik": 39.9891,
    "atr14": 0.2937,
    "52h_zirve_kapanis": 81.18,
-   "zirveden_pct": -5.47,
-   "haftalik_degisim_pct": -0.31,
-   "aylik_degisim_pct": -0.31,
-   "gun_ici_dusuk": 76.705,
+   "zirveden_pct": -5.51,
+   "haftalik_degisim_pct": -0.36,
+   "aylik_degisim_pct": -0.36,
+   "gun_ici_dusuk": 76.68,
    "gun_ici_yuksek": 76.86
   },
   "bitcoin": {
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-19",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 63363.1602,
-   "gunluk_degisim_pct": 0.6,
-   "rsi14_tamamlanmis": 23.4503,
+   "son_fiyat": 63032.3906,
+   "gunluk_degisim_pct": 0.07,
+   "rsi14_tamamlanmis": 22.0345,
    "rsi14_anlik": null,
    "atr14": 2524.0823,
    "52h_zirve_kapanis": 86602.9141,
-   "zirveden_pct": -26.83,
-   "haftalik_degisim_pct": -1.19,
-   "aylik_degisim_pct": -18.53,
+   "zirveden_pct": -27.22,
+   "haftalik_degisim_pct": -1.71,
+   "aylik_degisim_pct": -18.96,
    "gun_ici_dusuk": 62382.4844,
    "gun_ici_yuksek": 63985.2891
   },
@@ -10370,21 +10470,21 @@
    "kaynak": "yahoo",
    "son_bar_tarihi": "2026-11-19",
    "son_bar_kismi_mi": false,
-   "son_fiyat": 50.4638,
+   "son_fiyat": 50.4645,
    "gunluk_degisim_pct": 0.05,
-   "rsi14_tamamlanmis": 96.0513,
+   "rsi14_tamamlanmis": 96.0559,
    "rsi14_anlik": null,
    "atr14": 0.0728,
-   "52h_zirve_kapanis": 50.4638,
+   "52h_zirve_kapanis": 50.4645,
    "zirveden_pct": 0.0,
    "haftalik_degisim_pct": 0.42,
-   "aylik_degisim_pct": 1.77,
+   "aylik_degisim_pct": 1.78,
    "gun_ici_dusuk": 50.362,
    "gun_ici_yuksek": 50.4867
   }
  },
  "usdt_prim": {
-  "usdt_try": 50.339,
+  "usdt_try": 50.34,
   "kaynak": "BtcTurk",
   "usdtry": 50.4396,
   "usdtry_kaynak": "doviz.com (borsapy)",
@@ -10398,45 +10498,45 @@
   "durum": "NORMAL"
  },
  "gram_altin_canli": {
-  "canli": 6002.15,
-  "ons_usd": 3709.9,
+  "canli": 5968.9,
+  "ons_usd": 3689.3,
   "ons_tarih": "2026-11-19",
-  "usdtry": 50.4638,
+  "usdtry": 50.4645,
   "kalibrasyon_orani": 0.9972,
   "gozlem": 20,
   "borsapy_son": 6050.7,
   "borsapy_tarih": "2026-11-18",
   "borsapy_update_time": "2026-11-18T00:00:00",
-  "fark_pct": -0.8,
+  "fark_pct": -1.35,
   "yontem": "ons × USD/TRY / 31,1035 × kalibrasyon (son 20 gün, borsapy gram kapanışlarına göre)",
   "zirve_1y": 7549.47,
-  "zirveden_pct": -20.5,
+  "zirveden_pct": -20.94,
   "durum": "OK"
  },
  "tetikler": {
-  "korunan_taban_mesafe_pct": -12.25,
-  "tez_cizgisi_mesafe_pct": -9.46,
+  "korunan_taban_mesafe_pct": -12.31,
+  "tez_cizgisi_mesafe_pct": -9.52,
   "k3_tetik_13000_alti_kapanis": true,
   "k3_yaklasiyor_anlik": false,
   "tez_cizgisi_referans_kapanis": 11842.82,
   "tez_cizgisi_haftalik_kirildi": true,
   "korunan_taban_3gun": false,
   "ma200_ustu": false,
-  "banka_minus_endeks_pct": 1.0,
+  "banka_minus_endeks_pct": 1.06,
   "kamu_alim_proxy": "VAR",
   "kamu_alim_proxy_not": "ZAYIF PROXY: banka primi faiz indirimi beklentisinden de gelebilir; haberle teyit şart",
-  "genislik_tabana_kilitli_tum": 11,
-  "genislik_yukselen_orani_tum": 38.4,
+  "genislik_tabana_kilitli_tum": 12,
+  "genislik_yukselen_orani_tum": 38.5,
   "genislik_yukselen_orani_bist30": 43.3,
-  "generaller_eksi_ordu_puan": 4.9,
+  "generaller_eksi_ordu_puan": 4.8,
   "yapay_taban_sinyali": false,
   "yapay_taban_gerekce": "yok",
   "yabanci_1hafta_puan": 0.205,
-  "nasdaq_zirveden_pct": -10.52,
+  "nasdaq_zirveden_pct": -11.38,
   "nasdaq_duzeltme_tetik": false,
-  "altin_zirveden_pct": -30.24,
+  "altin_zirveden_pct": -30.63,
   "altin_duzeltme_tetik": true,
-  "vix": 22.95,
+  "vix": 25.43,
   "brent": 91.56,
   "brent_kaynak": "borsapy",
   "brent_tarih": "2026-11-18",
@@ -10445,12 +10545,12 @@
    "borsapy_tarih": "2026-11-18",
    "yahoo_ayni_gun": 91.95,
    "yahoo_tarih": "2026-11-18",
-   "yahoo_canli": 90.5,
+   "yahoo_canli": 89.65,
    "fark_pct": -0.42
   },
   "gram_altin_zirveden_pct_borsapy": -19.85,
-  "gram_altin": 6002.15,
-  "gram_altin_zirveden_pct": -20.5,
+  "gram_altin": 5968.9,
+  "gram_altin_zirveden_pct": -20.94,
   "gram_altin_kaynak": "canlı (ons × USD/TRY, kalibre)",
   "politika_faizi": 36.0,
   "ppk_kalan_gun": 21,
@@ -10464,8 +10564,8 @@
    "para_piyasasi": {
     "referans_fon_sayisi": 12,
     "hata_sayisi": 0,
-    "medyan_buyukluk_30g": 4.0,
-    "medyan_yatirimci_30g": 0.935
+    "medyan_buyukluk_30g": 6.305,
+    "medyan_yatirimci_30g": 1.16
    },
    "bist30_endeks": {
     "referans_fon_sayisi": 3,
@@ -10478,26 +10578,26 @@
    "YLB": {
     "buyukluk_30g": 13.97,
     "yatirimci_30g": 2.17,
-    "sektor_buyukluk_30g": 4.0,
-    "sektor_yatirimci_30g": 0.935,
-    "goreli_buyukluk": 9.97,
-    "goreli_yatirimci": 1.23
+    "sektor_buyukluk_30g": 6.305,
+    "sektor_yatirimci_30g": 1.16,
+    "goreli_buyukluk": 7.67,
+    "goreli_yatirimci": 1.01
    },
    "ZBJ": {
     "buyukluk_30g": 28.29,
     "yatirimci_30g": 27.48,
-    "sektor_buyukluk_30g": 4.0,
-    "sektor_yatirimci_30g": 0.935,
-    "goreli_buyukluk": 24.29,
-    "goreli_yatirimci": 26.55
+    "sektor_buyukluk_30g": 6.305,
+    "sektor_yatirimci_30g": 1.16,
+    "goreli_buyukluk": 21.98,
+    "goreli_yatirimci": 26.32
    },
    "BGP": {
     "buyukluk_30g": 30.17,
     "yatirimci_30g": 7.74,
-    "sektor_buyukluk_30g": 4.0,
-    "sektor_yatirimci_30g": 0.935,
-    "goreli_buyukluk": 26.17,
-    "goreli_yatirimci": 6.8
+    "sektor_buyukluk_30g": 6.305,
+    "sektor_yatirimci_30g": 1.16,
+    "goreli_buyukluk": 23.87,
+    "goreli_yatirimci": 6.58
    },
    "TIE": {
     "buyukluk_30g": 3.12,
@@ -10553,8 +10653,8 @@
   },
   "varlik_sinifi_ppf_ustu": {
    "TL mevduat (1 ay, brüt)": {
-    "fark_1a": 0.45,
-    "fark_3a": 1.1,
+    "fark_1a": 0.43,
+    "fark_3a": 1.02,
     "ardisik_is_gunu": 36,
     "olgun": true
    }
@@ -10574,25 +10674,27 @@
    "aofm_30g_yon": "GEVŞEME — fon getirileri önümüzdeki haftalarda düşer"
   },
   "rakip_supheli": {
-   "para_piyasasi": [],
+   "para_piyasasi": [
+    "KHP"
+   ],
    "bist30_endeks": []
   },
   "tufe_aylik": 2.58,
   "tufe_kaynak": "TÜİK resmi (EVDS, 2026-10-01)",
   "tufe_yillik": 29.77,
-  "yabanci_hisse_net_son_hafta": 367.18,
-  "yabanci_hisse_net_4hafta": 112.18,
-  "yabanci_dibs_net_4hafta": -938.56,
-  "yabanci_veri_tarihi": "2026-11-06",
+  "yabanci_hisse_net_son_hafta": 246.75,
+  "yabanci_hisse_net_4hafta": 447.68,
+  "yabanci_dibs_net_4hafta": -799.64,
+  "yabanci_veri_tarihi": "2026-11-13",
   "pka_12ay_enflasyon_beklentisi": 23.89,
-  "brut_rezerv_4hafta_pct": -4.53,
-  "mevduat_tl_1ay_brut": 41.87,
-  "mevduat_tl_3ay_brut": 42.47,
+  "brut_rezerv_4hafta_pct": -4.41,
+  "mevduat_tl_1ay_brut": 41.59,
+  "mevduat_tl_3ay_brut": 41.97,
   "beklenen_kur_artisi_12ay_pct": 20.48,
   "dolar_makasi_puan": 15.52,
   "dolar_gecis_tetik": false,
   "k3_donus_kapisi": {
-   "ma200": 13497.7814,
+   "ma200": 13497.7441,
    "ma200_ustu_2gun": false,
    "genislik_katilim": false,
    "yabanci_net_alici": true,
@@ -10626,7 +10728,7 @@
   "pozisyon_takip": {},
   "reel_getiri_yontem": "NET: getiri×(1-0.175) − aylık TÜFE; ALARM <0.5, ACİL ≤0.0",
   "borsa_plani": {
-   "son_kapanis": 11407.55,
+   "son_kapanis": 11400.09,
    "son_kapanis_tarihi": "2026-11-19",
    "haftalik_kapanis": 11842.82,
    "kurallar": [
@@ -10636,7 +10738,7 @@
      "seviye": 12200,
      "islem": "TIE 87.400 adet sat (pozisyonun ~1/3'ü)",
      "durum": "BEKLİYOR",
-     "uzaklik_pct": 6.95
+     "uzaklik_pct": 7.02
     },
     {
      "ad": "azalt2",
@@ -10644,7 +10746,7 @@
      "seviye": 12600,
      "islem": "TIE 87.400 adet daha sat (~1/3)",
      "durum": "BEKLİYOR",
-     "uzaklik_pct": 10.45
+     "uzaklik_pct": 10.53
     },
     {
      "ad": "plan1",
@@ -10652,7 +10754,7 @@
      "seviye": 14000,
      "islem": "kalan pozisyonun yarısını sat",
      "durum": "BEKLİYOR",
-     "uzaklik_pct": 22.73
+     "uzaklik_pct": 22.81
     },
     {
      "ad": "plan2",
@@ -10660,7 +10762,7 @@
      "seviye": 14450,
      "islem": "kalan pozisyonun tamamını sat",
      "durum": "BEKLİYOR",
-     "uzaklik_pct": 26.67
+     "uzaklik_pct": 26.75
     },
     {
      "ad": "koruma",
@@ -10693,9 +10795,9 @@
     },
     "donus_gun": {
      "t": "2026-11-19",
-     "k": 11407.55,
-     "degisim_pct": -0.61,
-     "hacim_orani": 0.74,
+     "k": 11400.09,
+     "degisim_pct": -0.67,
+     "hacim_orani": 0.76,
      "kismi": false
     },
     "panik_gunu_taban": 35.0
@@ -10733,46 +10835,46 @@
   },
   "kuresel_akis": {
    "turkiye_vs_gelismekte": {
-    "tur_5g_pct": -4.18,
-    "eem_5g_pct": -5.27,
-    "fark_5g_puan": 1.09,
-    "tur_20g_pct": -4.54,
-    "eem_20g_pct": -8.9,
-    "fark_20g_puan": 4.36,
+    "tur_5g_pct": -4.46,
+    "eem_5g_pct": -6.08,
+    "fark_5g_puan": 1.62,
+    "tur_20g_pct": -4.82,
+    "eem_20g_pct": -9.67,
+    "fark_20g_puan": 4.85,
     "durum": "GELİŞMEKTE OLAN ÜLKELER GENELİNDE BASKI",
     "seans_ici": true,
     "okuma": "TUR: Türkiye hisseleri (dolar, ABD'de işlem görür); EEM: tüm gelişmekte olan ülkeler"
    },
    "kuresel_kredi": {
-    "hyg_20g_pct": -0.31,
-    "emb_20g_pct": -0.88,
-    "hyg_zirveden_pct": -5.47,
-    "emb_zirveden_pct": -7.27,
+    "hyg_20g_pct": -0.36,
+    "emb_20g_pct": -0.96,
+    "hyg_zirveden_pct": -5.51,
+    "emb_zirveden_pct": -7.34,
     "durum": "NORMAL"
    },
    "bitcoin": {
-    "son_usd": 63363.1602,
-    "gunluk_pct": 0.6,
-    "haftalik_pct": -1.19,
-    "zirveden_pct": -26.83,
-    "son_cumadan_beri_pct": -7.16,
+    "son_usd": 63032.3906,
+    "gunluk_pct": 0.07,
+    "haftalik_pct": -1.71,
+    "zirveden_pct": -27.22,
+    "son_cumadan_beri_pct": -7.64,
     "son_cuma": "2026-11-13"
    }
   },
   "bist_dolar": {
-   "son": 226.05,
+   "son": 225.9,
    "tarih": "2026-11-19",
-   "usdtry": 50.4638,
+   "usdtry": 50.4645,
    "52h_zirve": 333.69,
    "52h_dip": 215.44,
-   "zirveden_pct": -32.26,
-   "dipten_pct": 4.93,
+   "zirveden_pct": -32.3,
+   "dipten_pct": 4.86,
    "yuzdelik_1y": 2.8,
-   "20g_degisim_pct": -3.18,
+   "20g_degisim_pct": -3.25,
    "durum": "52 HAFTANIN DİBİNE YAKIN (dolar bazında ucuz)"
   },
   "usdt_prim": {
-   "usdt_try": 50.339,
+   "usdt_try": 50.34,
    "kaynak": "BtcTurk",
    "usdtry": 50.4396,
    "usdtry_kaynak": "doviz.com (borsapy)",
@@ -10825,44 +10927,44 @@
    },
    "tahvil_tasima": {
     "GUV": {
-     "model_tasima_farki_yillik": 2.99,
-     "ima_edilen_tasima_farki_yillik": -17.07,
-     "duzeltme_yillik_puan": -20.06,
+     "model_tasima_farki_yillik": 2.96,
+     "ima_edilen_tasima_farki_yillik": -17.33,
+     "duzeltme_yillik_puan": -20.29,
      "uygulandi": false,
      "pencere": "2026-09-21 → 2026-11-19 (59 gün)"
     },
     "TI6": {
-     "model_tasima_farki_yillik": 2.99,
-     "ima_edilen_tasima_farki_yillik": -7.07,
-     "duzeltme_yillik_puan": -10.06,
+     "model_tasima_farki_yillik": 2.96,
+     "ima_edilen_tasima_farki_yillik": -7.24,
+     "duzeltme_yillik_puan": -10.2,
      "uygulandi": true,
      "pencere": "2026-09-21 → 2026-11-19 (59 gün)"
     },
     "YOT": {
-     "model_tasima_farki_yillik": 2.99,
-     "ima_edilen_tasima_farki_yillik": -10.83,
-     "duzeltme_yillik_puan": -13.82,
+     "model_tasima_farki_yillik": 2.96,
+     "ima_edilen_tasima_farki_yillik": -10.99,
+     "duzeltme_yillik_puan": -13.95,
      "uygulandi": true,
      "pencere": "2026-09-21 → 2026-11-19 (59 gün)"
     },
     "TDG": {
-     "model_tasima_farki_yillik": 2.99,
-     "ima_edilen_tasima_farki_yillik": -18.34,
-     "duzeltme_yillik_puan": -21.33,
+     "model_tasima_farki_yillik": 2.96,
+     "ima_edilen_tasima_farki_yillik": -18.66,
+     "duzeltme_yillik_puan": -21.62,
      "uygulandi": false,
      "pencere": "2026-09-21 → 2026-11-19 (59 gün)"
     },
     "FI3": {
-     "model_tasima_farki_yillik": 2.99,
-     "ima_edilen_tasima_farki_yillik": -7.0,
-     "duzeltme_yillik_puan": -9.99,
+     "model_tasima_farki_yillik": 2.96,
+     "ima_edilen_tasima_farki_yillik": -7.15,
+     "duzeltme_yillik_puan": -10.11,
      "uygulandi": true,
      "pencere": "2026-09-21 → 2026-11-19 (59 gün)"
     },
     "YFV": {
-     "model_tasima_farki_yillik": 2.99,
-     "ima_edilen_tasima_farki_yillik": -30.46,
-     "duzeltme_yillik_puan": -33.45,
+     "model_tasima_farki_yillik": 2.96,
+     "ima_edilen_tasima_farki_yillik": -30.79,
+     "duzeltme_yillik_puan": -33.75,
      "uygulandi": false,
      "pencere": "2026-09-21 → 2026-11-19 (59 gün)"
     }
@@ -10884,9 +10986,9 @@
       {
        "anahtar": "altin_basamak_1",
        "yon": "AL/ARTIR",
-       "sinyal": "Gram altın zirveden %-20.5 — 1. alım basamağı (≤%-18): hedef altın payı %20",
+       "sinyal": "Gram altın zirveden %-20.94 — 1. alım basamağı (≤%-18): hedef altın payı %20",
        "kosullar": {
-        "gram_zirveden": -20.5,
+        "gram_zirveden": -20.94,
         "basamak": 1,
         "esik": -18.0,
         "hedef_pay": 20.0,
@@ -10898,7 +11000,7 @@
       }
      ],
      "bekle": {
-      "gram_zirveden_pct": -20.5,
+      "gram_zirveden_pct": -20.94,
       "gram_kaynak": "canlı (ons × USD/TRY, kalibre)",
       "fed_gevseme": false,
       "tl_stres": 0,
@@ -10939,7 +11041,7 @@
      "bekle": {
       "mevduat_brut": 38.0,
       "kaynak": "gerçek teklif (2026-11-03, Yapı Kredi / Denizbank (Odea 37,5))",
-      "evds_ortalama": 41.87,
+      "evds_ortalama": 41.59,
       "ppf_brut_yillik": 36.26,
       "fark": 1.74
      },
@@ -10987,8 +11089,8 @@
     "yurtdisi": {
      "sinyaller": [],
      "bekle": {
-      "nasdaq_zirveden": -10.52,
-      "sp500_zirveden": -5.92,
+      "nasdaq_zirveden": -11.38,
+      "sp500_zirveden": -6.69,
       "fed_gevseme": false
      },
      "durum": "BEKLE"
@@ -11006,7 +11108,7 @@
      "durum": "YOK"
     },
     "fed_gevseme_beklentisi": {
-     "abd10y_1a_pct": -0.95,
+     "abd10y_1a_pct": -1.52,
      "durum": false
     }
    },
@@ -11040,31 +11142,31 @@
  "tahvil_analiz": {
   "verim_kaynagi": "TradingView + arşiv",
   "verim_gozlem_gun": 730,
-  "iki_yil_verim": 39.49,
+  "iki_yil_verim": 39.46,
   "fiili_faiz": 36.0,
   "fonlar": {
    "GUV": {
     "portfoyde": false,
     "etkin_sure": {
      "sure_yil": 1.38,
-     "r2": 0.59,
+     "r2": 0.58,
      "gozlem": 51,
      "guven": "iyi"
     },
     "kullanilan_sure_yil": 1.38,
-    "sure_kaynagi": "tahmin (regresyon, R²=0.59, 51 hafta)",
+    "sure_kaynagi": "tahmin (regresyon, R²=0.58, 51 hafta)",
     "kalibrasyon": {
      "pencere": "2026-09-21 → 2026-11-19 (59 gün)",
      "fon_getiri_pct": 3.71,
      "kiyas_getiri_pct": 5.82,
-     "verim_degisimi_puan": -0.47,
-     "sure_etkisi_puan": 0.65,
+     "verim_degisimi_puan": -0.5,
+     "sure_etkisi_puan": 0.69,
      "gerceklesen_fark_puan": -2.11,
-     "model_tasima_farki_yillik": 2.99,
-     "ima_edilen_tasima_farki_yillik": -17.07,
-     "duzeltme_yillik_puan": -20.06,
+     "model_tasima_farki_yillik": 2.96,
+     "ima_edilen_tasima_farki_yillik": -17.33,
+     "duzeltme_yillik_puan": -20.29,
      "uygulandi": false,
-     "okuma": "Faiz sabitken model fonun para piyasasını yılda +3.0 puan geçmesini bekliyordu; son 59 günde gerçekleşen -17.1 puan (fark çok büyük — uygulanmadı)",
+     "okuma": "Faiz sabitken model fonun para piyasasını yılda +3.0 puan geçmesini bekliyordu; son 59 günde gerçekleşen -17.3 puan (fark çok büyük — uygulanmadı)",
      "kiyas": "YLB"
     },
     "senaryo": {
@@ -11072,45 +11174,45 @@
      "senaryolar": [
       {
        "verim_degisimi_puan": -3,
-       "tahvil_fonu_3a_pct": 13.64,
+       "tahvil_fonu_3a_pct": 13.63,
        "para_piyasasi_3a_pct": 8.38,
-       "fark_puan": 5.26
+       "fark_puan": 5.25
       },
       {
        "verim_degisimi_puan": -2,
-       "tahvil_fonu_3a_pct": 12.26,
+       "tahvil_fonu_3a_pct": 12.25,
        "para_piyasasi_3a_pct": 8.5,
-       "fark_puan": 3.76
+       "fark_puan": 3.75
       },
       {
        "verim_degisimi_puan": -1,
-       "tahvil_fonu_3a_pct": 10.88,
+       "tahvil_fonu_3a_pct": 10.87,
        "para_piyasasi_3a_pct": 8.62,
-       "fark_puan": 2.26
+       "fark_puan": 2.25
       },
       {
        "verim_degisimi_puan": 0,
-       "tahvil_fonu_3a_pct": 9.5,
+       "tahvil_fonu_3a_pct": 9.49,
        "para_piyasasi_3a_pct": 8.75,
-       "fark_puan": 0.75
+       "fark_puan": 0.74
       },
       {
        "verim_degisimi_puan": 1,
-       "tahvil_fonu_3a_pct": 8.12,
+       "tahvil_fonu_3a_pct": 8.11,
        "para_piyasasi_3a_pct": 8.88,
-       "fark_puan": -0.76
+       "fark_puan": -0.77
       },
       {
        "verim_degisimi_puan": 2,
-       "tahvil_fonu_3a_pct": 6.74,
+       "tahvil_fonu_3a_pct": 6.73,
        "para_piyasasi_3a_pct": 9.0,
-       "fark_puan": -2.26
+       "fark_puan": -2.27
       }
      ],
-     "basabas_verim_degisimi_puan": 0.5,
-     "basabas_okuma": "2 yıllık faiz 3 ayda +0.5 puandan daha az yükselirse tahvil fonu para piyasasını geçer",
+     "basabas_verim_degisimi_puan": 0.49,
+     "basabas_okuma": "2 yıllık faiz 3 ayda +0.49 puandan daha az yükselirse tahvil fonu para piyasasını geçer",
      "varsayimlar": {
-      "tasima": "2Y verim %39.49 − yıllık ücret %1.5",
+      "tasima": "2Y verim %39.46 − yıllık ücret %1.5",
       "para_piyasasi": "fiili faiz %36.0 − ücret %1.0; faiz değişiminin ortalama yarısı yansır",
       "fiyat_etkisi": "anlık ve doğrusal (süre × Δverim); vergi her ikisinde aynı (%17,5) olduğu için brüt kıyas"
      }
@@ -11131,14 +11233,14 @@
      "pencere": "2026-09-21 → 2026-11-19 (59 gün)",
      "fon_getiri_pct": 5.12,
      "kiyas_getiri_pct": 5.82,
-     "verim_degisimi_puan": -0.47,
-     "sure_etkisi_puan": 0.44,
+     "verim_degisimi_puan": -0.5,
+     "sure_etkisi_puan": 0.47,
      "gerceklesen_fark_puan": -0.7,
-     "model_tasima_farki_yillik": 2.99,
-     "ima_edilen_tasima_farki_yillik": -7.07,
-     "duzeltme_yillik_puan": -10.06,
+     "model_tasima_farki_yillik": 2.96,
+     "ima_edilen_tasima_farki_yillik": -7.24,
+     "duzeltme_yillik_puan": -10.2,
      "uygulandi": true,
-     "okuma": "Faiz sabitken model fonun para piyasasını yılda +3.0 puan geçmesini bekliyordu; son 59 günde gerçekleşen -7.1 puan",
+     "okuma": "Faiz sabitken model fonun para piyasasını yılda +3.0 puan geçmesini bekliyordu; son 59 günde gerçekleşen -7.2 puan",
      "kiyas": "YLB"
     },
     "senaryo": {
@@ -11146,50 +11248,50 @@
      "senaryolar": [
       {
        "verim_degisimi_puan": -3,
-       "tahvil_fonu_3a_pct": 9.8,
+       "tahvil_fonu_3a_pct": 9.76,
        "para_piyasasi_3a_pct": 8.38,
-       "fark_puan": 1.42
+       "fark_puan": 1.38
       },
       {
        "verim_degisimi_puan": -2,
-       "tahvil_fonu_3a_pct": 8.86,
+       "tahvil_fonu_3a_pct": 8.82,
        "para_piyasasi_3a_pct": 8.5,
-       "fark_puan": 0.36
+       "fark_puan": 0.32
       },
       {
        "verim_degisimi_puan": -1,
-       "tahvil_fonu_3a_pct": 7.92,
+       "tahvil_fonu_3a_pct": 7.88,
        "para_piyasasi_3a_pct": 8.62,
-       "fark_puan": -0.7
+       "fark_puan": -0.74
       },
       {
        "verim_degisimi_puan": 0,
-       "tahvil_fonu_3a_pct": 6.98,
+       "tahvil_fonu_3a_pct": 6.94,
        "para_piyasasi_3a_pct": 8.75,
-       "fark_puan": -1.77
+       "fark_puan": -1.81
       },
       {
        "verim_degisimi_puan": 1,
-       "tahvil_fonu_3a_pct": 6.04,
+       "tahvil_fonu_3a_pct": 6.0,
        "para_piyasasi_3a_pct": 8.88,
-       "fark_puan": -2.84
+       "fark_puan": -2.88
       },
       {
        "verim_degisimi_puan": 2,
-       "tahvil_fonu_3a_pct": 5.1,
+       "tahvil_fonu_3a_pct": 5.06,
        "para_piyasasi_3a_pct": 9.0,
-       "fark_puan": -3.9
+       "fark_puan": -3.94
       }
      ],
-     "basabas_verim_degisimi_puan": -1.66,
-     "basabas_okuma": "2 yıllık faiz 3 ayda -1.66 puandan daha fazla düşerse tahvil fonu para piyasasını geçer",
+     "basabas_verim_degisimi_puan": -1.7,
+     "basabas_okuma": "2 yıllık faiz 3 ayda -1.7 puandan daha fazla düşerse tahvil fonu para piyasasını geçer",
      "varsayimlar": {
-      "tasima": "2Y verim %39.49 − yıllık ücret %1.5 -10.06 puan kalibrasyon (gerçekleşen getiriden)",
+      "tasima": "2Y verim %39.46 − yıllık ücret %1.5 -10.20 puan kalibrasyon (gerçekleşen getiriden)",
       "para_piyasasi": "fiili faiz %36.0 − ücret %1.0; faiz değişiminin ortalama yarısı yansır",
       "fiyat_etkisi": "anlık ve doğrusal (süre × Δverim); vergi her ikisinde aynı (%17,5) olduğu için brüt kıyas"
      }
     },
-    "senaryo_kalibrasyonsuz_basabas": 0.7
+    "senaryo_kalibrasyonsuz_basabas": 0.69
    },
    "YOT": {
     "portfoyde": false,
@@ -11205,14 +11307,14 @@
      "pencere": "2026-09-21 → 2026-11-19 (59 gün)",
      "fon_getiri_pct": 4.46,
      "kiyas_getiri_pct": 5.82,
-     "verim_degisimi_puan": -0.47,
-     "sure_etkisi_puan": 0.39,
+     "verim_degisimi_puan": -0.5,
+     "sure_etkisi_puan": 0.42,
      "gerceklesen_fark_puan": -1.36,
-     "model_tasima_farki_yillik": 2.99,
-     "ima_edilen_tasima_farki_yillik": -10.83,
-     "duzeltme_yillik_puan": -13.82,
+     "model_tasima_farki_yillik": 2.96,
+     "ima_edilen_tasima_farki_yillik": -10.99,
+     "duzeltme_yillik_puan": -13.95,
      "uygulandi": true,
-     "okuma": "Faiz sabitken model fonun para piyasasını yılda +3.0 puan geçmesini bekliyordu; son 59 günde gerçekleşen -10.8 puan",
+     "okuma": "Faiz sabitken model fonun para piyasasını yılda +3.0 puan geçmesini bekliyordu; son 59 günde gerçekleşen -11.0 puan",
      "kiyas": "YLB"
     },
     "senaryo": {
@@ -11220,50 +11322,50 @@
      "senaryolar": [
       {
        "verim_degisimi_puan": -3,
-       "tahvil_fonu_3a_pct": 8.53,
+       "tahvil_fonu_3a_pct": 8.49,
        "para_piyasasi_3a_pct": 8.38,
-       "fark_puan": 0.15
+       "fark_puan": 0.11
       },
       {
        "verim_degisimi_puan": -2,
-       "tahvil_fonu_3a_pct": 7.7,
+       "tahvil_fonu_3a_pct": 7.66,
        "para_piyasasi_3a_pct": 8.5,
-       "fark_puan": -0.8
+       "fark_puan": -0.84
       },
       {
        "verim_degisimi_puan": -1,
-       "tahvil_fonu_3a_pct": 6.87,
+       "tahvil_fonu_3a_pct": 6.83,
        "para_piyasasi_3a_pct": 8.62,
-       "fark_puan": -1.75
+       "fark_puan": -1.79
       },
       {
        "verim_degisimi_puan": 0,
-       "tahvil_fonu_3a_pct": 6.04,
+       "tahvil_fonu_3a_pct": 6.0,
        "para_piyasasi_3a_pct": 8.75,
-       "fark_puan": -2.71
+       "fark_puan": -2.75
       },
       {
        "verim_degisimi_puan": 1,
-       "tahvil_fonu_3a_pct": 5.21,
+       "tahvil_fonu_3a_pct": 5.17,
        "para_piyasasi_3a_pct": 8.88,
-       "fark_puan": -3.67
+       "fark_puan": -3.71
       },
       {
        "verim_degisimi_puan": 2,
-       "tahvil_fonu_3a_pct": 4.38,
+       "tahvil_fonu_3a_pct": 4.34,
        "para_piyasasi_3a_pct": 9.0,
-       "fark_puan": -4.62
+       "fark_puan": -4.66
       }
      ],
-     "basabas_verim_degisimi_puan": -2.84,
-     "basabas_okuma": "2 yıllık faiz 3 ayda -2.84 puandan daha fazla düşerse tahvil fonu para piyasasını geçer",
+     "basabas_verim_degisimi_puan": -2.88,
+     "basabas_okuma": "2 yıllık faiz 3 ayda -2.88 puandan daha fazla düşerse tahvil fonu para piyasasını geçer",
      "varsayimlar": {
-      "tasima": "2Y verim %39.49 − yıllık ücret %1.5 -13.82 puan kalibrasyon (gerçekleşen getiriden)",
+      "tasima": "2Y verim %39.46 − yıllık ücret %1.5 -13.95 puan kalibrasyon (gerçekleşen getiriden)",
       "para_piyasasi": "fiili faiz %36.0 − ücret %1.0; faiz değişiminin ortalama yarısı yansır",
       "fiyat_etkisi": "anlık ve doğrusal (süre × Δverim); vergi her ikisinde aynı (%17,5) olduğu için brüt kıyas"
      }
     },
-    "senaryo_kalibrasyonsuz_basabas": 0.78
+    "senaryo_kalibrasyonsuz_basabas": 0.77
    },
    "TDG": {
     "portfoyde": false,
@@ -11279,14 +11381,14 @@
      "pencere": "2026-09-21 → 2026-11-19 (59 gün)",
      "fon_getiri_pct": 3.68,
      "kiyas_getiri_pct": 5.82,
-     "verim_degisimi_puan": -0.47,
-     "sure_etkisi_puan": 0.82,
+     "verim_degisimi_puan": -0.5,
+     "sure_etkisi_puan": 0.88,
      "gerceklesen_fark_puan": -2.14,
-     "model_tasima_farki_yillik": 2.99,
-     "ima_edilen_tasima_farki_yillik": -18.34,
-     "duzeltme_yillik_puan": -21.33,
+     "model_tasima_farki_yillik": 2.96,
+     "ima_edilen_tasima_farki_yillik": -18.66,
+     "duzeltme_yillik_puan": -21.62,
      "uygulandi": false,
-     "okuma": "Faiz sabitken model fonun para piyasasını yılda +3.0 puan geçmesini bekliyordu; son 59 günde gerçekleşen -18.3 puan (fark çok büyük — uygulanmadı)",
+     "okuma": "Faiz sabitken model fonun para piyasasını yılda +3.0 puan geçmesini bekliyordu; son 59 günde gerçekleşen -18.7 puan (fark çok büyük — uygulanmadı)",
      "kiyas": "YLB"
     },
     "senaryo": {
@@ -11294,45 +11396,45 @@
      "senaryolar": [
       {
        "verim_degisimi_puan": -3,
-       "tahvil_fonu_3a_pct": 14.75,
+       "tahvil_fonu_3a_pct": 14.74,
        "para_piyasasi_3a_pct": 8.38,
-       "fark_puan": 6.37
+       "fark_puan": 6.36
       },
       {
        "verim_degisimi_puan": -2,
-       "tahvil_fonu_3a_pct": 13.0,
+       "tahvil_fonu_3a_pct": 12.99,
        "para_piyasasi_3a_pct": 8.5,
-       "fark_puan": 4.5
+       "fark_puan": 4.49
       },
       {
        "verim_degisimi_puan": -1,
-       "tahvil_fonu_3a_pct": 11.25,
+       "tahvil_fonu_3a_pct": 11.24,
        "para_piyasasi_3a_pct": 8.62,
-       "fark_puan": 2.63
+       "fark_puan": 2.62
       },
       {
        "verim_degisimi_puan": 0,
-       "tahvil_fonu_3a_pct": 9.5,
+       "tahvil_fonu_3a_pct": 9.49,
        "para_piyasasi_3a_pct": 8.75,
-       "fark_puan": 0.75
+       "fark_puan": 0.74
       },
       {
        "verim_degisimi_puan": 1,
-       "tahvil_fonu_3a_pct": 7.75,
+       "tahvil_fonu_3a_pct": 7.74,
        "para_piyasasi_3a_pct": 8.88,
-       "fark_puan": -1.13
+       "fark_puan": -1.14
       },
       {
        "verim_degisimi_puan": 2,
-       "tahvil_fonu_3a_pct": 6.0,
+       "tahvil_fonu_3a_pct": 5.99,
        "para_piyasasi_3a_pct": 9.0,
-       "fark_puan": -3.0
+       "fark_puan": -3.01
       }
      ],
-     "basabas_verim_degisimi_puan": 0.4,
-     "basabas_okuma": "2 yıllık faiz 3 ayda +0.4 puandan daha az yükselirse tahvil fonu para piyasasını geçer",
+     "basabas_verim_degisimi_puan": 0.39,
+     "basabas_okuma": "2 yıllık faiz 3 ayda +0.39 puandan daha az yükselirse tahvil fonu para piyasasını geçer",
      "varsayimlar": {
-      "tasima": "2Y verim %39.49 − yıllık ücret %1.5",
+      "tasima": "2Y verim %39.46 − yıllık ücret %1.5",
       "para_piyasasi": "fiili faiz %36.0 − ücret %1.0; faiz değişiminin ortalama yarısı yansır",
       "fiyat_etkisi": "anlık ve doğrusal (süre × Δverim); vergi her ikisinde aynı (%17,5) olduğu için brüt kıyas"
      }
@@ -11343,24 +11445,24 @@
     "portfoyde": false,
     "etkin_sure": {
      "sure_yil": 0.81,
-     "r2": 0.6,
+     "r2": 0.59,
      "gozlem": 51,
      "guven": "iyi"
     },
     "kullanilan_sure_yil": 0.81,
-    "sure_kaynagi": "tahmin (regresyon, R²=0.6, 51 hafta)",
+    "sure_kaynagi": "tahmin (regresyon, R²=0.59, 51 hafta)",
     "kalibrasyon": {
      "pencere": "2026-09-21 → 2026-11-19 (59 gün)",
      "fon_getiri_pct": 5.07,
      "kiyas_getiri_pct": 5.82,
-     "verim_degisimi_puan": -0.47,
-     "sure_etkisi_puan": 0.38,
+     "verim_degisimi_puan": -0.5,
+     "sure_etkisi_puan": 0.41,
      "gerceklesen_fark_puan": -0.75,
-     "model_tasima_farki_yillik": 2.99,
-     "ima_edilen_tasima_farki_yillik": -7.0,
-     "duzeltme_yillik_puan": -9.99,
+     "model_tasima_farki_yillik": 2.96,
+     "ima_edilen_tasima_farki_yillik": -7.15,
+     "duzeltme_yillik_puan": -10.11,
      "uygulandi": true,
-     "okuma": "Faiz sabitken model fonun para piyasasını yılda +3.0 puan geçmesini bekliyordu; son 59 günde gerçekleşen -7.0 puan",
+     "okuma": "Faiz sabitken model fonun para piyasasını yılda +3.0 puan geçmesini bekliyordu; son 59 günde gerçekleşen -7.2 puan",
      "kiyas": "YLB"
     },
     "senaryo": {
@@ -11368,57 +11470,57 @@
      "senaryolar": [
       {
        "verim_degisimi_puan": -3,
-       "tahvil_fonu_3a_pct": 9.43,
+       "tahvil_fonu_3a_pct": 9.39,
        "para_piyasasi_3a_pct": 8.38,
-       "fark_puan": 1.05
+       "fark_puan": 1.01
       },
       {
        "verim_degisimi_puan": -2,
-       "tahvil_fonu_3a_pct": 8.62,
+       "tahvil_fonu_3a_pct": 8.58,
        "para_piyasasi_3a_pct": 8.5,
-       "fark_puan": 0.12
+       "fark_puan": 0.08
       },
       {
        "verim_degisimi_puan": -1,
-       "tahvil_fonu_3a_pct": 7.81,
+       "tahvil_fonu_3a_pct": 7.77,
        "para_piyasasi_3a_pct": 8.62,
-       "fark_puan": -0.81
+       "fark_puan": -0.85
       },
       {
        "verim_degisimi_puan": 0,
-       "tahvil_fonu_3a_pct": 7.0,
+       "tahvil_fonu_3a_pct": 6.96,
        "para_piyasasi_3a_pct": 8.75,
-       "fark_puan": -1.75
+       "fark_puan": -1.79
       },
       {
        "verim_degisimi_puan": 1,
-       "tahvil_fonu_3a_pct": 6.19,
+       "tahvil_fonu_3a_pct": 6.15,
        "para_piyasasi_3a_pct": 8.88,
-       "fark_puan": -2.69
+       "fark_puan": -2.73
       },
       {
        "verim_degisimi_puan": 2,
-       "tahvil_fonu_3a_pct": 5.38,
+       "tahvil_fonu_3a_pct": 5.34,
        "para_piyasasi_3a_pct": 9.0,
-       "fark_puan": -3.62
+       "fark_puan": -3.66
       }
      ],
-     "basabas_verim_degisimi_puan": -1.87,
-     "basabas_okuma": "2 yıllık faiz 3 ayda -1.87 puandan daha fazla düşerse tahvil fonu para piyasasını geçer",
+     "basabas_verim_degisimi_puan": -1.91,
+     "basabas_okuma": "2 yıllık faiz 3 ayda -1.91 puandan daha fazla düşerse tahvil fonu para piyasasını geçer",
      "varsayimlar": {
-      "tasima": "2Y verim %39.49 − yıllık ücret %1.5 -9.99 puan kalibrasyon (gerçekleşen getiriden)",
+      "tasima": "2Y verim %39.46 − yıllık ücret %1.5 -10.11 puan kalibrasyon (gerçekleşen getiriden)",
       "para_piyasasi": "fiili faiz %36.0 − ücret %1.0; faiz değişiminin ortalama yarısı yansır",
       "fiyat_etkisi": "anlık ve doğrusal (süre × Δverim); vergi her ikisinde aynı (%17,5) olduğu için brüt kıyas"
      }
     },
-    "senaryo_kalibrasyonsuz_basabas": 0.8
+    "senaryo_kalibrasyonsuz_basabas": 0.79
    },
    "YFV": {
     "portfoyde": false,
     "etkin_sure": {
      "sure_yil": -0.04,
      "r2": 0.01,
-     "gozlem": 51,
+     "gozlem": 52,
      "guven": "güvenilmez"
     },
     "kullanilan_sure_yil": 1.75,
@@ -11427,14 +11529,14 @@
      "pencere": "2026-09-21 → 2026-11-19 (59 gün)",
      "fon_getiri_pct": 1.72,
      "kiyas_getiri_pct": 5.82,
-     "verim_degisimi_puan": -0.47,
-     "sure_etkisi_puan": 0.82,
+     "verim_degisimi_puan": -0.5,
+     "sure_etkisi_puan": 0.88,
      "gerceklesen_fark_puan": -4.1,
-     "model_tasima_farki_yillik": 2.99,
-     "ima_edilen_tasima_farki_yillik": -30.46,
-     "duzeltme_yillik_puan": -33.45,
+     "model_tasima_farki_yillik": 2.96,
+     "ima_edilen_tasima_farki_yillik": -30.79,
+     "duzeltme_yillik_puan": -33.75,
      "uygulandi": false,
-     "okuma": "Faiz sabitken model fonun para piyasasını yılda +3.0 puan geçmesini bekliyordu; son 59 günde gerçekleşen -30.5 puan (fark çok büyük — uygulanmadı)",
+     "okuma": "Faiz sabitken model fonun para piyasasını yılda +3.0 puan geçmesini bekliyordu; son 59 günde gerçekleşen -30.8 puan (fark çok büyük — uygulanmadı)",
      "kiyas": "YLB"
     },
     "senaryo": {
@@ -11442,45 +11544,45 @@
      "senaryolar": [
       {
        "verim_degisimi_puan": -3,
-       "tahvil_fonu_3a_pct": 14.75,
+       "tahvil_fonu_3a_pct": 14.74,
        "para_piyasasi_3a_pct": 8.38,
-       "fark_puan": 6.37
+       "fark_puan": 6.36
       },
       {
        "verim_degisimi_puan": -2,
-       "tahvil_fonu_3a_pct": 13.0,
+       "tahvil_fonu_3a_pct": 12.99,
        "para_piyasasi_3a_pct": 8.5,
-       "fark_puan": 4.5
+       "fark_puan": 4.49
       },
       {
        "verim_degisimi_puan": -1,
-       "tahvil_fonu_3a_pct": 11.25,
+       "tahvil_fonu_3a_pct": 11.24,
        "para_piyasasi_3a_pct": 8.62,
-       "fark_puan": 2.63
+       "fark_puan": 2.62
       },
       {
        "verim_degisimi_puan": 0,
-       "tahvil_fonu_3a_pct": 9.5,
+       "tahvil_fonu_3a_pct": 9.49,
        "para_piyasasi_3a_pct": 8.75,
-       "fark_puan": 0.75
+       "fark_puan": 0.74
       },
       {
        "verim_degisimi_puan": 1,
-       "tahvil_fonu_3a_pct": 7.75,
+       "tahvil_fonu_3a_pct": 7.74,
        "para_piyasasi_3a_pct": 8.88,
-       "fark_puan": -1.13
+       "fark_puan": -1.14
       },
       {
        "verim_degisimi_puan": 2,
-       "tahvil_fonu_3a_pct": 6.0,
+       "tahvil_fonu_3a_pct": 5.99,
        "para_piyasasi_3a_pct": 9.0,
-       "fark_puan": -3.0
+       "fark_puan": -3.01
       }
      ],
-     "basabas_verim_degisimi_puan": 0.4,
-     "basabas_okuma": "2 yıllık faiz 3 ayda +0.4 puandan daha az yükselirse tahvil fonu para piyasasını geçer",
+     "basabas_verim_degisimi_puan": 0.39,
+     "basabas_okuma": "2 yıllık faiz 3 ayda +0.39 puandan daha az yükselirse tahvil fonu para piyasasını geçer",
      "varsayimlar": {
-      "tasima": "2Y verim %39.49 − yıllık ücret %1.5",
+      "tasima": "2Y verim %39.46 − yıllık ücret %1.5",
       "para_piyasasi": "fiili faiz %36.0 − ücret %1.0; faiz değişiminin ortalama yarısı yansır",
       "fiyat_etkisi": "anlık ve doğrusal (süre × Δverim); vergi her ikisinde aynı (%17,5) olduğu için brüt kıyas"
      }
@@ -11491,9 +11593,9 @@
  },
  "arsiv": "43 gün kayıtlı",
  "fonoloji_cagri": {
-  "cagri": 0,
-  "limit_429": 0,
-  "bekleme_sn": 0.0,
+  "cagri": 191,
+  "limit_429": 3,
+  "bekleme_sn": 87.0,
   "hata": 0
  },
  "kaynak_karnesi": {
@@ -11502,29 +11604,35 @@
    "son_deneme_sayisi": 20,
    "basari_pct": 100,
    "ardisik_basarisiz": 0,
-   "son_basari": "2026-11-19 08:17",
+   "son_basari": "2026-11-19 18:52",
    "basarisiz_saatler": {},
-   "bu_calisma": null
+   "bu_calisma": [
+    8,
+    8
+   ]
   },
   "tefas": {
    "durum": "İYİ",
    "son_deneme_sayisi": 20,
    "basari_pct": 100,
    "ardisik_basarisiz": 0,
-   "son_basari": "2026-11-19 08:17",
+   "son_basari": "2026-11-19 18:52",
    "basarisiz_saatler": {},
-   "bu_calisma": null
+   "bu_calisma": [
+    25,
+    25
+   ]
   },
   "evds": {
    "durum": "İYİ",
    "son_deneme_sayisi": 20,
    "basari_pct": 100,
    "ardisik_basarisiz": 0,
-   "son_basari": "2026-11-19 18:17",
+   "son_basari": "2026-11-19 18:52",
    "basarisiz_saatler": {},
    "bu_calisma": [
-    1,
-    1
+    12,
+    12
    ]
   },
   "yahoo": {
@@ -11532,7 +11640,7 @@
    "son_deneme_sayisi": 20,
    "basari_pct": 100,
    "ardisik_basarisiz": 0,
-   "son_basari": "2026-11-19 18:17",
+   "son_basari": "2026-11-19 18:52",
    "basarisiz_saatler": {},
    "bu_calisma": [
     13,
@@ -11544,7 +11652,7 @@
    "son_deneme_sayisi": 20,
    "basari_pct": 100,
    "ardisik_basarisiz": 0,
-   "son_basari": "2026-11-19 18:17",
+   "son_basari": "2026-11-19 18:52",
    "basarisiz_saatler": {},
    "bu_calisma": [
     9,
@@ -11556,16 +11664,19 @@
    "son_deneme_sayisi": 20,
    "basari_pct": 100,
    "ardisik_basarisiz": 0,
-   "son_basari": "2026-11-19 08:17",
+   "son_basari": "2026-11-19 18:52",
    "basarisiz_saatler": {},
-   "bu_calisma": null
+   "bu_calisma": [
+    1,
+    1
+   ]
   },
   "doviz_altin": {
    "durum": "İYİ",
    "son_deneme_sayisi": 20,
    "basari_pct": 100,
    "ardisik_basarisiz": 0,
-   "son_basari": "2026-11-19 18:17",
+   "son_basari": "2026-11-19 18:52",
    "basarisiz_saatler": {},
    "bu_calisma": [
     8,
@@ -11577,7 +11688,7 @@
    "son_deneme_sayisi": 20,
    "basari_pct": 100,
    "ardisik_basarisiz": 0,
-   "son_basari": "2026-11-19 18:17",
+   "son_basari": "2026-11-19 18:52",
    "basarisiz_saatler": {},
    "bu_calisma": [
     2,
@@ -11587,20 +11698,23 @@
   "tradingview": {
    "durum": "İYİ",
    "son_deneme_sayisi": 20,
-   "basari_pct": 90,
+   "basari_pct": 95,
    "ardisik_basarisiz": 0,
-   "son_basari": "2026-11-19 08:17",
+   "son_basari": "2026-11-19 18:52",
    "basarisiz_saatler": {
-    "18": 2
+    "18": 1
    },
-   "bu_calisma": null
+   "bu_calisma": [
+    1,
+    1
+   ]
   },
   "takvim": {
    "durum": "İYİ",
    "son_deneme_sayisi": 20,
    "basari_pct": 100,
    "ardisik_basarisiz": 0,
-   "son_basari": "2026-11-19 18:17",
+   "son_basari": "2026-11-19 18:52",
    "basarisiz_saatler": {},
    "bu_calisma": [
     2,
@@ -11612,7 +11726,7 @@
    "son_deneme_sayisi": 20,
    "basari_pct": 100,
    "ardisik_basarisiz": 0,
-   "son_basari": "2026-11-19 18:17",
+   "son_basari": "2026-11-19 18:52",
    "basarisiz_saatler": {},
    "bu_calisma": [
     1,
@@ -11620,27 +11734,27 @@
    ]
   }
  },
- "calisma_suresi_dk": 0.3,
+ "calisma_suresi_dk": 5.6,
  "saglik": {
   "ozet": "TAMAM",
   "issue_tetikleyen": [],
-  "sure_dk": 0.3,
+  "sure_dk": 5.6,
   "en_yavas_moduller_sn": {
-   "enflasyon": 4.1,
-   "genislik_tum_piyasa": 2.1,
-   "evds_aofm": 1.2,
-   "yahoo_brent_yahoo": 0.8,
-   "borsapy_endeks_XU100": 0.7,
-   "borsapy_endeks_XBANK": 0.7,
-   "borsapy_endeks_XUMAL": 0.7,
-   "usdt_btcturk": 0.7,
-   "usdt_prim_hesap": 0.7,
-   "borsapy_endeks_XU030": 0.6
+   "rakip_tarama": 180.4,
+   "evds_mevduat_tl_1ay": 15.6,
+   "evds_brut_doviz_rezerv": 15.0,
+   "evds_yabanci_dibs_net_haftalik": 14.8,
+   "evds_mevduat_tl_3ay": 14.8,
+   "evds_net_uluslararasi_rezerv": 14.7,
+   "evds_yabanci_hisse_net_haftalik": 14.6,
+   "yabanci_orani_toplu": 7.4,
+   "evds_tufe_endeks": 4.1,
+   "enflasyon": 4.1
   },
   "hatali_moduller": {
    "tahvil": "NOT: borsapy (doviz.com) okunamadı (HATA: DataNotAvailableError: Bond table not found on page) → yedek kaynak: doviz.com (kendi okuma)",
    "firsat_rotasyon_YLB_IRY_ozel": "NOT: YLB→IRY önerilmedi — IRY parasının %41.69'i özel sektör borçlanmasında (sınır %10.0); ek getiri bu riskin karşılığı",
-   "firsat_altin_basamak_1": "NOT: fırsat radarı sinyali sürüyor (2026-11-19'den beri): Gram altın zirveden %-20.5 — 1. alım basamağı (≤%-18): hedef altın payı %20",
+   "firsat_altin_basamak_1": "NOT: fırsat radarı sinyali sürüyor (2026-11-19'den beri): Gram altın zirveden %-20.94 — 1. alım basamağı (≤%-18): hedef altın payı %20",
    "firsat_ppf_reel": "NOT: fırsat radarı sinyali sürüyor (2026-11-03'den beri): Para piyasası enflasyonu yeterince geçmiyor: {'YLB': 'ACIL', 'ZBJ': 'ACIL', 'BGP': 'ACIL'}"
   },
   "tum_moduller": {
@@ -11656,11 +11770,60 @@
    "borsapy_endeks_XUMAL": "OK",
    "genislik_tum_piyasa": "OK",
    "genislik_bist30": "OK",
+   "yabanci_orani_toplu": "OK",
+   "yabanci_trend": "OK",
+   "fonoloji_YLB": "OK",
+   "fonoloji_IJV": "OK",
+   "fonoloji_ZBJ": "OK",
+   "fonoloji_BGP": "OK",
+   "fonoloji_YOT": "OK",
+   "fonoloji_TIE": "OK",
+   "fonoloji_AKU": "OK",
+   "fonoloji_DLY": "OK",
+   "fon_bilgi_YLB": "OK",
+   "fon_ucret_YLB": "OK",
+   "fon_YLB": "OK",
+   "fon_bilgi_IJV": "OK",
+   "fon_ucret_IJV": "OK",
+   "fon_IJV": "OK",
+   "fon_bilgi_ZBJ": "OK",
+   "fon_ucret_ZBJ": "OK",
+   "fon_ZBJ": "OK",
+   "fon_bilgi_BGP": "OK",
+   "fon_ucret_BGP": "OK",
+   "fon_BGP": "OK",
+   "fon_bilgi_YOT": "OK",
+   "fon_ucret_YOT": "OK",
+   "fon_YOT": "OK",
+   "fon_bilgi_TIE": "OK",
+   "fon_ucret_TIE": "OK",
+   "fon_TIE": "OK",
+   "fon_bilgi_AKU": "OK",
+   "fon_ucret_AKU": "OK",
+   "fon_AKU": "OK",
+   "fon_bilgi_DLY": "OK",
+   "fon_ucret_DLY": "OK",
+   "fon_DLY": "OK",
+   "fon_akis": "OK",
+   "fon_tutarlilik": "OK",
+   "rakip_tarama": "OK",
    "evds_aofm": "OK",
+   "evds_yabanci_hisse_net_haftalik": "OK",
+   "evds_yabanci_dibs_net_haftalik": "OK",
+   "evds_mevduat_tl_1ay": "OK",
+   "evds_mevduat_tl_3ay": "OK",
+   "evds_tufe_endeks": "OK",
+   "evds_pka_12ay_enflasyon": "OK",
+   "evds_brut_doviz_rezerv": "OK",
+   "evds_net_uluslararasi_rezerv": "OK",
+   "evds_pka_kur": "OK",
+   "evds_pka_faiz": "OK",
    "enflasyon": "OK",
    "tahvil": "NOT: borsapy (doviz.com) okunamadı (HATA: DataNotAvailableError: Bond table not found on page) → yedek kaynak: doviz.com (kendi okuma)",
    "tahvil_doviz_kendi": "OK",
    "verim_arsivi": "OK",
+   "verim_gecmisi_tv": "OK",
+   "verim_evds": "OK",
    "fx_USD": "OK",
    "fx_EUR": "OK",
    "fx_gram-altin": "OK",
@@ -11692,9 +11855,10 @@
    "kuresel_akis_hesap": "OK",
    "bist_dolar_hesap": "OK",
    "ozel_tahvil_hesap": "OK",
+   "tahvil_analiz": "OK",
    "kalibrasyon_hesap": "OK",
    "firsat_rotasyon_YLB_IRY_ozel": "NOT: YLB→IRY önerilmedi — IRY parasının %41.69'i özel sektör borçlanmasında (sınır %10.0); ek getiri bu riskin karşılığı",
-   "firsat_altin_basamak_1": "NOT: fırsat radarı sinyali sürüyor (2026-11-19'den beri): Gram altın zirveden %-20.5 — 1. alım basamağı (≤%-18): hedef altın payı %20",
+   "firsat_altin_basamak_1": "NOT: fırsat radarı sinyali sürüyor (2026-11-19'den beri): Gram altın zirveden %-20.94 — 1. alım basamağı (≤%-18): hedef altın payı %20",
    "firsat_ppf_reel": "NOT: fırsat radarı sinyali sürüyor (2026-11-03'den beri): Para piyasası enflasyonu yeterince geçmiyor: {'YLB': 'ACIL', 'ZBJ': 'ACIL', 'BGP': 'ACIL'}",
    "firsat_radari_hesap": "OK",
    "gunluk_arsiv": "OK",
