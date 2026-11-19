@@ -72,12 +72,15 @@ def R(usdt="NORMAL", gz=-10.0, a10=-1.0, nz=-3.0, panik="YOK"):
     return {"tetikler": {"usdt_prim": {"durum": usdt}, "dolar_makasi_puan": 17.0, "brut_rezerv_4hafta_pct": -1.0,
                          "gram_altin_zirveden_pct": gz, "mevduat_tl_1ay_brut": 42.7, "varlik_sinifi_olgun": ["TL mevduat (1 ay, brüt)"],
                          "reel_getiri": {"YLB": {"brut_30g_pct": 2.9, "durum": "OK"}}, "rakip_olgun_adaylar": {"TIE": [{"kod": "AKU", "fark_1y": 7, "aday_gun": 23}],
-                         "YLB": [{"kod": "EIL", "fark_1y": 47.6, "aday_gun": 20}], "BGP": [{"kod": "ZZA", "fark_1y": 2.0, "aday_gun": 21}, {"kod": "ZZB", "fark_1y": 1.5, "aday_gun": 21}]},
+                         "YLB": [{"kod": "EIL", "fark_1y": 47.6, "aday_gun": 20}, {"kod": "IRY", "fark_1y": 2.6, "aday_gun": 20}],
+                         "BGP": [{"kod": "ZZA", "fark_1y": 2.0, "aday_gun": 21}, {"kod": "ZZB", "fark_1y": 1.5, "aday_gun": 21}]},
                          "borsa_plani": {"panik_dibi": {"durum": panik}}, "bist_dolar": {"dipten_pct": 1.0},
                          "kuresel_akis": {"turkiye_vs_gelismekte": {"durum": "NORMAL"}, "kuresel_kredi": {"durum": "NORMAL"}}},
             "kuresel": {"abd_10y": {"aylik_degisim_pct": a10}, "usdtry_yahoo": {"aylik_degisim_pct": 1.0},
                         "nasdaq": {"zirveden_pct": nz}, "sp500": {"zirveden_pct": -2.0}},
             "bist100": {"rsi14_tamamlanmis": 25.0},
+            "rakip_tarama": {"para_piyasasi": {"siralama": [{"kod": "IRY", "ozel_payi": 41.69}, {"kod": "ZZB", "ozel_payi": 2.0},
+                                                            {"kod": "EIL", "ozel_payi": 3.41}]}},
             "tahvil_analiz": {"fonlar": {"YOT": {"kalibrasyon": {"uygulandi": True}, "senaryo": {"basabas_verim_degisimi_puan": -3.8,
                               "senaryolar": [{"verim_degisimi_puan": 0, "fark_puan": -3.6}]}},
                                          "GUX": {"kalibrasyon": {"uygulandi": True}, "senaryo": {"senaryolar": [{"verim_degisimi_puan": 0, "fark_puan": 1.2}]}}}}}
@@ -93,6 +96,9 @@ br.AYAR["mevduat_gercek_teklif"] = {"oran": 38.0, "tarih": "2026-10-30", "banka"
 o4 = br.firsat_radari(R())
 br.AYAR["mevduat_gercek_teklif"] = {"oran": 38.0, "tarih": "2026-09-01", "banka": "test"}
 o5 = br.firsat_radari(R())
+o6 = br.firsat_radari(R(gz=-25.0, a10=1.0))     # 19 Kas: Fed gevşemiyor (faiz yükseliyor) → basamak yine çalışır
+o7 = br.firsat_radari(R(gz=-17.0, a10=1.0))
+o8 = br.firsat_radari(R(gz=-31.0, a10=1.0))
 an = lambda o, v: [x["anahtar"] for x in o["varliklar"].get(v, {}).get("sinyaller", []) if x["yon"] != "SUSTURULDU"]
 print(json.dumps({"ozet1": o1["ozet"], "altin1": an(o1, "altin"), "tahvil1": an(o1, "tahvil"), "borsa1": an(o1, "borsa"),
    "mevduat1": an(o1, "mevduat"), "ppf1": an(o1, "para_piyasasi"),
@@ -102,7 +108,11 @@ print(json.dumps({"ozet1": o1["ozet"], "altin1": an(o1, "altin"), "tahvil1": an(
    "not2": sorted(k for k, v in h2.items() if k.startswith("firsat_") and str(v).startswith("NOT")),
    "uyari2": sorted(k for k, v in h2.items() if k.startswith("firsat_") and str(v).startswith("UYARI")),
    "kalkti3": sorted(k for k in h3 if k.endswith("_kalkti")), "altin3": o3["ozet"]["altin"],
-   "mevduat4": o4["ozet"]["mevduat"], "mvkaynak4": o4["varliklar"]["mevduat"]["bekle"]["kaynak"], "mevduat5": o5["ozet"]["mevduat"]}, ensure_ascii=False))
+   "mevduat4": o4["ozet"]["mevduat"], "mvkaynak4": o4["varliklar"]["mevduat"]["bekle"]["kaynak"], "mevduat5": o5["ozet"]["mevduat"],
+   "ozel1": sorted(k for k in h1 if k.endswith("_ozel")), "ozel_metin1": h1.get("firsat_rotasyon_YLB_IRY_ozel", ""),
+   "altin6": an(o6, "altin"), "ozet6": o6["ozet"]["altin"], "altin7": an(o7, "altin"), "altin8": an(o8, "altin"),
+   "oneri6": [x.get("oneri", "") for x in o6["varliklar"]["altin"]["sinyaller"]],
+   "basamak6": o6["varliklar"]["altin"]["bekle"]["basamaklar"]}, ensure_ascii=False))
 """
     tmp = tempfile.mkdtemp()
     open(os.path.join(tmp, "ayarlar.json"), "w", encoding="utf-8").write(json.dumps(
@@ -605,8 +615,18 @@ def main():
          and "rakip_YLB_getiri_yok" in d_bizim_sifir["saglik"]["tum_moduller"],
                                                                     "Rakip tarama: bizim fonun getirisi 0/eksik gelirse karşılaştırma yapılmaz (sahte adaylar oluşmaz)"),
         # --- 31 Eki: fırsat radarı (otopilot) ---
-        (set(_fr.get("altin1", [])) >= {"altin_tl_sigorta", "altin_fiyat"} and _fr.get("ozet1", {}).get("altin") == "AL/ARTIR",
-                                                                    "Fırsat radarı: TL stresinde ve 'ucuz altın + Fed gevşemesi'nde altın sinyali verir"),
+        (set(_fr.get("altin1", [])) >= {"altin_tl_sigorta", "altin_basamak_1"} and _fr.get("ozet1", {}).get("altin") == "AL/ARTIR",
+                                                                    "Fırsat radarı: TL stresinde ve zirveden −%18'de (1. basamak) altın sinyali verir"),
+        # --- 19 Kas: kademeli altın alımı (Fed şartı yok) + geçiş adayında özel sektör borcu filtresi ---
+        (_fr.get("altin6") == ["altin_basamak_1", "altin_basamak_2"] and _fr.get("ozet6") == "AL/ARTIR"
+         and any("%22.5" in x and "Fed gevşemiyor" in x for x in _fr.get("oneri6", [])),
+                                                                    "Altın basamakları: Fed faiz artırırken de −%24'te 1. ve 2. basamak (hedef pay %22,5) sinyali verir"),
+        (_fr.get("altin7") == [] and _fr.get("altin8") == ["altin_basamak_1", "altin_basamak_2", "altin_basamak_3"]
+         and [b.get("ulasildi") for b in _fr.get("basamak6", [])] == [True, True, False],
+                                                                    "Altın basamakları: −%17'de sinyal yok, −%31'de üç basamak; raporda hangi basamağa ulaşıldığı görünür"),
+        (_fr.get("ozel1") == ["firsat_rotasyon_YLB_IRY_ozel"] and "41.69" in _fr.get("ozel_metin1", "")
+         and "rotasyon_YLB" not in _fr.get("ppf1", []) and any("ZZB" in x for x in _fr.get("ppf_sinyal1", [])),
+                                                                    "Geçiş filtresi: özel sektör borcu %10'u aşan aday (IRY %41,7) önerilmez, not düşer; düşük riskli aday önerilir"),
         (_fr.get("tahvil1") == ["tahvil_cik_YOT", "tahvil_gir_GUX"] or set(_fr.get("tahvil1", [])) == {"tahvil_cik_YOT", "tahvil_gir_GUX"},
                                                                     "Fırsat radarı: kalibre modele göre geride kalan tahvil fonu için ÇIK, öne geçen aday için AL sinyali"),
         ("borsa_panik_dibi" in _fr.get("borsa1", []) and "rotasyon_TIE" not in _fr.get("borsa1", []) and "mevduat_teklif" in _fr.get("mevduat1", []),
