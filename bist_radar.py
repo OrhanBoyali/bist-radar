@@ -2575,7 +2575,12 @@ def kalibrasyon_ozet(R):
 # üretir; sürerse not (NOT) olarak kalır; kalkınca not düşer. Kullanıcının kapattığı sinyaller: ayarlar "firsat_sustur".
 FIRSAT_FILE = "output/firsat_durum.json"
 FIRSAT_ESIK = {
-    "altin_zirveden_al": -18.0,          # gram altın 1 yıllık zirvesinden en az bu kadar aşağıda (%)
+    "altin_zirveden_al": -18.0,          # gram altın 1 yıllık zirvesinden en az bu kadar aşağıda (%) = 1. alım basamağı
+    # 19 Kas (kullanıcı kararı, seçenek 1): kademeli fırsat alımı — Fed şartı KALDIRILDI (hata #30: Fed artırırken
+    # altın ucuzluyor, "ucuz + Fed gevşemesi" birlikte nadiren oluyor → fırsat kaçıyordu). Basamak: (zirveden %, hedef altın payı %).
+    # Tutar sistemde hesaplanmaz (kişisel adetler repoda yok): Claude ana kayıttaki adetlerle payı hedefe tamamlar.
+    "altin_basamak_2": -24.0, "altin_basamak_3": -30.0,
+    "altin_pay_1": 20.0, "altin_pay_2": 22.5, "altin_pay_3": 25.0,
     "altin_zirve_azalt": -2.0,           # zirveye bu kadar yakın (%) → kâr al değerlendirmesi
     "faiz_yeniden_degerlendir": 30.0,    # politika faizi bunun altına inince para piyasası avantajı daralır
     "fed_gevseme_abd10y_aylik": -6.0,    # ABD 10 yıllık faiz 1 ayda %6+ düşerse (~0,3 puan) gevşeme beklentisi
@@ -2623,9 +2628,16 @@ def firsat_radari(R):
     if tl_n:
         koy("altin", "altin_tl_sigorta", "AL/ARTIR", "TL stresi var — altın sigortasını büyütme zamanı", tl,
             "Altın payını %25-30'a çıkarmayı değerlendir (kademeli; banka altın hesabı ya da fiziki)")
-    if gz is not None and gz <= e["altin_zirveden_al"] and fed_gevseme:
-        koy("altin", "altin_fiyat", "AL/ARTIR", f"Gram altın zirveden %{gz} ve Fed gevşeme beklentisi", {"gram_zirveden": gz, "fed_gevseme": True},
-            "~50 bin TL kademeli alım değerlendir")
+    basamaklar = [(1, e["altin_zirveden_al"], e["altin_pay_1"]), (2, e["altin_basamak_2"], e["altin_pay_2"]),
+                  (3, e["altin_basamak_3"], e["altin_pay_3"])]
+    for n, z, pay in basamaklar:          # 19 Kas: her basamak ayrı sinyal → yeni basamak yeni bildirim
+        if gz is not None and gz <= z:
+            sonraki = next((f"zirveden %{z2:g} → pay %{p2:g}" for n2, z2, p2 in basamaklar if n2 == n + 1), "son basamak")
+            koy("altin", f"altin_basamak_{n}", "AL/ARTIR",
+                f"Gram altın zirveden %{gz} — {n}. alım basamağı (≤%{z:g}): hedef altın payı %{pay:g}",
+                {"gram_zirveden": gz, "basamak": n, "esik": z, "hedef_pay": pay, "fed_gevseme": fed_gevseme, "sonraki": sonraki},
+                f"Altın payını hedefe (%{pay:g}) tamamla — tutar ana kayıttaki adetlerle; kaynak para piyasası fonu. Sonraki: {sonraki}"
+                + ("" if fed_gevseme else ". Not: Fed gevşemiyor — düşüş sürebilir, bu yüzden kademeli"))
     if pf is not None and pf <= e["faiz_yeniden_degerlendir"]:
         koy("altin", "altin_faiz", "DEĞERLENDİR", f"Politika faizi %{pf} — para piyasasının altına üstünlüğü daralıyor", {"politika_faizi": pf},
             "Altın payını yeniden değerlendir")
@@ -2633,7 +2645,9 @@ def firsat_radari(R):
         koy("altin", "altin_zirve", "AZALT/ÇIK", f"Gram altın 1 yıllık zirvesine yakın (%{gz}), TL stresi yok",
             {"gram_zirveden": gz}, "Altın payı %20'nin üstündeyse bir kısmında kâr almayı değerlendir")
     V.setdefault("altin", {"sinyaller": []})["bekle"] = {"gram_zirveden_pct": gz, "gram_kaynak": T.get("gram_altin_kaynak"), "fed_gevseme": fed_gevseme, "tl_stres": tl_n,
-        "ne_olursa": f"TL stresi; ya da gram zirveden ≤%{e['altin_zirveden_al']} VE Fed gevşemesi; ya da politika faizi ≤%{e['faiz_yeniden_degerlendir']}"}
+        "basamaklar": [{"basamak": n, "zirveden": z, "hedef_pay": p, "ulasildi": gz is not None and gz <= z} for n, z, p in basamaklar],
+        "ne_olursa": (f"TL stresi; ya da gram zirveden ≤%{e['altin_zirveden_al']} / %{e['altin_basamak_2']} / %{e['altin_basamak_3']} "
+                      f"(altın payı %{e['altin_pay_1']} / %{e['altin_pay_2']} / %{e['altin_pay_3']}); ya da politika faizi ≤%{e['faiz_yeniden_degerlendir']}")}
     # DÖVİZ
     if T.get("dolar_gecis_tetik") or tl_n >= 2:
         koy("doviz", "doviz_gecis", "AL/ARTIR", "TL'nin dövize karşı avantajı kapanıyor ya da güçlü TL stresi",
@@ -2668,10 +2682,20 @@ def firsat_radari(R):
     if kotu:
         koy("para_piyasasi", "ppf_reel", "DEĞERLENDİR", f"Para piyasası enflasyonu yeterince geçmiyor: {kotu}", kotu,
             "Alternatiflere bak: mevduat teklifi, tahvil (kalibre senaryo), altın")
+    # 19 Kas: geçiş adayının ÖZEL SEKTÖR borçlanma payı (IJV'den bu risk yüzünden çıktık; IRY %41,7 ile önerildi).
+    # Kendi fonlarımızdaki sınır (ozel_tahvil_esik.pay_pct, vars. %10) adaylara da uygulanır.
+    oz_esik = float({**OZEL_TAHVIL_VARSAYILAN, **(AYAR.get("ozel_tahvil_esik") or {})}.get("pay_pct", 10.0))
+    oz_pay = {x.get("kod"): x.get("ozel_payi") for g in ("para_piyasasi",)
+              for x in (((R.get("rakip_tarama") or {}).get(g) or {}).get("siralama") or []) if isinstance(x, dict)}
     for fon, adaylar in (T.get("rakip_olgun_adaylar") or {}).items():
         # 2 Kas: veri hatası koruması (para piyasasında yılda >15 puan fark gerçekçi değil) + aday bazında susturma
         tavan = 15.0 if fon in CEPHANE else 40.0
-        temiz = [a for a in (adaylar or []) if f"rotasyon_{fon}_{a.get('kod')}" not in sustur
+        riskli = {a.get("kod") for a in (adaylar or []) if fon in CEPHANE and oz_pay.get(a.get("kod")) is not None
+                  and oz_pay[a.get("kod")] > oz_esik}
+        for kod in sorted(riskli):
+            HEALTH[f"firsat_rotasyon_{fon}_{kod}_ozel"] = (f"NOT: {fon}→{kod} önerilmedi — {kod} parasının %{oz_pay[kod]}'i özel sektör "
+                                                           f"borçlanmasında (sınır %{oz_esik}); ek getiri bu riskin karşılığı")
+        temiz = [a for a in (adaylar or []) if f"rotasyon_{fon}_{a.get('kod')}" not in sustur and a.get("kod") not in riskli
                  and (a.get("fark_1y") is None or abs(a["fark_1y"]) <= tavan)]
         for a in adaylar or []:
             if a.get("fark_1y") is not None and abs(a["fark_1y"]) > tavan:
