@@ -2754,6 +2754,15 @@ def firsat_radari(R):
     except Exception:
         once = {}
     simdi, bs = {}, NOW.strftime("%Y-%m-%d")
+    # 24 Kas: eşiğin etrafında gidip gelen sinyal (20 Kas: altın 2. basamak 08:17 açıldı, 09:17 kalktı) yeniden açılınca
+    # tekrar bildirim üretmesin → kalkan sinyaller 3 gün hatırlanır, bu sürede yeniden açılırsa yalnızca NOT
+    def _gun(t):
+        try:
+            return (NOW.date() - datetime.strptime(str(t)[:10], "%Y-%m-%d").date()).days
+        except Exception:
+            return 99
+    kalkan = {a: x for a, x in (once.get("_kalkan") or {}).items() if isinstance(x, dict) and _gun(x.get("kalkti")) <= 3}
+    once = {a: x for a, x in once.items() if not a.startswith("_")}
     for varlik, v in V.items():
         aktif = [x for x in v["sinyaller"] if x["yon"] not in ("SUSTURULDU",)]
         oncelik = {"AL/ARTIR": 0, "AZALT/ÇIK": 0, "DEĞERLENDİR": 1, "İZLE": 2}
@@ -2765,13 +2774,20 @@ def firsat_radari(R):
             x["ilk_gorulme"] = simdi[a]["ilk"]
             if x["yon"] == "İZLE":
                 continue
-            if a not in once:
+            if a not in once and a in kalkan:
+                HEALTH[f"firsat_{a}"] = (f"NOT: fırsat radarı sinyali yeniden açıldı ({kalkan[a].get('kalkti')} kalkmıştı; "
+                                         f"3 gün içinde — yeniden bildirim yok): {x['sinyal']}")
+            elif a not in once:
                 HEALTH[f"firsat_{a}"] = f"UYARI: FIRSAT RADARI — {x['yon']}: {x['sinyal']} → {x['oneri']}"
             else:
                 HEALTH[f"firsat_{a}"] = f"NOT: fırsat radarı sinyali sürüyor ({simdi[a]['ilk']}'den beri): {x['sinyal']}"
     for a, x in once.items():
         if a not in simdi and x.get("yon") != "İZLE":
             HEALTH[f"firsat_{a}_kalkti"] = f"NOT: fırsat radarı sinyali kalktı: {x.get('sinyal')}"
+            kalkan[a] = {"sinyal": x.get("sinyal"), "yon": x.get("yon"), "kalkti": bs}
+    kalkan = {a: x for a, x in kalkan.items() if a not in simdi}
+    if kalkan:
+        simdi["_kalkan"] = kalkan
     os.makedirs("output", exist_ok=True)
     json.dump(simdi, open(FIRSAT_FILE, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     ozet = {varlik: v["durum"] for varlik, v in V.items()}
@@ -3142,20 +3158,37 @@ def main():
             # kıyaslanınca gün içi %3+ petrol hareketi sahte "kaynak çelişkisi" bildirimi açıyordu (8 günde 30 çalışma).
             # Artık AYNI GÜNÜN kapanışları karşılaştırılır: borsapy'nin tarihindeki (ya da öncesindeki son) Yahoo kapanışı.
             bt = str(br.get("update_time") or "")[:10] if isinstance(br, dict) else ""
-            ky, kt = by, "son (tarih bilinmiyor)"
+            ky, kt, lo, hi = by, "son (tarih bilinmiyor)", None, None
             ys = _SERI.get("Y:brent_yahoo")
             if bt and ys is not None:
-                yg = _gun_seri(ys)
-                yg = yg[yg.index.strftime("%Y-%m-%d") <= bt]
-                if len(yg):
-                    ky, kt = float(yg.iloc[-1]), yg.index[-1].strftime("%Y-%m-%d")
+                # 24 Kas: doviz.com'un "gün" değeri vadeli piyasanın gün sonu fiyatı değil, gün içinde bir anın fiyatı
+                # (23 Kas: borsapy 86,66 = Yahoo'nun 18:52'deki fiyatı; Yahoo kapanışı ABD seansında %3 yükselip 89,37).
+                # Bu yüzden kapanışla değil, Yahoo'nun AYNI GÜNKÜ gün içi aralığıyla (düşük–yüksek, ±%1) kıyaslanır.
+                yd = ys.copy()
+                ix = pd.to_datetime(yd.index)
+                yd.index = (ix.tz_localize(None) if getattr(ix, "tz", None) is not None else ix).normalize()
+                yd = yd[~yd.index.duplicated(keep="last")]
+                yd = yd[yd.index.strftime("%Y-%m-%d") <= bt].dropna(subset=["Close"])
+                if len(yd):
+                    son = yd.iloc[-1]
+                    ky, kt = float(son["Close"]), yd.index[-1].strftime("%Y-%m-%d")
+                    if "Low" in yd and "High" in yd and pd.notna(son["Low"]) and pd.notna(son["High"]):
+                        lo, hi = float(son["Low"]), float(son["High"])
             fark = round((T["brent"] / ky - 1) * 100, 2)
+            if lo is not None and hi is not None:      # aralığın dışındaki uzaklık (içindeyse 0)
+                b_ = T["brent"]
+                aralik_fark = 0.0 if lo * 0.99 <= b_ <= hi * 1.01 else round(
+                    ((b_ / (lo * 0.99) - 1) if b_ < lo * 0.99 else (b_ / (hi * 1.01) - 1)) * 100, 2)
+            else:
+                aralik_fark = fark
             T["brent_tarih"] = bt or None
             T["brent_capraz"] = {"borsapy": T["brent"], "borsapy_tarih": bt or None, "yahoo_ayni_gun": J(round(ky, 2)),
-                                 "yahoo_tarih": kt, "yahoo_canli": by, "fark_pct": fark}
-            if abs(fark) > 3:
-                HEALTH["brent_kaynak_celiskisi"] = (f"UYARI: Brent borsapy {T['brent']} ({bt or '?'}) / Yahoo {round(ky, 2)} ({kt}) "
-                                                   f"aynı gün %{fark} fark — vade geçişi ya da hatalı veri; haberle teyit et")
+                                 "yahoo_gun_ici": [J(round(lo, 2)), J(round(hi, 2))] if lo is not None else None,
+                                 "yahoo_tarih": kt, "yahoo_canli": by, "fark_pct": fark, "aralik_disi_pct": aralik_fark}
+            if abs(aralik_fark) > 2:
+                HEALTH["brent_kaynak_celiskisi"] = (f"UYARI: Brent borsapy {T['brent']} ({bt or '?'}) Yahoo'nun aynı gün aralığının "
+                                                   f"({round(lo, 2) if lo else '?'}–{round(hi, 2) if hi else '?'}, {kt}) %{aralik_fark} dışında — "
+                                                   "vade geçişi ya da hatalı veri; haberle teyit et")
         # 5 Kas (hata #29): borsapy gram altın önceki günün kapanışı → canlı (ons × kur) değer birincil
         T["gram_altin_zirveden_pct_borsapy"] = (R.get("gram_altin_1y") or {}).get("zirveden_pct")
         gc = R.get("gram_altin_canli") or {}
