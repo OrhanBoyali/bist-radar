@@ -96,9 +96,24 @@ br.AYAR["mevduat_gercek_teklif"] = {"oran": 38.0, "tarih": "2026-10-30", "banka"
 o4 = br.firsat_radari(R())
 br.AYAR["mevduat_gercek_teklif"] = {"oran": 38.0, "tarih": "2026-09-01", "banka": "test"}
 o5 = br.firsat_radari(R())
+br.HEALTH.clear()
 o6 = br.firsat_radari(R(gz=-25.0, a10=1.0))     # 19 Kas: Fed gevşemiyor (faiz yükseliyor) → basamak yine çalışır
+h6 = dict(br.HEALTH)
 o7 = br.firsat_radari(R(gz=-17.0, a10=1.0))
+br.HEALTH.clear()
 o8 = br.firsat_radari(R(gz=-31.0, a10=1.0))
+h8 = dict(br.HEALTH)
+# 24 Kas: 3 günden eski kalkış → yeniden açılınca yine bildirim
+br.firsat_radari(R(gz=-10.0, a10=1.0))
+import os as _os
+_d = json.load(open(br.FIRSAT_FILE, encoding="utf-8"))
+for _x in (_d.get("_kalkan") or {}).values():
+    _x["kalkti"] = "2026-10-20"
+json.dump(_d, open(br.FIRSAT_FILE, "w", encoding="utf-8"))
+br.HEALTH.clear()
+o9 = br.firsat_radari(R(gz=-20.0, a10=1.0))
+h9 = dict(br.HEALTH)
+sev = lambda h, k: str(h.get(k, ""))[:5]
 an = lambda o, v: [x["anahtar"] for x in o["varliklar"].get(v, {}).get("sinyaller", []) if x["yon"] != "SUSTURULDU"]
 print(json.dumps({"ozet1": o1["ozet"], "altin1": an(o1, "altin"), "tahvil1": an(o1, "tahvil"), "borsa1": an(o1, "borsa"),
    "mevduat1": an(o1, "mevduat"), "ppf1": an(o1, "para_piyasasi"),
@@ -112,7 +127,10 @@ print(json.dumps({"ozet1": o1["ozet"], "altin1": an(o1, "altin"), "tahvil1": an(
    "ozel1": sorted(k for k in h1 if k.endswith("_ozel")), "ozel_metin1": h1.get("firsat_rotasyon_YLB_IRY_ozel", ""),
    "altin6": an(o6, "altin"), "ozet6": o6["ozet"]["altin"], "altin7": an(o7, "altin"), "altin8": an(o8, "altin"),
    "oneri6": [x.get("oneri", "") for x in o6["varliklar"]["altin"]["sinyaller"]],
-   "basamak6": o6["varliklar"]["altin"]["bekle"]["basamaklar"]}, ensure_ascii=False))
+   "basamak6": o6["varliklar"]["altin"]["bekle"]["basamaklar"],
+   "yeniden6": [sev(h6, "firsat_altin_basamak_1"), sev(h6, "firsat_altin_basamak_2")],
+   "yeniden8": [sev(h8, "firsat_altin_basamak_1"), sev(h8, "firsat_altin_basamak_2"), sev(h8, "firsat_altin_basamak_3")],
+   "eski9": sev(h9, "firsat_altin_basamak_1")}, ensure_ascii=False))
 """
     tmp = tempfile.mkdtemp()
     open(os.path.join(tmp, "ayarlar.json"), "w", encoding="utf-8").write(json.dumps(
@@ -408,6 +426,7 @@ def main():
     d_brent_gunici = calistir(ek_env={"RADAR_MOCK_BRENT_GUNICI": "1"})
     _geride = fon_geride_birim()
     d_brent_celiski = calistir(ek_env={"RADAR_MOCK_BRENT_CELISKI": "1"})
+    d_brent_gec = calistir(ek_env={"RADAR_MOCK_BRENT_GECKAPANIS": "1"})
     d_usdt_yedek = calistir(ek_env={"RADAR_MOCK_BTCTURK_HATA": "1"})
     _an_gun = _pd.Timestamp(_AN[:10])
     _usdt_gecmis = {(_an_gun - _pd.offsets.BDay(i)).strftime("%Y-%m-%d"): 0.8 for i in range(1, 8)}
@@ -624,6 +643,8 @@ def main():
         (_fr.get("altin7") == [] and _fr.get("altin8") == ["altin_basamak_1", "altin_basamak_2", "altin_basamak_3"]
          and [b.get("ulasildi") for b in _fr.get("basamak6", [])] == [True, True, False],
                                                                     "Altın basamakları: −%17'de sinyal yok, −%31'de üç basamak; raporda hangi basamağa ulaşıldığı görünür"),
+        (_fr.get("yeniden6") == ["NOT: ", "UYARI"] and _fr.get("yeniden8") == ["NOT: ", "NOT: ", "UYARI"] and _fr.get("eski9") == "UYARI",
+                                                                    "Bildirim tekrarı: 3 gün içinde kalkıp yeniden açılan sinyal yalnızca NOT verir; yeni basamak ve eski kalkış yine bildirir"),
         (_fr.get("ozel1") == ["firsat_rotasyon_YLB_IRY_ozel"] and "41.69" in _fr.get("ozel_metin1", "")
          and "rotasyon_YLB" not in _fr.get("ppf1", []) and any("ZZB" in x for x in _fr.get("ppf_sinyal1", [])),
                                                                     "Geçiş filtresi: özel sektör borcu %10'u aşan aday (IRY %41,7) önerilmez, not düşer; düşük riskli aday önerilir"),
@@ -673,6 +694,10 @@ def main():
          and (d_brent_gunici["tetikler"].get("brent_capraz") or {}).get("yahoo_tarih") == (d_brent_gunici["tetikler"].get("brent_capraz") or {}).get("borsapy_tarih", "")[:10]
          and abs((d_brent_gunici["tetikler"].get("brent_capraz") or {}).get("fark_pct", 99)) < 3,
                                                                     "Brent: petrolün gün içi %5 düşüşü, borsapy dünkü kapanışta diye sahte çelişki bildirimi açmaz (aynı gün kıyası)"),
+        ("brent_kaynak_celiskisi" not in d_brent_gec["saglik"]["hatali_moduller"]
+         and ((d_brent_gec["tetikler"].get("brent_capraz") or {}).get("fark_pct") or 0) < -3
+         and (d_brent_gec["tetikler"].get("brent_capraz") or {}).get("aralik_disi_pct") == 0.0,
+                                                                    "Brent: borsapy değeri gün içi aralıktaysa kapanıştan %4 farklı olsa da çelişki sayılmaz (23 Kas vakası)"),
         ("brent_kaynak_celiskisi" in d_brent_celiski["saglik"].get("issue_tetikleyen", []),
                                                                     "Brent: aynı günün kapanışlarında gerçek %3+ fark hâlâ bildirim açar"),
         # --- 30 Eki: küresel para akışı, USDT primi, piyasa takvimi, kalibrasyon ---
