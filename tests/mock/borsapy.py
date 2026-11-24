@@ -125,11 +125,14 @@ class FX:
     def current(self):
         d = {"last": {"USD": 48.83, "EUR": 57.0, "BRENT": 108.0}.get(self.k, 6800.0)}
         import os
-        if self.k == "BRENT" and (os.environ.get("RADAR_MOCK_BRENT_GUNICI") or os.environ.get("RADAR_MOCK_BRENT_CELISKI")):
+        if self.k == "BRENT" and (os.environ.get("RADAR_MOCK_BRENT_GUNICI") or os.environ.get("RADAR_MOCK_BRENT_CELISKI")
+                                  or os.environ.get("RADAR_MOCK_BRENT_GECKAPANIS")):
             # 9 Kas: gerçekteki gibi borsapy Brent bir önceki günün kapanışı (Yahoo sahtesinin sondan ikinci barı)
             d["update_time"] = (pd.Timestamp.today().normalize() - pd.offsets.BDay(2)).strftime("%Y-%m-%dT00:00:00")
             if os.environ.get("RADAR_MOCK_BRENT_CELISKI"):
                 d["last"] = 125.0                                    # aynı gün kapanışında gerçek çelişki
+            if os.environ.get("RADAR_MOCK_BRENT_GECKAPANIS"):
+                d["last"] = 105.0                                    # 24 Kas: gün içi bir anın fiyatı (kapanış 109,96)
         return d
     def history(self, period="1y"): return _ohlc(250, 7500, 6800)
 def economic_calendar(**k): return pd.DataFrame({"Date": ["2026-09-24"], "Event": ["test"]})
