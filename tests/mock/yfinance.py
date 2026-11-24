@@ -19,4 +19,7 @@ def download(t, period="300d", interval="1d", **k):
         c[-1] = c[-2] * 0.95
     if t == "HYG" and os.environ.get("RADAR_MOCK_KREDI_STRES"):   # 30 Eki: yüksek getirili tahviller 1 ayda ~%6 düşer
         c[-22:] = c[-22:] * np.linspace(1.0, 0.94, 22)
-    return pd.DataFrame({"Open": c, "High": c + 1, "Low": c - 1, "Close": c, "Volume": 1000}, index=idx)
+    lo = c - 1
+    if t == "BZ=F" and os.environ.get("RADAR_MOCK_BRENT_GECKAPANIS"):   # 24 Kas: dünkü barın dibi %5 aşağıda (geç saatte yükseldi)
+        lo = lo.copy(); lo[-2] = c[-2] * 0.95
+    return pd.DataFrame({"Open": c, "High": c + 1, "Low": lo, "Close": c, "Volume": 1000}, index=idx)
