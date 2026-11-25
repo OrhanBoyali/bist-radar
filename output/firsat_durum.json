@@ -1,8 +1,14 @@
 {
  "altin_basamak_1": {
-  "sinyal": "Gram altın zirveden %-23.45 — 1. alım basamağı (≤%-18): hedef altın payı %20",
+  "sinyal": "Gram altın zirveden %-24.12 — 1. alım basamağı (≤%-18): hedef altın payı %20",
   "yon": "AL/ARTIR",
   "ilk": "2026-11-19",
+  "son": "2026-11-25"
+ },
+ "altin_basamak_2": {
+  "sinyal": "Gram altın zirveden %-24.12 — 2. alım basamağı (≤%-24): hedef altın payı %22.5",
+  "yon": "AL/ARTIR",
+  "ilk": "2026-11-25",
   "son": "2026-11-25"
  },
  "ppf_reel": {
@@ -10,12 +16,5 @@
   "yon": "DEĞERLENDİR",
   "ilk": "2026-11-03",
   "son": "2026-11-25"
- },
- "_kalkan": {
-  "altin_basamak_2": {
-   "sinyal": "Gram altın zirveden %-24.28 — 2. alım basamağı (≤%-24): hedef altın payı %22.5",
-   "yon": "AL/ARTIR",
-   "kalkti": "2026-11-25"
-  }
  }
 }
