@@ -1,32 +1,38 @@
 {
  "altin_basamak_1": {
-  "sinyal": "Gram altın zirveden %-24.72 — 1. alım basamağı (≤%-18): hedef altın payı %20",
+  "sinyal": "Gram altın zirveden %-22.12 — 1. alım basamağı (≤%-18): hedef altın payı %20",
   "yon": "AL/ARTIR",
   "ilk": "2026-11-19",
-  "son": "2026-11-25"
- },
- "altin_basamak_2": {
-  "sinyal": "Gram altın zirveden %-24.72 — 2. alım basamağı (≤%-24): hedef altın payı %22.5",
-  "yon": "AL/ARTIR",
-  "ilk": "2026-11-25",
-  "son": "2026-11-25"
+  "son": "2026-11-26"
  },
  "ppf_reel": {
   "sinyal": "Para piyasası enflasyonu yeterince geçmiyor: {'YLB': 'ACIL', 'ZBJ': 'ACIL', 'BGP': 'ACIL'}",
   "yon": "DEĞERLENDİR",
   "ilk": "2026-11-03",
-  "son": "2026-11-25"
+  "son": "2026-11-26"
+ },
+ "tahvil_gir_TDG": {
+  "sinyal": "TDG: faiz sabit kalsa bile 3 ayda para piyasasını 0.97 puan geçiyor (kalibre model)",
+  "yon": "AL/ARTIR",
+  "ilk": "2026-11-26",
+  "son": "2026-11-26"
  },
  "borsa_ucuz": {
   "sinyal": "Aşırı satım + dolar bazında 1 yılın dibi; TL ve küresel stres yok",
   "yon": "İZLE",
   "ilk": "2026-11-25",
-  "son": "2026-11-25"
+  "son": "2026-11-26"
  },
- "yurtdisi_hisse": {
-  "sinyal": "ABD borsaları düzeltmede (Nasdaq zirveden %-17.17, S&P %-10.21) — ABD seansı sürüyor, kapanışta teyit edilecek",
-  "yon": "DEĞERLENDİR",
-  "ilk": "2026-11-25",
-  "son": "2026-11-25"
+ "_kalkan": {
+  "altin_basamak_2": {
+   "sinyal": "Gram altın zirveden %-24.72 — 2. alım basamağı (≤%-24): hedef altın payı %22.5",
+   "yon": "AL/ARTIR",
+   "kalkti": "2026-11-26"
+  },
+  "yurtdisi_hisse": {
+   "sinyal": "ABD borsaları düzeltmede (Nasdaq zirveden %-17.17, S&P %-10.21) — ABD seansı sürüyor, kapanışta teyit edilecek",
+   "yon": "DEĞERLENDİR",
+   "kalkti": "2026-11-26"
+  }
  }
 }
