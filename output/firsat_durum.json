@@ -1,6 +1,12 @@
 {
+ "altin_tl_sigorta": {
+  "sinyal": "TL stresi var — altın sigortasını büyütme zamanı",
+  "yon": "AL/ARTIR",
+  "ilk": "2026-11-26",
+  "son": "2026-11-26"
+ },
  "altin_basamak_1": {
-  "sinyal": "Gram altın zirveden %-22.43 — 1. alım basamağı (≤%-18): hedef altın payı %20",
+  "sinyal": "Gram altın zirveden %-22.57 — 1. alım basamağı (≤%-18): hedef altın payı %20",
   "yon": "AL/ARTIR",
   "ilk": "2026-11-19",
   "son": "2026-11-26"
@@ -12,7 +18,13 @@
   "son": "2026-11-26"
  },
  "tahvil_gir_TDG": {
-  "sinyal": "TDG: faiz sabit kalsa bile 3 ayda para piyasasını 0.97 puan geçiyor (kalibre model)",
+  "sinyal": "TDG: faiz sabit kalsa bile 3 ayda para piyasasını 2.89 puan geçiyor (kalibre model)",
+  "yon": "AL/ARTIR",
+  "ilk": "2026-11-26",
+  "son": "2026-11-26"
+ },
+ "tahvil_gir_YFV": {
+  "sinyal": "YFV: faiz sabit kalsa bile 3 ayda para piyasasını 1.75 puan geçiyor (kalibre model)",
   "yon": "AL/ARTIR",
   "ilk": "2026-11-26",
   "son": "2026-11-26"
